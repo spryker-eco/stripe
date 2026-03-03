@@ -1,0 +1,11 @@
+key,translation,locale
+stripeCreditCard,Credit Card via Stripe,en_US
+stripeInvoice,Invoice via Stripe,en_US
+checkout.payment.provider.Stripe,Stripe,en_US
+oms.state.new,New,en_US
+oms.state.processing,Processing,en_US
+oms.state.authorization-pending,Authorization Pending,en_US
+oms.state.authorization-failed,Authorization Failed,en_US
+oms.state.authorized,Authorized,en_US
+oms.state.capture-pending,Capture Pending,en_US
+oms.state.captured,Captured,en_US

@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<statemachine
+    xmlns="spryker:oms-01"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="spryker:oms-01 http://static.spryker.com/oms-01.xsd">
+
+    <process name="StripeInvoice01" main="true">
+
+        <!-- ====================================================================
+             STATES
+             ==================================================================== -->
+
+        <states>
+            <state name="new" display="oms.state.new"/>
+            <state name="processing" display="oms.state.processing" reserved="true"/>
+            <state name="authorization pending" display="oms.state.authorization-pending"/>
+            <state name="authorization failed" display="oms.state.authorization-failed"/>
+            <state name="authorized" display="oms.state.authorized"/>
+            <state name="capture pending" display="oms.state.capture-pending"/>
+            <state name="captured" display="oms.state.captured"/>
+            <state name="canceled" display="oms.state.canceled"/>
+        </states>
+
+        <!-- ====================================================================
+             TRANSITIONS
+             ==================================================================== -->
+
+        <transitions>
+            <!-- Initial state transition. Can be removed Once the rest of OMS is implemented. -->
+            <transition happy="true">
+                <source>new</source>
+                <target>processing</target>
+                <event>wait</event>
+            </transition>
+
+            <!-- Authorize -->
+            <transition happy="true">
+                <source>processing</source>
+                <target>authorization pending</target>
+                <event>authorize</event>
+            </transition>
+
+            <!-- Authorization result (checked via webhook) -->
+            <transition happy="true" condition="Stripe/IsAuthorized">
+                <source>authorization pending</source>
+                <target>authorized</target>
+            </transition>
+
+            <transition condition="Stripe/IsAuthorizationFailed">
+                <source>authorization pending</source>
+                <target>authorization failed</target>
+            </transition>
+
+            <!-- Capture -->
+            <transition happy="true">
+                <source>authorized</source>
+                <target>capture pending</target>
+                <event>capture</event>
+            </transition>
+
+            <transition happy="true" condition="Stripe/IsCaptured">
+                <source>capture pending</source>
+                <target>captured</target>
+            </transition>
+
+            <!-- Cancel -->
+            <transition>
+                <source>authorized</source>
+                <target>canceled</target>
+                <event>cancel</event>
+            </transition>
+        </transitions>
+
+        <!-- ====================================================================
+             EVENTS
+             ==================================================================== -->
+
+        <events>
+            <event name="wait" timeout="1s"/>
+            <event name="authorize" manual="true" onEnter="true" command="Stripe/Authorize"/>
+            <event name="capture" manual="true" onEnter="true" command="Stripe/Capture"/>
+            <event name="cancel" manual="true" command="Stripe/Cancel"/>
+        </events>
+
+    </process>
+
+</statemachine>

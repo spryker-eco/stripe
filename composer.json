@@ -1,0 +1,50 @@
+{
+    "name": "spryker-eco/stripe",
+    "description": "Spryker Stripe integration",
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": ">=8.3",
+        "guzzlehttp/guzzle": "^7.10",
+        "spryker/checkout-extension": "^1.5.0",
+        "spryker/kernel": "^3.81.0",
+        "spryker/oms": "^11.50.0",
+        "spryker/oms-extension": "^1.6.0",
+        "spryker/payment": "^5.28.0",
+        "spryker/payment-extension": "^1.1.0",
+        "spryker/propel-orm": "^1.21.0",
+        "spryker/sales": "^11.78.0",
+        "spryker/step-engine": "^3.7.0",
+        "spryker/symfony": "^3.19.0",
+        "spryker/transfer": "^3.27.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "spryker/code-sniffer": "*",
+        "spryker/testify": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "SprykerEco\\": "src/SprykerEco/",
+            "SprykerTest\\": "tests/SprykerEcoTest/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "cs-check": "phpcs -p -s src/ tests/",
+        "cs-fix": "phpcbf -p src/ tests/",
+        "phpstan": "vendor/bin/phpstan analyse"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

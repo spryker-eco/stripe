@@ -1,0 +1,5 @@
+payment_method_key,store
+stripeCreditCard,DE
+stripeCreditCard,AT
+stripeInvoice,DE
+stripeInvoice,AT
