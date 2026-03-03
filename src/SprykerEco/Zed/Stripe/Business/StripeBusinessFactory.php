@@ -7,22 +7,27 @@
 
 namespace SprykerEco\Zed\Stripe\Business;
 
-use SprykerEco\Client\Stripe\StripeClientInterface;
-use SprykerEco\Zed\Kernel\Business\AbstractBusinessFactory;
-use SprykerEco\Zed\Stripe\Business\Notification\NotificationProcessor;
-use SprykerEco\Zed\Stripe\Business\Notification\NotificationProcessorInterface;
+use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
+use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
+use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
+use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
+use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingHandler;
+use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingUrlGenerator;
 use SprykerEco\Zed\Stripe\Business\Oms\Command\OmsCommandHandler;
-use SprykerEco\Zed\Stripe\Business\Oms\Command\OmsCommandHandlerInterface;
-use SprykerEco\Zed\Stripe\Business\Oms\Condition\OmsConditionChecker;
-use SprykerEco\Zed\Stripe\Business\Oms\Condition\OmsConditionCheckerInterface;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentAuthorizer;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentAuthorizerInterface;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentCanceller;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentCapturer;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentInitializer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentMethodFilter;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentMethodFilterInterface;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReader;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentReaderInterface;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentSaver;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentSaverInterface;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountLinks;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccounts;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeCustomers;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
+use SprykerEco\Zed\Stripe\Business\Webhook\WebhookHandler;
 use SprykerEco\Zed\Stripe\StripeDependencyProvider;
 
 /**
@@ -32,7 +37,24 @@ use SprykerEco\Zed\Stripe\StripeDependencyProvider;
  */
 class StripeBusinessFactory extends AbstractBusinessFactory
 {
-    public function createPaymentSaver(): PaymentSaverInterface
+    public function createWebhookHandler(): WebhookHandler
+    {
+        return new WebhookHandler(
+            $this->getConfig(),
+            $this->getPaymentAppFacade(),
+            $this->createPaymentReader(),
+            $this->createMerchantOnboardingHandler(),
+        );
+    }
+
+    public function createPaymentInitializer(): PaymentInitializer
+    {
+        return new PaymentInitializer(
+            $this->createStripeIntents(),
+        );
+    }
+
+    public function createPaymentSaver(): PaymentSaver
     {
         return new PaymentSaver(
             $this->getEntityManager(),
@@ -40,57 +62,130 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    public function createPaymentAuthorizer(): PaymentAuthorizerInterface
+    public function createOmsCommandHandler(): OmsCommandHandler
     {
-        return new PaymentAuthorizer(
-            $this->getStripeClient(),
-            $this->createPaymentReader(),
+        return new OmsCommandHandler(
+            $this->createPaymentAuthorizer(),
+            $this->createPaymentCapturer(),
+            $this->createPaymentCanceller(),
+            $this->createPaymentRefunder(),
+        );
+    }
+
+    public function createPaymentMethodFilter(): PaymentMethodFilter
+    {
+        return new PaymentMethodFilter();
+    }
+
+    public function createMerchantOnboardingUrlGenerator(): MerchantOnboardingUrlGenerator
+    {
+        return new MerchantOnboardingUrlGenerator(
+            $this->createStripeAccounts(),
+            $this->createStripeAccountLinks(),
             $this->getEntityManager(),
+            $this->getRepository(),
             $this->getConfig(),
         );
     }
 
-    public function createPaymentMethodFilter(): PaymentMethodFilterInterface
-    {
-        return new PaymentMethodFilter(
-            $this->getStripeClient(),
-            $this->getConfig(),
-        );
-    }
-
-    public function createPaymentReader(): PaymentReaderInterface
+    public function createPaymentReader(): PaymentReader
     {
         return new PaymentReader(
             $this->getRepository(),
         );
     }
 
-    public function createOmsCommandHandler(): OmsCommandHandlerInterface
+    protected function createPaymentAuthorizer(): PaymentAuthorizer
     {
-        return new OmsCommandHandler(
-            $this->getStripeClient(),
+        return new PaymentAuthorizer(
+            $this->createStripeIntents(),
             $this->createPaymentReader(),
+        );
+    }
+
+    protected function createPaymentCapturer(): PaymentCapturer
+    {
+        return new PaymentCapturer(
+            $this->createStripeIntents(),
+            $this->createPaymentReader(),
+        );
+    }
+
+    protected function createPaymentCanceller(): PaymentCanceller
+    {
+        return new PaymentCanceller(
+            $this->createStripeIntents(),
+            $this->createPaymentReader(),
+        );
+    }
+
+    protected function createPaymentRefunder(): PaymentRefunder
+    {
+        return new PaymentRefunder(
+            $this->createStripeRefunds(),
+            $this->createPaymentReader(),
+        );
+    }
+
+    protected function createMerchantOnboardingHandler(): MerchantOnboardingHandler
+    {
+        return new MerchantOnboardingHandler(
+            $this->getMerchantAppFacade(),
             $this->getEntityManager(),
         );
     }
 
-    public function createOmsConditionChecker(): OmsConditionCheckerInterface
+    protected function createStripeIntents(): StripeIntents
     {
-        return new OmsConditionChecker(
-            $this->createPaymentReader(),
+        return new StripeIntents(
+            $this->createStripeClientFactory(),
+            $this->createStripeCustomers(),
             $this->getConfig(),
         );
     }
 
-    public function createNotificationProcessor(): NotificationProcessorInterface
+    protected function createStripeRefunds(): StripeRefunds
     {
-        return new NotificationProcessor(
-            $this->getEntityManager(),
+        return new StripeRefunds(
+            $this->createStripeClientFactory(),
         );
     }
 
-    public function getStripeClient(): StripeClientInterface
+    protected function createStripeCustomers(): StripeCustomers
     {
-        return $this->getProvidedDependency(StripeDependencyProvider::CLIENT_STRIPE);
+        return new StripeCustomers(
+            $this->createStripeClientFactory(),
+        );
+    }
+
+    protected function createStripeAccounts(): StripeAccounts
+    {
+        return new StripeAccounts(
+            $this->createStripeClientFactory(),
+        );
+    }
+
+    protected function createStripeAccountLinks(): StripeAccountLinks
+    {
+        return new StripeAccountLinks(
+            $this->createStripeClientFactory(),
+        );
+    }
+
+    protected function createStripeClientFactory(): StripeClientFactory
+    {
+        return new StripeClientFactory(
+            $this->getConfig(),
+        );
+    }
+
+    public function getPaymentAppFacade(): PaymentAppFacadeInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_PAYMENT_APP);
+    }
+
+    public function getMerchantAppFacade(): MerchantAppFacadeInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_MERCHANT_APP);
     }
 }

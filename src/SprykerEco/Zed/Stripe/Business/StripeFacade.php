@@ -7,15 +7,14 @@
 
 namespace SprykerEco\Zed\Stripe\Business;
 
-use Generated\Shared\Transfer\CheckoutResponseTransfer;
+use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentMethodsTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\SaveOrderTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
-use Orm\Zed\Sales\Persistence\SpySalesOrder;
-use Orm\Zed\Sales\Persistence\SpySalesOrderItem;
-use SprykerEco\Zed\Kernel\Business\AbstractFacade;
+use Spryker\Zed\Kernel\Business\AbstractFacade;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeBusinessFactory getFactory()
@@ -28,34 +27,72 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      * {@inheritDoc}
      *
      * @api
-     *
-     * @param \Generated\Shared\Transfer\QuoteTransfer $quoteTransfer
-     * @param \Generated\Shared\Transfer\SaveOrderTransfer $saveOrderTransfer
-     *
-     * @return void
      */
-    public function saveOrderPayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void
+    public function processWebhook(StripeWebhookPayloadTransfer $webhookPayloadTransfer): StripeWebhookProcessResponseTransfer
+    {
+        return $this->getFactory()
+            ->createWebhookHandler()
+            ->processWebhook($webhookPayloadTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer
+    {
+        return $this->getFactory()
+            ->createPaymentInitializer()
+            ->initializePayment($quoteTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void
     {
         $this->getFactory()
             ->createPaymentSaver()
-            ->saveOrderPayment($quoteTransfer, $saveOrderTransfer);
+            ->savePayment($quoteTransfer, $saveOrderTransfer);
     }
 
     /**
      * {@inheritDoc}
      *
      * @api
-     *
-     * @param \Generated\Shared\Transfer\QuoteTransfer $quoteTransfer
-     * @param \Generated\Shared\Transfer\CheckoutResponseTransfer $checkoutResponseTransfer
-     *
-     * @return void
      */
-    public function executePostSaveHook(QuoteTransfer $quoteTransfer, CheckoutResponseTransfer $checkoutResponseTransfer): void
+    public function authorizePayment(OrderTransfer $orderTransfer): void
     {
         $this->getFactory()
-            ->createPaymentAuthorizer()
-            ->executePostSaveHook($quoteTransfer, $checkoutResponseTransfer);
+            ->createOmsCommandHandler()
+            ->authorize($orderTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function capturePayment(OrderTransfer $orderTransfer): void
+    {
+        $this->getFactory()
+            ->createOmsCommandHandler()
+            ->capture($orderTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function cancelPayment(OrderTransfer $orderTransfer): void
+    {
+        $this->getFactory()
+            ->createOmsCommandHandler()
+            ->cancel($orderTransfer);
     }
 
     /**
@@ -63,15 +100,22 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      *
-     * @param \Generated\Shared\Transfer\PaymentMethodsTransfer $paymentMethodsTransfer
-     * @param \Generated\Shared\Transfer\QuoteTransfer $quoteTransfer
-     *
-     * @return \Generated\Shared\Transfer\PaymentMethodsTransfer
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function filterPaymentMethods(
-        PaymentMethodsTransfer $paymentMethodsTransfer,
-        QuoteTransfer $quoteTransfer,
-    ): PaymentMethodsTransfer {
+    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems): void
+    {
+        $this->getFactory()
+            ->createOmsCommandHandler()
+            ->refund($orderTransfer, $orderItems);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function filterPaymentMethods(PaymentMethodsTransfer $paymentMethodsTransfer, QuoteTransfer $quoteTransfer): PaymentMethodsTransfer
+    {
         return $this->getFactory()
             ->createPaymentMethodFilter()
             ->filterPaymentMethods($paymentMethodsTransfer, $quoteTransfer);
@@ -81,115 +125,11 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      * {@inheritDoc}
      *
      * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
      */
-    public function executeAuthorizeCommand(SpySalesOrder $orderEntity, array $orderItems): void
-    {
-        $this->getFactory()
-            ->createOmsCommandHandler()
-            ->executeAuthorizeCommand($orderEntity, $orderItems);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
-     */
-    public function executeCaptureCommand(SpySalesOrder $orderEntity, array $orderItems): void
-    {
-        $this->getFactory()
-            ->createOmsCommandHandler()
-            ->executeCaptureCommand($orderEntity, $orderItems);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
-     */
-    public function executeCancelCommand(SpySalesOrder $orderEntity, array $orderItems): void
-    {
-        $this->getFactory()
-            ->createOmsCommandHandler()
-            ->executeCancelCommand($orderEntity, $orderItems);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrderItem $orderItemEntity
-     *
-     * @return bool
-     */
-    public function isPaymentAuthorized(SpySalesOrderItem $orderItemEntity): bool
+    public function generateMerchantOnboardingUrl(string $merchantReference): string
     {
         return $this->getFactory()
-            ->createOmsConditionChecker()
-            ->isPaymentAuthorized($orderItemEntity);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrderItem $orderItemEntity
-     *
-     * @return bool
-     */
-    public function isPaymentAuthorizationFailed(SpySalesOrderItem $orderItemEntity): bool
-    {
-        return $this->getFactory()
-            ->createOmsConditionChecker()
-            ->isPaymentAuthorizationFailed($orderItemEntity);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrderItem $orderItemEntity
-     *
-     * @return bool
-     */
-    public function isPaymentCaptured(SpySalesOrderItem $orderItemEntity): bool
-    {
-        return $this->getFactory()
-            ->createOmsConditionChecker()
-            ->isPaymentCaptured($orderItemEntity);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     *
-     * @param \Generated\Shared\Transfer\StripeWebhookPayloadTransfer $webhookPayloadTransfer
-     *
-     * @return \Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer
-     */
-    public function processWebhook(
-        StripeWebhookPayloadTransfer $webhookPayloadTransfer
-    ): StripeWebhookProcessResponseTransfer {
-        return $this->getFactory()
-            ->createNotificationProcessor()
-            ->processWebhook($webhookPayloadTransfer);
+            ->createMerchantOnboardingUrlGenerator()
+            ->generateOnboardingUrl($merchantReference);
     }
 }

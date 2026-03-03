@@ -7,160 +7,104 @@
 
 namespace SprykerEco\Zed\Stripe\Business;
 
-use Generated\Shared\Transfer\CheckoutResponseTransfer;
+use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentMethodsTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\SaveOrderTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
-use Orm\Zed\Sales\Persistence\SpySalesOrder;
-use Orm\Zed\Sales\Persistence\SpySalesOrderItem;
 
 interface StripeFacadeInterface
 {
     /**
      * Specification:
-     * - Saves payment data during checkout order save phase.
-     * - Creates records in spy_stripe and spy_stripe_order_item tables.
+     * - Verifies Stripe webhook signature.
+     * - Parses the event and writes the corresponding status to `spy_payment_app_payment_status` via PaymentAppFacade.
+     * - For `account.updated` (marketplace): delegates to MerchantOnboardingHandler.
      *
      * @api
-     *
-     * @param \Generated\Shared\Transfer\QuoteTransfer $quoteTransfer
-     * @param \Generated\Shared\Transfer\SaveOrderTransfer $saveOrderTransfer
-     *
-     * @return void
      */
-    public function saveOrderPayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void;
+    public function processWebhook(StripeWebhookPayloadTransfer $webhookPayloadTransfer): StripeWebhookProcessResponseTransfer;
 
     /**
      * Specification:
-     * - Executes post-save checkout hook.
-     * - Typically triggers payment authorization for the order.
+     * - Creates a Stripe PaymentIntent for the given quote.
+     * - Returns the client secret and transaction ID needed by Stripe Elements JS.
      *
      * @api
-     *
-     * @param \Generated\Shared\Transfer\QuoteTransfer $quoteTransfer
-     * @param \Generated\Shared\Transfer\CheckoutResponseTransfer $checkoutResponseTransfer
-     *
-     * @return void
      */
-    public function executePostSaveHook(QuoteTransfer $quoteTransfer, CheckoutResponseTransfer $checkoutResponseTransfer): void;
+    public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer;
 
     /**
      * Specification:
-     * - Filters available payment methods based on quote data and business rules.
-     *  - Communicates with payment provider via PaymentMethodAdapter.
+     * - Persists a `spy_stripe_payment` record linking the order to the Stripe PaymentIntent.
+     * - Called from StripeCheckoutDoSaveOrderPlugin during order save.
      *
      * @api
-     *
-     * @param \Generated\Shared\Transfer\PaymentMethodsTransfer $paymentMethodsTransfer
-     * @param \Generated\Shared\Transfer\QuoteTransfer $quoteTransfer
-     *
-     * @return \Generated\Shared\Transfer\PaymentMethodsTransfer
      */
-    public function filterPaymentMethods(
-        PaymentMethodsTransfer $paymentMethodsTransfer,
-        QuoteTransfer $quoteTransfer,
-    ): PaymentMethodsTransfer;
+    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void;
 
     /**
      * Specification:
-     * - Executes payment authorization command.
-     * - Called by OMS AuthorizePlugin during order processing.
-     * - Communicates with payment provider via AuthorizeAdapter.
+     * - Verifies the Stripe PaymentIntent is in an authorized state.
+     * - Authorization itself happens client-side; this step confirms the result.
+     * - Called from StripeAuthorizeCommandPlugin or StripeCheckoutPostSavePlugin.
+     * - Does NOT write payment status — status is set via webhook.
      *
      * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
      */
-    public function executeAuthorizeCommand(SpySalesOrder $orderEntity, array $orderItems): void;
+    public function authorizePayment(OrderTransfer $orderTransfer): void;
 
     /**
      * Specification:
-     * - Executes payment capture command.
-     * - Called by OMS CapturePlugin to capture authorized funds.
-     * - Communicates with payment provider via CaptureAdapter.
+     * - Captures a previously authorized Stripe PaymentIntent.
+     * - Called from StripeCaptureCommandPlugin.
+     * - Does NOT write payment status — status is set via webhook.
      *
      * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
      */
-    public function executeCaptureCommand(SpySalesOrder $orderEntity, array $orderItems): void;
+    public function capturePayment(OrderTransfer $orderTransfer): void;
 
     /**
      * Specification:
-     * - Executes payment cancellation command.
-     * - Called by OMS CancelPlugin to cancel authorized but not captured payment.
-     * - Communicates with payment provider via CancelAdapter.
+     * - Cancels (voids) a Stripe PaymentIntent.
+     * - Called from StripeCancelCommandPlugin.
+     * - Does NOT write payment status — status is set via webhook.
      *
      * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
      */
-    public function executeCancelCommand(SpySalesOrder $orderEntity, array $orderItems): void;
+    public function cancelPayment(OrderTransfer $orderTransfer): void;
 
     /**
      * Specification:
-     * - Checks if payment is authorized.
-     * - Called by OMS IsAuthorizedPlugin condition.
+     * - Creates a Stripe Refund for the given order items.
+     * - Refund amount is the sum of priceToPayAggregation for each item.
+     * - Called from StripeRefundCommandPlugin.
+     * - Does NOT write payment status — status is set via webhook.
      *
      * @api
      *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrderItem $orderItemEntity
-     *
-     * @return bool
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function isPaymentAuthorized(SpySalesOrderItem $orderItemEntity): bool;
+    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems): void;
 
     /**
      * Specification:
-     * - Checks if payment authorization failed.
-     * - Called by OMS IsAuthorizationFailedPlugin condition.
+     * - Filters the available payment methods to only include Stripe.
+     * - Called from StripePaymentMethodFilterPlugin.
      *
      * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrderItem $orderItemEntity
-     *
-     * @return bool
      */
-    public function isPaymentAuthorizationFailed(SpySalesOrderItem $orderItemEntity): bool;
+    public function filterPaymentMethods(PaymentMethodsTransfer $paymentMethodsTransfer, QuoteTransfer $quoteTransfer): PaymentMethodsTransfer;
 
     /**
      * Specification:
-     * - Checks if payment is captured.
-     * - Called by OMS IsCapturedPlugin condition.
+     * - Generates a Stripe Connect onboarding URL for the given merchant (marketplace only).
+     * - Creates a Stripe connected account if one does not exist yet.
+     * - Saves the stripe_account_id to spy_stripe_merchant.
      *
      * @api
-     *
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrderItem $orderItemEntity
-     *
-     * @return bool
      */
-    public function isPaymentCaptured(SpySalesOrderItem $orderItemEntity): bool;
-
-    /**
-     * Specification:
-     * - Processes incoming webhook notification from payment service provider.
-     * - Saves webhook payload to database for audit trail.
-     * - Updates payment status based on webhook data.
-     * - Optionally triggers OMS state machine transitions.
-     *
-     * @api
-     *
-     * @param \Generated\Shared\Transfer\StripeWebhookPayloadTransfer $webhookPayloadTransfer
-     *
-     * @return \Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer
-     */
-    public function processWebhook(
-        StripeWebhookPayloadTransfer $webhookPayloadTransfer,
-    ): StripeWebhookProcessResponseTransfer;
+    public function generateMerchantOnboardingUrl(string $merchantReference): string;
 }

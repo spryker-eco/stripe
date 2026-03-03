@@ -7,10 +7,7 @@
 
 namespace SprykerEco\Zed\Stripe\Communication;
 
-use SprykerEco\Zed\Calculation\Business\CalculationFacadeInterface;
-use SprykerEco\Zed\Kernel\Communication\AbstractCommunicationFactory;
-use SprykerEco\Zed\Sales\Business\SalesFacadeInterface;
-use SprykerEco\Zed\Stripe\StripeDependencyProvider;
+use Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory;
 
 /**
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
@@ -20,13 +17,4 @@ use SprykerEco\Zed\Stripe\StripeDependencyProvider;
  */
 class StripeCommunicationFactory extends AbstractCommunicationFactory
 {
-    public function getCalculationFacade(): CalculationFacadeInterface
-    {
-        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_CALCULATION);
-    }
-
-    public function getSalesFacade(): SalesFacadeInterface
-    {
-        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES);
-    }
 }
