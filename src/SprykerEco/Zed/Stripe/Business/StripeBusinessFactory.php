@@ -1,14 +1,14 @@
 <?php
 
 /**
- * MIT License
- * For full license information, please view the LICENSE file that was distributed with this source code.
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
 namespace SprykerEco\Zed\Stripe\Business;
 
-use SprykerEco\Zed\Kernel\Business\AbstractBusinessFactory;
 use SprykerEco\Client\Stripe\StripeClientInterface;
+use SprykerEco\Zed\Kernel\Business\AbstractBusinessFactory;
 use SprykerEco\Zed\Stripe\Business\Notification\NotificationProcessor;
 use SprykerEco\Zed\Stripe\Business\Notification\NotificationProcessorInterface;
 use SprykerEco\Zed\Stripe\Business\Oms\Command\OmsCommandHandler;

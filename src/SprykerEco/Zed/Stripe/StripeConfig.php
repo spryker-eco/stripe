@@ -1,8 +1,8 @@
 <?php
 
 /**
- * MIT License
- * For full license information, please view the LICENSE file that was distributed with this source code.
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
 namespace SprykerEco\Zed\Stripe;
@@ -101,12 +101,12 @@ class StripeConfig extends AbstractBundleConfig
     {
         return [
             Event::PAYMENT_INTENT_AMOUNT_CAPTURABLE_UPDATED, // → authorized
-            Event::PAYMENT_INTENT_SUCCEEDED,                 // → captured
-            Event::PAYMENT_INTENT_PAYMENT_FAILED,            // → capture_failed / keep new (3DS retry)
-            Event::PAYMENT_INTENT_CANCELED,                  // → canceled
-            Event::CHARGE_FAILED,                            // → capture_failed (captured=true)
-            Event::CHARGE_REFUND_UPDATED,                    // → refunded / refund_failed
-            Event::ACCOUNT_UPDATED,                          // marketplace: merchant onboarding status
+            Event::PAYMENT_INTENT_SUCCEEDED, // → captured
+            Event::PAYMENT_INTENT_PAYMENT_FAILED, // → capture_failed / keep new (3DS retry)
+            Event::PAYMENT_INTENT_CANCELED, // → canceled
+            Event::CHARGE_FAILED, // → capture_failed (captured=true)
+            Event::CHARGE_REFUND_UPDATED, // → refunded / refund_failed
+            Event::ACCOUNT_UPDATED, // marketplace: merchant onboarding status
         ];
     }
 }

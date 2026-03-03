@@ -1,15 +1,14 @@
 <?php
 
 /**
- * MIT License
- * For full license information, please view the LICENSE file that was distributed with this source code.
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
 namespace SprykerEco\Client\Stripe;
 
 use GuzzleHttp\Client;
 use SprykerEco\Client\Kernel\AbstractFactory;
-use SprykerEco\Client\ZedRequest\ZedRequestClientInterface;
 use SprykerEco\Client\Stripe\Api\ApiLogger;
 use SprykerEco\Client\Stripe\Api\Authorization\AuthorizationApiRequest;
 use SprykerEco\Client\Stripe\Api\Authorization\AuthorizationMapper;
@@ -21,6 +20,7 @@ use SprykerEco\Client\Stripe\Api\PaymentMethods\PaymentMethodsApiRequest;
 use SprykerEco\Client\Stripe\Api\PaymentMethods\PaymentMethodsMapper;
 use SprykerEco\Client\Stripe\Zed\StripeStub;
 use SprykerEco\Client\Stripe\Zed\StripeStubInterface;
+use SprykerEco\Client\ZedRequest\ZedRequestClientInterface;
 
 /**
  * @method \SprykerEco\Client\Stripe\StripeConfig getConfig()

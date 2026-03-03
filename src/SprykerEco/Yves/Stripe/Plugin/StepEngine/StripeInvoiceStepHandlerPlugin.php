@@ -1,19 +1,19 @@
 <?php
 
 /**
- * MIT License
- * For full license information, please view the LICENSE file that was distributed with this source code.
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
 namespace SprykerEco\Yves\Stripe\Plugin\StepEngine;
 
+use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\StripeInvoiceTransfer;
 use Generated\Shared\Transfer\StripeTransfer;
-use Generated\Shared\Transfer\QuoteTransfer;
 use SprykerEco\Shared\Kernel\Transfer\AbstractTransfer;
+use SprykerEco\Shared\Stripe\StripeConfig;
 use SprykerEco\Yves\Kernel\AbstractPlugin;
 use SprykerEco\Yves\StepEngine\Dependency\Plugin\Handler\StepHandlerPluginInterface;
-use SprykerEco\Shared\Stripe\StripeConfig;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
