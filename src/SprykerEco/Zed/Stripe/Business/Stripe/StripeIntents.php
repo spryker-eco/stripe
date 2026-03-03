@@ -1,0 +1,435 @@
+<?php
+
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
+namespace SprykerEco\Zed\Stripe\Business\Stripe;
+
+use Generated\Shared\Transfer\QuoteTransfer;
+use Generated\Shared\Transfer\StripeCustomerRequestTransfer;
+use Generated\Shared\Transfer\StripeCustomerResponseTransfer;
+use Generated\Shared\Transfer\StripeIntentCaptureRequestTransfer;
+use Generated\Shared\Transfer\StripeIntentCaptureResponseTransfer;
+use Generated\Shared\Transfer\StripeIntentRequestTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Spryker\Shared\Log\LoggerTrait;
+use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
+use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
+use SprykerEco\Zed\Stripe\Business\Stripe\Exception\UnsupportedCountryException;
+use SprykerEco\Zed\Stripe\StripeConfig;
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\ExceptionInterface;
+use Stripe\PaymentIntent;
+
+class StripeIntents
+{
+    use LoggerTrait;
+
+    protected const PAYMENT_METHOD_US_BANK_ACCOUNT = 'pm_1Omdm7JjAXLVbfUvp5FRopNT';
+
+    public function __construct(
+        protected StripeClientFactory $stripeClientFactory,
+        protected StripeCustomers $stripeCustomers,
+        protected StripeConfig $config,
+    ) {
+    }
+
+    public function create(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
+    {
+        $quoteTransfer = $stripeIntentRequestTransfer->getQuoteOrFail();
+        $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
+        $stripeIntentResponseTransfer->setIsSuccessful(false);
+
+        try {
+            $stripeClient = $this->stripeClientFactory->create();
+            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
+
+            $stripeCustomerRequestTransfer = (new StripeCustomerRequestTransfer())->setQuote($quoteTransfer);
+            $stripeCustomerResponseTransfer = $this->stripeCustomers->searchOrCreate($stripeCustomerRequestTransfer);
+
+            $paymentIntentParams = $this->createPaymentIntentParams($quoteTransfer, $stripeCustomerResponseTransfer, $stripeIntentRequestTransfer);
+            $paymentIntentParams = $this->addMetadata($quoteTransfer, $paymentIntentParams);
+
+            $paymentIntent = $stripeClient->paymentIntents->create($paymentIntentParams, $opts);
+
+            if (!$paymentIntent->__isset('id') || $paymentIntent->id === null) {
+                return $stripeIntentResponseTransfer
+                    ->setMessage('Payment Intent creation failed: ID is missing in the response.');
+            }
+
+            if (!$paymentIntent->__isset('client_secret') || $paymentIntent->client_secret === null) {
+                return $stripeIntentResponseTransfer
+                    ->setMessage('Payment Intent creation failed: ClientSecret is missing in the response.');
+            }
+
+            $stripeIntentResponseTransfer->setIsSuccessful(true);
+            $stripeIntentResponseTransfer->setTransactionId($paymentIntent->id);
+            $stripeIntentResponseTransfer->setClientSecret($paymentIntent->client_secret);
+        } catch (ApiErrorException $apiErrorException) {
+            $this->getLogger()->error($apiErrorException, [
+                QuoteTransfer::ORDER_REFERENCE => $quoteTransfer->getOrderReference(),
+                StripeIntentRequestTransfer::TRANSACTION_ID => $stripeIntentRequestTransfer->getTransactionId(),
+            ]);
+
+            $stripeIntentResponseTransfer->setMessage($apiErrorException->getMessage());
+        }
+
+        return $stripeIntentResponseTransfer;
+    }
+
+    public function get(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
+    {
+        $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
+        $stripeIntentResponseTransfer->setIsSuccessful(false);
+
+        $transactionId = $stripeIntentRequestTransfer->getTransactionIdOrFail();
+
+        try {
+            $stripeClient = $this->stripeClientFactory->create();
+            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
+            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, [], $opts);
+
+            $stripeIntentResponseTransfer->setIsSuccessful(true);
+            $stripeIntentResponseTransfer
+                ->setClientSecret($paymentIntent->client_secret)
+                ->setGrandTotal($paymentIntent->amount)
+                ->setCurrencyCode($paymentIntent->currency)
+                ->setStatus($paymentIntent->status);
+
+            $latestCharge = $paymentIntent->offsetExists('latest_charge') ? $paymentIntent->latest_charge : null;
+
+            if ($latestCharge !== null) {
+                $stripeIntentResponseTransfer
+                    ->setLatestChargeId(is_string($latestCharge) ? $latestCharge : $latestCharge->id);
+            }
+        } catch (ExceptionInterface $exception) {
+            $this->getLogger()->error($exception, [
+                StripeIntentRequestTransfer::TRANSACTION_ID => $transactionId,
+            ]);
+        }
+
+        return $stripeIntentResponseTransfer;
+    }
+
+    public function capture(StripeIntentCaptureRequestTransfer $stripeIntentCaptureRequestTransfer): StripeIntentCaptureResponseTransfer
+    {
+        $stripeIntentCaptureResponseTransfer = new StripeIntentCaptureResponseTransfer();
+        $stripeIntentCaptureResponseTransfer->setIsSuccessful(false);
+
+        $transactionId = $stripeIntentCaptureRequestTransfer->getTransactionIdOrFail();
+
+        try {
+            $stripeClient = $this->stripeClientFactory->create();
+            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
+            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, [], $opts);
+
+            // Already succeeded (e.g. Bank Account Payment — auto-captured)
+            if ($paymentIntent->status === 'succeeded') {
+                $stripeIntentCaptureResponseTransfer->setIsSuccessful(true);
+                $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURED);
+
+                $this->getLogger()->info('Payment Intent already succeeded, capture is not applicable.', [
+                    StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $transactionId,
+                ]);
+
+                return $stripeIntentCaptureResponseTransfer;
+            }
+
+            // Only capture when in requires_capture state
+            if ($paymentIntent->status !== 'requires_capture') {
+                $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
+
+                $this->getLogger()->info(
+                    sprintf('Payment Intent is not in a state that allows capture. Current status: `%s`', $paymentIntent->status),
+                    [StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $transactionId],
+                );
+
+                return $stripeIntentCaptureResponseTransfer;
+            }
+
+            $capturePaymentIntent = $stripeClient->paymentIntents->capture($transactionId, null, $opts);
+
+            if (!$capturePaymentIntent->__isset('status') || $capturePaymentIntent->status !== 'succeeded') {
+                $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
+
+                $this->getLogger()->warning('Payment Intent capture failed.', [
+                    StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $transactionId,
+                ]);
+
+                return $stripeIntentCaptureResponseTransfer;
+            }
+
+            // Capture accepted — final status will arrive via payment_intent.succeeded webhook
+            $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_REQUESTED);
+            $stripeIntentCaptureResponseTransfer->setIsSuccessful(true);
+        } catch (ApiErrorException $apiErrorException) {
+            $this->getLogger()->error($apiErrorException, [
+                StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $transactionId,
+            ]);
+
+            $stripeIntentCaptureResponseTransfer->setMessage($apiErrorException->getMessage());
+            $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
+        }
+
+        return $stripeIntentCaptureResponseTransfer;
+    }
+
+    public function cancel(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
+    {
+        $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
+        $stripeIntentResponseTransfer->setIsSuccessful(false);
+
+        $transactionId = $stripeIntentRequestTransfer->getTransactionIdOrFail();
+
+        try {
+            $stripeClient = $this->stripeClientFactory->create();
+            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
+            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, [], $opts);
+
+            if ($paymentIntent->status === 'canceled') {
+                $stripeIntentResponseTransfer->setIsSuccessful(true);
+                $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
+
+                $this->getLogger()->info('Payment Intent already canceled.', [
+                    StripeIntentRequestTransfer::TRANSACTION_ID => $transactionId,
+                ]);
+
+                return $stripeIntentResponseTransfer;
+            }
+
+            if (!$this->canPaymentIntentBeCanceled($paymentIntent)) {
+                $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);
+
+                $this->getLogger()->info(
+                    sprintf('Payment Intent is not in a state that allows cancellation. Current status: `%s`', $paymentIntent->status),
+                    [StripeIntentRequestTransfer::TRANSACTION_ID => $transactionId],
+                );
+
+                return $stripeIntentResponseTransfer;
+            }
+
+            $cancelPaymentIntent = $stripeClient->paymentIntents->cancel($transactionId, null, $opts);
+
+            if (!$cancelPaymentIntent->__isset('status') || $cancelPaymentIntent->status !== 'canceled') {
+                $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);
+
+                $this->getLogger()->warning('Payment Intent cancellation failed.', [
+                    StripeIntentRequestTransfer::TRANSACTION_ID => $transactionId,
+                ]);
+
+                return $stripeIntentResponseTransfer;
+            }
+
+            $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
+            $stripeIntentResponseTransfer->setIsSuccessful(true);
+        } catch (ApiErrorException $apiErrorException) {
+            $this->getLogger()->error($apiErrorException, [
+                StripeIntentRequestTransfer::TRANSACTION_ID => $transactionId,
+            ]);
+
+            $stripeIntentResponseTransfer->setMessage($apiErrorException->getMessage());
+            $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);
+        }
+
+        return $stripeIntentResponseTransfer;
+    }
+
+    protected function canPaymentIntentBeCanceled(PaymentIntent $paymentIntent): bool
+    {
+        if (in_array($paymentIntent->status, ['succeeded', 'captured'])) {
+            return false;
+        }
+
+        if (in_array($paymentIntent->status, ['requires_payment_method', 'requires_capture', 'requires_confirmation', 'requires_action'])) {
+            return true;
+        }
+
+        return $paymentIntent->status === 'processing'
+            && ($paymentIntent->__isset('payment_method') && $paymentIntent->payment_method === static::PAYMENT_METHOD_US_BANK_ACCOUNT);
+    }
+
+    /**
+     * @param array<string, mixed> $paymentIntentParams
+     *
+     * @return array<string, mixed>
+     */
+    protected function addMetadata(QuoteTransfer $quoteTransfer, array $paymentIntentParams): array
+    {
+        $paymentIntentParams['metadata'] = [];
+
+        if ($quoteTransfer->getOrderReference()) {
+            $paymentIntentParams['metadata'][StripeConfig::METADATA_ORDER_REFERENCE] = $quoteTransfer->getOrderReference();
+        }
+
+        if ($quoteTransfer->getAdditionalPaymentData()) {
+            $paymentIntentParams['metadata'] = array_merge(
+                $paymentIntentParams['metadata'],
+                $this->truncateMetadata($quoteTransfer->getAdditionalPaymentData()),
+            );
+        }
+
+        return $paymentIntentParams;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function createPaymentIntentParams(
+        QuoteTransfer $quoteTransfer,
+        StripeCustomerResponseTransfer $stripeCustomerResponseTransfer,
+        StripeIntentRequestTransfer $stripeIntentRequestTransfer,
+    ): array {
+        $description = $quoteTransfer->getOrderReference()
+            ? 'Order Reference: ' . $quoteTransfer->getOrderReference()
+            : 'Pre-Order Payment';
+
+        $config = [
+            'amount' => $quoteTransfer->getGrandTotal(),
+            'currency' => $quoteTransfer->getCurrencyCode(),
+            'description' => $description,
+            'automatic_payment_methods' => ['enabled' => true],
+            'capture_method' => 'automatic',
+        ];
+
+        if (
+            ($quoteTransfer->getShippingZip() || $quoteTransfer->getZip())
+            && ($quoteTransfer->getShippingCity() || $quoteTransfer->getCity())
+            && ($quoteTransfer->getShippingAddress1() || $quoteTransfer->getAddress1())
+        ) {
+            $config['shipping'] = [
+                'name' => trim(($quoteTransfer->getShippingFirstName() ?? $quoteTransfer->getCustomerFirstName()) . ' ' . ($quoteTransfer->getShippingLastName() ?? $quoteTransfer->getCustomerLastName())),
+                'address' => [
+                    'city' => $quoteTransfer->getShippingCity() ?? $quoteTransfer->getCity(),
+                    'country' => $quoteTransfer->getShippingCountryCode() ?? $quoteTransfer->getCountryCode(),
+                    'line1' => $quoteTransfer->getShippingAddress1() ?? $quoteTransfer->getAddress1(),
+                    'line2' => $quoteTransfer->getShippingAddress2() ?? $quoteTransfer->getAddress2(),
+                    'postal_code' => $quoteTransfer->getShippingZip() ?? $quoteTransfer->getZip(),
+                    'state' => $quoteTransfer->getShippingState() ?? $quoteTransfer->getState(),
+                ],
+                'phone' => $quoteTransfer->getShippingPhone() ?? $quoteTransfer->getPhone(),
+            ];
+        }
+
+        if ($stripeCustomerResponseTransfer->getIsSuccessful() && $stripeCustomerResponseTransfer->getCustomerId()) {
+            $config['customer'] = $stripeCustomerResponseTransfer->getCustomerId();
+        }
+
+        $config['payment_method_options'] = [
+            'affirm' => ['capture_method' => 'manual'],
+            'afterpay_clearpay' => ['capture_method' => 'manual'],
+            'amazon_pay' => ['capture_method' => 'manual'],
+            'card' => ['capture_method' => 'manual'],
+            'card_present' => ['capture_method' => 'manual_preferred'],
+            'cashapp' => ['capture_method' => 'manual'],
+            'klarna' => ['capture_method' => 'manual'],
+            'link' => ['capture_method' => 'manual'],
+            'mobilepay' => ['capture_method' => 'manual'],
+            'paypal' => ['capture_method' => 'manual'],
+            'revolut_pay' => ['capture_method' => 'manual'],
+        ];
+
+        // Bank transfer only supported for specific currencies
+        if (!in_array($quoteTransfer->getCurrencyCode(), ['EUR', 'USD', 'GBP', 'MXN', 'JPY'])) {
+            return $config;
+        }
+
+        try {
+            $bankTransferConfig = $this->getBankTransferConfigurationForRegion($quoteTransfer->getCountryCode() ?? '');
+
+            $supportedCurrencies = [
+                'gb_bank_transfer' => ['GBP'],
+                'eu_bank_transfer' => ['EUR'],
+                'us_bank_transfer' => ['USD'],
+                'jp_bank_transfer' => ['JPY'],
+                'mx_bank_transfer' => ['MXN'],
+            ];
+
+            if (!in_array(strtoupper($quoteTransfer->getCurrencyCode() ?? ''), $supportedCurrencies[$bankTransferConfig['type']], true)) {
+                return $config;
+            }
+
+            $config['payment_method_options']['customer_balance'] = [
+                'funding_type' => 'bank_transfer',
+                'bank_transfer' => $bankTransferConfig,
+            ];
+        } catch (UnsupportedCountryException) {
+        }
+
+        return $config;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getBankTransferConfigurationForRegion(string $countryCode): array
+    {
+        $countryCode = strtoupper(trim($countryCode));
+        $region = $this->getRegionFromCountry($countryCode);
+
+        return match ($region) {
+            'gb', 'us', 'mx', 'jp' => ['type' => sprintf('%s_bank_transfer', $region)],
+            default => [
+                'type' => 'eu_bank_transfer',
+                'eu_bank_transfer' => ['country' => $this->getEUSupportedCountryForLocalizedIBAN($countryCode)],
+            ],
+        };
+    }
+
+    /**
+     * @throws \SprykerEco\Zed\Stripe\Business\Stripe\Exception\UnsupportedCountryException
+     */
+    protected function getRegionFromCountry(string $countryCode): string
+    {
+        return match ($countryCode) {
+            'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HU', 'HR', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'CH' => 'eu',
+            'GB' => 'gb',
+            'US' => 'us',
+            'MX' => 'mx',
+            'JP' => 'jp',
+            default => throw new UnsupportedCountryException(sprintf('Country code not supported: %s', $countryCode)),
+        };
+    }
+
+    /**
+     * IBAN is localized to one of BE, DE, ES, FR, IE or NL.
+     *
+     * @see https://stripe.com/docs/payments/bank-transfers/accept-a-payment?platform=web&country=eu&invoices=without#element-create-payment-intent
+     */
+    protected function getEUSupportedCountryForLocalizedIBAN(string $countryCode): string
+    {
+        return match ($countryCode) {
+            'BE', 'DE', 'ES', 'FR', 'IE', 'NL' => $countryCode,
+            default => 'DE',
+        };
+    }
+
+    /**
+     * @param array<string|int, mixed> $additionalPaymentData
+     *
+     * @return array<string|int, mixed>
+     */
+    protected function truncateMetadata(array $additionalPaymentData): array
+    {
+        $truncatedMetadata = [];
+        $additionalPaymentData = array_slice($additionalPaymentData, 0, 50);
+
+        foreach ($additionalPaymentData as $key => $value) {
+            if (is_string($key)) {
+                if (mb_strlen($key) > 40) {
+                    $key = mb_substr($key, 0, 40);
+                }
+                $key = str_replace(['[', ']'], '', $key);
+            }
+
+            if (is_string($value) && mb_strlen($value) > 500) {
+                $value = mb_substr($value, 0, 500);
+            }
+
+            $truncatedMetadata[$key] = $value;
+        }
+
+        return $truncatedMetadata;
+    }
+}
