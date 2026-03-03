@@ -8,11 +8,11 @@
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
 use Generated\Shared\Transfer\OrderTransfer;
-use Generated\Shared\Transfer\StripeIntentRequestTransfer;
+use Generated\Shared\Transfer\StripeIntentCaptureRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
 
-class PaymentAuthorizer
+class PaymentCapturer
 {
     use LoggerTrait;
 
@@ -22,30 +22,30 @@ class PaymentAuthorizer
     ) {
     }
 
-    public function authorizePayment(OrderTransfer $orderTransfer): void
+    public function capturePayment(OrderTransfer $orderTransfer): void
     {
         $stripePaymentTransfer = $this->paymentReader->getPaymentByOrderReference(
             $orderTransfer->getOrderReferenceOrFail(),
         );
 
         if ($stripePaymentTransfer === null || $stripePaymentTransfer->getTransactionId() === null) {
-            $this->getLogger()->warning('PaymentAuthorizer: no payment record or transactionId found', [
+            $this->getLogger()->error('PaymentCapturer: no payment record or transactionId found', [
                 'orderReference' => $orderTransfer->getOrderReference(),
             ]);
 
             return;
         }
 
-        $stripeIntentRequestTransfer = (new StripeIntentRequestTransfer())
+        $stripeIntentCaptureRequestTransfer = (new StripeIntentCaptureRequestTransfer())
             ->setTransactionId($stripePaymentTransfer->getTransactionId());
 
-        $stripeIntentResponseTransfer = $this->stripeIntents->get($stripeIntentRequestTransfer);
+        $stripeIntentCaptureResponseTransfer = $this->stripeIntents->capture($stripeIntentCaptureRequestTransfer);
 
-        if ($stripeIntentResponseTransfer->getIsSuccessful() !== true) {
-            $this->getLogger()->error('PaymentAuthorizer: failed to retrieve payment intent', [
+        if ($stripeIntentCaptureResponseTransfer->getIsSuccessful() !== true) {
+            $this->getLogger()->error('PaymentCapturer: capture failed', [
                 'orderReference' => $orderTransfer->getOrderReference(),
                 'transactionId' => $stripePaymentTransfer->getTransactionId(),
-                'message' => $stripeIntentResponseTransfer->getMessage(),
+                'message' => $stripeIntentCaptureResponseTransfer->getMessage(),
             ]);
         }
     }

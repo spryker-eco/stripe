@@ -7,29 +7,22 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
-use Generated\Shared\Transfer\StripeTransfer;
-use Orm\Zed\Sales\Persistence\SpySalesOrderItem;
+use Generated\Shared\Transfer\StripePaymentTransfer;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
 
-class PaymentReader implements PaymentReaderInterface
+class PaymentReader
 {
-    public function __construct(
-        protected StripeRepositoryInterface $repository,
-    ) {
+    public function __construct(protected StripeRepositoryInterface $repository)
+    {
     }
 
-    public function findPaymentByIdSalesOrder(int $idSalesOrder): ?StripeTransfer
+    public function getPaymentByOrderReference(string $orderReference): ?StripePaymentTransfer
     {
-        return $this->repository->findStripeByIdSalesOrder($idSalesOrder);
+        return $this->repository->findPaymentByOrderReference($orderReference);
     }
 
-    public function findPaymentByOrderItem(SpySalesOrderItem $orderItemEntity): ?StripeTransfer
+    public function getPaymentByTransactionId(string $transactionId): ?StripePaymentTransfer
     {
-        return $this->repository->findStripeByIdSalesOrder($orderItemEntity->getFkSalesOrder());
-    }
-
-    public function findPaymentByProviderReference(string $providerReference): ?StripeTransfer
-    {
-        return $this->repository->findStripeByProviderReference($providerReference);
+        return $this->repository->findPaymentByTransactionId($transactionId);
     }
 }

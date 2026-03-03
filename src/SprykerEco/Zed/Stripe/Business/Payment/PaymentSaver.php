@@ -7,14 +7,15 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
+use Generated\Shared\Transfer\PaymentTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\SaveOrderTransfer;
-use Generated\Shared\Transfer\StripeTransfer;
+use Generated\Shared\Transfer\StripePaymentTransfer;
 use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class PaymentSaver implements PaymentSaverInterface
+class PaymentSaver
 {
     public function __construct(
         protected StripeEntityManagerInterface $entityManager,
@@ -22,45 +23,36 @@ class PaymentSaver implements PaymentSaverInterface
     ) {
     }
 
-    public function saveOrderPayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void
+    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void
     {
-        $paymentTransfer = $quoteTransfer->getPayment();
-        $stripeTransfer = $paymentTransfer->getStripe();
+        $stripePaymentTransfer = (new StripePaymentTransfer())
+            ->setOrderReference($saveOrderTransfer->getOrderReferenceOrFail())
+            ->setFkSalesOrder($saveOrderTransfer->getIdSalesOrderOrFail())
+            ->setAmount($quoteTransfer->getGrandTotal())
+            ->setCurrencyCode($quoteTransfer->getCurrencyCode())
+            ->setBusinessModel($this->config->getBusinessModel())
+            ->setTransactionId($this->resolveTransactionId($quoteTransfer));
 
-        if ($paymentTransfer->getPaymentProvider() !== SharedStripeConfig::PAYMENT_PROVIDER_NAME) {
-            return;
-        }
-
-        $stripeTransfer = $this->createStripeTransfer(
-            $stripeTransfer,
-            $saveOrderTransfer,
-        );
-
-        $stripeTransfer = $this->entityManager->savePayment($stripeTransfer);
-
-        $this->saveOrderItems($stripeTransfer, $saveOrderTransfer);
+        $this->entityManager->createPayment($stripePaymentTransfer);
     }
 
-    protected function createStripeTransfer(
-        StripeTransfer $stripeTransfer,
-        SaveOrderTransfer $saveOrderTransfer,
-    ): StripeTransfer {
-        $stripeTransfer
-            ->setFkSalesOrder($saveOrderTransfer->getIdSalesOrderOrFail());
-
-        return $stripeTransfer;
-    }
-
-    protected function saveOrderItems(
-        StripeTransfer $stripeTransfer,
-        SaveOrderTransfer $saveOrderTransfer,
-    ): void {
-        foreach ($saveOrderTransfer->getOrderItems() as $itemTransfer) {
-            $this->entityManager->savePaymentOrderItem(
-                $stripeTransfer->getIdStripeOrFail(),
-                $itemTransfer->getIdSalesOrderItemOrFail(),
-                $this->config::PAYMENT_STATUS_NEW,
-            );
+    protected function resolveTransactionId(QuoteTransfer $quoteTransfer): ?string
+    {
+        foreach ($quoteTransfer->getPayments() as $paymentTransfer) {
+            if (
+                $paymentTransfer->getPaymentProvider() === SharedStripeConfig::PAYMENT_PROVIDER_NAME
+                && $paymentTransfer->getTransactionId() !== null
+            ) {
+                return $paymentTransfer->getTransactionId();
+            }
         }
+
+        /** @var \Generated\Shared\Transfer\PaymentTransfer|null $payment */
+        $payment = $quoteTransfer->getPayment();
+        if ($payment instanceof PaymentTransfer && $payment->getTransactionId() !== null) {
+            return $payment->getTransactionId();
+        }
+
+        return null;
     }
 }

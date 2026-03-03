@@ -12,7 +12,7 @@ use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
 
-class PaymentAuthorizer
+class PaymentCanceller
 {
     use LoggerTrait;
 
@@ -22,14 +22,14 @@ class PaymentAuthorizer
     ) {
     }
 
-    public function authorizePayment(OrderTransfer $orderTransfer): void
+    public function cancelPayment(OrderTransfer $orderTransfer): void
     {
         $stripePaymentTransfer = $this->paymentReader->getPaymentByOrderReference(
             $orderTransfer->getOrderReferenceOrFail(),
         );
 
         if ($stripePaymentTransfer === null || $stripePaymentTransfer->getTransactionId() === null) {
-            $this->getLogger()->warning('PaymentAuthorizer: no payment record or transactionId found', [
+            $this->getLogger()->error('PaymentCanceller: no payment record or transactionId found', [
                 'orderReference' => $orderTransfer->getOrderReference(),
             ]);
 
@@ -39,10 +39,10 @@ class PaymentAuthorizer
         $stripeIntentRequestTransfer = (new StripeIntentRequestTransfer())
             ->setTransactionId($stripePaymentTransfer->getTransactionId());
 
-        $stripeIntentResponseTransfer = $this->stripeIntents->get($stripeIntentRequestTransfer);
+        $stripeIntentResponseTransfer = $this->stripeIntents->cancel($stripeIntentRequestTransfer);
 
         if ($stripeIntentResponseTransfer->getIsSuccessful() !== true) {
-            $this->getLogger()->error('PaymentAuthorizer: failed to retrieve payment intent', [
+            $this->getLogger()->error('PaymentCanceller: cancel failed', [
                 'orderReference' => $orderTransfer->getOrderReference(),
                 'transactionId' => $stripePaymentTransfer->getTransactionId(),
                 'message' => $stripeIntentResponseTransfer->getMessage(),
