@@ -9,7 +9,7 @@ namespace SprykerEco\Zed\Stripe\Communication\Controller;
 
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
-use SprykerEco\Zed\Kernel\Communication\Controller\AbstractGatewayController;
+use Spryker\Zed\Kernel\Communication\Controller\AbstractGatewayController;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()

@@ -9,7 +9,7 @@ namespace SprykerEco\Client\Stripe\Zed;
 
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
-use SprykerEco\Client\ZedRequest\ZedRequestClientInterface;
+use Spryker\Client\ZedRequest\ZedRequestClientInterface;
 
 class StripeStub implements StripeStubInterface
 {

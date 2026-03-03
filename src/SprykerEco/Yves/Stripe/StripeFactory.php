@@ -7,9 +7,9 @@
 
 namespace SprykerEco\Yves\Stripe;
 
-use SprykerEco\Client\Quote\QuoteClientInterface;
+use Spryker\Client\Quote\QuoteClientInterface;
+use Spryker\Yves\Kernel\AbstractFactory;
 use SprykerEco\Client\Stripe\StripeClientInterface;
-use SprykerEco\Yves\Kernel\AbstractFactory;
 use SprykerEco\Yves\Stripe\Form\DataProvider\StripeCreditCardDataProvider;
 use SprykerEco\Yves\Stripe\Form\DataProvider\StripeInvoiceDataProvider;
 use SprykerEco\Yves\Stripe\Form\StripeCreditCardSubForm;

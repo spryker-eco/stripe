@@ -7,8 +7,8 @@
 
 namespace SprykerEco\Yves\Stripe;
 
-use SprykerEco\Yves\Kernel\AbstractBundleDependencyProvider;
-use SprykerEco\Yves\Kernel\Container;
+use Spryker\Yves\Kernel\AbstractBundleDependencyProvider;
+use Spryker\Yves\Kernel\Container;
 
 /**
  * @method \SprykerEco\Yves\Stripe\StripeConfig getConfig()

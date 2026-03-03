@@ -7,8 +7,8 @@
 
 namespace SprykerEco\Client\Stripe;
 
-use SprykerEco\Client\Kernel\AbstractDependencyProvider;
-use SprykerEco\Client\Kernel\Container;
+use Spryker\Client\Kernel\AbstractDependencyProvider;
+use Spryker\Client\Kernel\Container;
 
 /**
  * @method \SprykerEco\Client\Stripe\StripeConfig getConfig()

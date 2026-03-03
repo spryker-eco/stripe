@@ -7,8 +7,8 @@
 
 namespace SprykerEco\Yves\Stripe\Plugin\Router;
 
-use SprykerEco\Yves\Router\Plugin\RouteProvider\AbstractRouteProviderPlugin;
-use SprykerEco\Yves\Router\Route\RouteCollection;
+use Spryker\Yves\Router\Plugin\RouteProvider\AbstractRouteProviderPlugin;
+use Spryker\Yves\Router\Route\RouteCollection;
 
 class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
 {
