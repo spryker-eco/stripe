@@ -7,31 +7,18 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Oms\Command;
 
-use Orm\Zed\Sales\Persistence\SpySalesOrder;
+use Generated\Shared\Transfer\OrderTransfer;
 
 interface OmsCommandHandlerInterface
 {
-    /**
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
-     */
-    public function executeAuthorizeCommand(SpySalesOrder $orderEntity, array $orderItems): void;
+    public function authorize(OrderTransfer $orderTransfer): void;
+
+    public function capture(OrderTransfer $orderTransfer): void;
+
+    public function cancel(OrderTransfer $orderTransfer): void;
 
     /**
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function executeCaptureCommand(SpySalesOrder $orderEntity, array $orderItems): void;
-
-    /**
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     *
-     * @return void
-     */
-    public function executeCancelCommand(SpySalesOrder $orderEntity, array $orderItems): void;
+    public function refund(OrderTransfer $orderTransfer, array $orderItems): void;
 }

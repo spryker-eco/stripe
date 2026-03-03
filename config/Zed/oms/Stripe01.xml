@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<statemachine
+    xmlns="spryker:oms-01"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="spryker:oms-01 http://static.spryker.com/oms-01.xsd">
+
+    <!-- Auto-capture flow: PaymentIntent is captured immediately on confirmation.
+         No separate capture step needed; OMS waits for IsCaptured webhook. -->
+    <process name="Stripe01" main="true">
+
+        <states>
+            <state name="new" display="oms.state.new"/>
+            <state name="payment pending" reserved="true" display="oms.state.payment-pending"/>
+            <state name="authorization failed" display="oms.state.authorization-failed"/>
+            <state name="captured" reserved="true" display="oms.state.captured"/>
+            <state name="cancelled" display="oms.state.cancelled"/>
+            <state name="refunded" display="oms.state.refunded"/>
+            <state name="refund failed" display="oms.state.refund-failed"/>
+            <state name="shipped" reserved="true" display="oms.state.shipped"/>
+            <state name="delivered" display="oms.state.delivered"/>
+            <state name="closed" display="oms.state.closed"/>
+        </states>
+
+        <transitions>
+            <!-- Checkout → wait for Stripe webhook -->
+            <transition happy="true">
+                <source>new</source>
+                <target>payment pending</target>
+                <event>wait for payment</event>
+            </transition>
+
+            <!-- payment_intent.succeeded → CAPTURED -->
+            <transition happy="true" condition="PaymentApp/IsCaptured">
+                <source>payment pending</source>
+                <target>captured</target>
+            </transition>
+
+            <!-- payment_intent.payment_failed → AUTHORIZATION_FAILED -->
+            <transition condition="PaymentApp/IsAuthorizationFailed">
+                <source>payment pending</source>
+                <target>authorization failed</target>
+            </transition>
+
+            <!-- Cancel before capture -->
+            <transition>
+                <source>payment pending</source>
+                <target>cancelled</target>
+                <event>cancel</event>
+            </transition>
+
+            <!-- Fulfillment -->
+            <transition happy="true">
+                <source>captured</source>
+                <target>shipped</target>
+                <event>ship</event>
+            </transition>
+
+            <transition happy="true">
+                <source>shipped</source>
+                <target>delivered</target>
+                <event>deliver</event>
+            </transition>
+
+            <transition happy="true">
+                <source>delivered</source>
+                <target>closed</target>
+                <event>close</event>
+            </transition>
+
+            <!-- Refund -->
+            <transition>
+                <source>captured</source>
+                <target>refunded</target>
+                <event>refund</event>
+            </transition>
+
+            <transition happy="true" condition="PaymentApp/IsRefunded">
+                <source>refunded</source>
+                <target>refunded</target>
+            </transition>
+
+            <transition condition="PaymentApp/IsRefundFailed">
+                <source>refunded</source>
+                <target>refund failed</target>
+            </transition>
+        </transitions>
+
+        <events>
+            <event name="wait for payment" onEnter="true" timeout="15m"/>
+            <event name="cancel" manual="true" command="Stripe/Cancel"/>
+            <event name="ship" manual="true"/>
+            <event name="deliver" manual="true"/>
+            <event name="close" manual="true"/>
+            <event name="refund" manual="true" command="Stripe/Refund"/>
+        </events>
+
+    </process>
+
+</statemachine>
