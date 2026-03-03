@@ -5,7 +5,7 @@
     "type": "library",
     "require": {
         "php": ">=8.3",
-        "guzzlehttp/guzzle": "^7.10",
+        "stripe/stripe-php": "^13.0",
         "spryker/checkout-extension": "^1.5.0",
         "spryker/kernel": "^3.81.0",
         "spryker/oms": "^11.50.0",
