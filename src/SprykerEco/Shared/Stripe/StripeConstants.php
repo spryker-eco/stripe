@@ -29,4 +29,11 @@ interface StripeConstants
 
     // Environment: 'test'|'live'
     public const string STRIPE_ENVIRONMENT = 'STRIPE:STRIPE_ENVIRONMENT';
+
+    // Marketplace: Merchant Connect onboarding URLs
+    public const string STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL = 'STRIPE:STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL';
+
+    public const string STRIPE_MERCHANT_ONBOARDING_RETURN_URL = 'STRIPE:STRIPE_MERCHANT_ONBOARDING_RETURN_URL';
+
+    public const string STRIPE_MERCHANT_ONBOARDING_REFRESH_URL = 'STRIPE:STRIPE_MERCHANT_ONBOARDING_REFRESH_URL';
 }

@@ -7,6 +7,7 @@
 
 namespace SprykerEco\Zed\Stripe\Business;
 
+use Generated\Shared\Transfer\MerchantAppOnboardingInitializationResponseTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentMethodsTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
@@ -126,10 +127,34 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      */
-    public function generateMerchantOnboardingUrl(string $merchantReference): string
+    public function generateMerchantOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): string
     {
         return $this->getFactory()
             ->createMerchantOnboardingUrlGenerator()
-            ->generateOnboardingUrl($merchantReference);
+            ->generateOnboardingUrl($merchantReference, $returnUrl, $refreshUrl);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function registerMerchantOnboarding(): void
+    {
+        $this->getFactory()
+            ->createMerchantOnboardingRegistrar()
+            ->register();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void
+    {
+        $this->getFactory()
+            ->createPaymentFundsTransfer()
+            ->transfer($orderTransfer, $merchantReference, $amount);
     }
 }

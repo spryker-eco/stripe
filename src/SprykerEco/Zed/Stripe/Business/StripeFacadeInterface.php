@@ -14,6 +14,7 @@ use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
+use Generated\Shared\Transfer\MerchantAppOnboardingInitializationResponseTransfer;
 
 interface StripeFacadeInterface
 {
@@ -103,8 +104,29 @@ interface StripeFacadeInterface
      * - Generates a Stripe Connect onboarding URL for the given merchant (marketplace only).
      * - Creates a Stripe connected account if one does not exist yet.
      * - Saves the stripe_account_id to spy_stripe_merchant.
+     * - Uses returnUrl and refreshUrl as the Stripe account link redirect targets.
      *
      * @api
      */
-    public function generateMerchantOnboardingUrl(string $merchantReference): string;
+    public function generateMerchantOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): string;
+
+    /**
+     * Specification:
+     * - Registers Stripe as ready to support merchant onboarding via MerchantAppFacade.
+     * - Stores onboarding strategy ('redirect') and initialize URL in MerchantApp module.
+     * - Called from StripeMarketplaceInstallerPlugin during setup:init-db.
+     *
+     * @api
+     */
+    public function registerMerchantOnboarding(): void;
+
+    /**
+     * Specification:
+     * - Transfers funds to the merchant's Stripe connected account (marketplace only).
+     * - Reads the payment's latest charge ID and the merchant's Stripe account ID.
+     * - Called from StripeTransferCommandPlugin via OMS command.
+     *
+     * @api
+     */
+    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void;
 }

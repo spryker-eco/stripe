@@ -22,11 +22,14 @@ use SprykerEco\Zed\Stripe\Business\Payment\PaymentMethodFilter;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReader;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentSaver;
+use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingRegistrar;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsTransfer;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountLinks;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccounts;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeCustomers;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfers;
 use SprykerEco\Zed\Stripe\Business\Webhook\WebhookHandler;
 use SprykerEco\Zed\Stripe\StripeDependencyProvider;
 
@@ -182,6 +185,30 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     public function getPaymentAppFacade(): PaymentAppFacadeInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::FACADE_PAYMENT_APP);
+    }
+
+    public function createMerchantOnboardingRegistrar(): MerchantOnboardingRegistrar
+    {
+        return new MerchantOnboardingRegistrar(
+            $this->getMerchantAppFacade(),
+            $this->getConfig(),
+        );
+    }
+
+    public function createPaymentFundsTransfer(): PaymentFundsTransfer
+    {
+        return new PaymentFundsTransfer(
+            $this->createStripeTransfers(),
+            $this->createPaymentReader(),
+            $this->getRepository(),
+        );
+    }
+
+    protected function createStripeTransfers(): StripeTransfers
+    {
+        return new StripeTransfers(
+            $this->createStripeClientFactory(),
+        );
     }
 
     public function getMerchantAppFacade(): MerchantAppFacadeInterface
