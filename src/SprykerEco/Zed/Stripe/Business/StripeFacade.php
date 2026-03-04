@@ -7,7 +7,6 @@
 
 namespace SprykerEco\Zed\Stripe\Business;
 
-use Generated\Shared\Transfer\MerchantAppOnboardingInitializationResponseTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentMethodsTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;

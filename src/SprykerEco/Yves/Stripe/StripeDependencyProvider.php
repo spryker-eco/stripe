@@ -28,6 +28,7 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
     protected function addStripeClient(Container $container): Container
     {
         $container->set(static::CLIENT_STRIPE, function (Container $container) {
+            /** @phpstan-ignore method.notFound */
             return $container->getLocator()->stripe()->client();
         });
 

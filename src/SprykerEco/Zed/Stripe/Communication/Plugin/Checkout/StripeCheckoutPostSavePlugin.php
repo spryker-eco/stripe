@@ -10,8 +10,8 @@ namespace SprykerEco\Zed\Stripe\Communication\Plugin\Checkout;
 use Generated\Shared\Transfer\CheckoutResponseTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
-use SprykerEco\Zed\CheckoutExtension\Dependency\Plugin\CheckoutPostSaveInterface;
-use SprykerEco\Zed\Kernel\Communication\AbstractPlugin;
+use Spryker\Zed\CheckoutExtension\Dependency\Plugin\CheckoutPostSaveInterface;
+use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()

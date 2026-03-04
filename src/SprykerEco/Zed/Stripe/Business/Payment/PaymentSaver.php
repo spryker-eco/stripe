@@ -28,8 +28,8 @@ class PaymentSaver
         $stripePaymentTransfer = (new StripePaymentTransfer())
             ->setOrderReference($saveOrderTransfer->getOrderReferenceOrFail())
             ->setFkSalesOrder($saveOrderTransfer->getIdSalesOrderOrFail())
-            ->setAmount($quoteTransfer->getGrandTotal())
-            ->setCurrencyCode($quoteTransfer->getCurrencyCode())
+            ->setAmount($quoteTransfer->getTotals() !== null ? $quoteTransfer->getTotals()->getGrandTotal() : null)
+            ->setCurrencyCode($quoteTransfer->getCurrency() !== null ? $quoteTransfer->getCurrency()->getCode() : null)
             ->setBusinessModel($this->config->getBusinessModel())
             ->setTransactionId($this->resolveTransactionId($quoteTransfer));
 
@@ -41,16 +41,17 @@ class PaymentSaver
         foreach ($quoteTransfer->getPayments() as $paymentTransfer) {
             if (
                 $paymentTransfer->getPaymentProvider() === SharedStripeConfig::PAYMENT_PROVIDER_NAME
-                && $paymentTransfer->getTransactionId() !== null
+                && $paymentTransfer->getStripe() !== null
+                && $paymentTransfer->getStripe()->getTransactionId() !== null
             ) {
-                return $paymentTransfer->getTransactionId();
+                return $paymentTransfer->getStripe()->getTransactionId();
             }
         }
 
         /** @var \Generated\Shared\Transfer\PaymentTransfer|null $payment */
         $payment = $quoteTransfer->getPayment();
-        if ($payment instanceof PaymentTransfer && $payment->getTransactionId() !== null) {
-            return $payment->getTransactionId();
+        if ($payment instanceof PaymentTransfer && $payment->getStripe() !== null && $payment->getStripe()->getTransactionId() !== null) {
+            return $payment->getStripe()->getTransactionId();
         }
 
         return null;

@@ -9,7 +9,7 @@ namespace SprykerEco\Zed\Stripe\Persistence;
 
 use Generated\Shared\Transfer\StripeMerchantTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
-use SprykerEco\Zed\Kernel\Persistence\AbstractRepository;
+use Spryker\Zed\Kernel\Persistence\AbstractRepository;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Persistence\StripePersistenceFactory getFactory()

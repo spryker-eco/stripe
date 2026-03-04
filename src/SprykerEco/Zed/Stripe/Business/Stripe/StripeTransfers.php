@@ -67,7 +67,7 @@ class StripeTransfers
             'metadata' => $stripeTransmissionRequestTransfer->getMetadata(),
         ];
 
-        if ($transferData['amount'] >= 0) {
+        if ((int)$transferData['amount'] >= 0) {
             return $stripeClient->transfers->create($transferData);
         }
 
@@ -75,7 +75,7 @@ class StripeTransfers
             throw new ReverseTransferWithoutPreviousMadeTransferException(MessageBuilder::transferReversalDoesNotHaveAPreviousMadeTransfer());
         }
 
-        $amount = abs($transferData['amount']);
+        $amount = abs((int)$transferData['amount']);
 
         return $stripeClient->transfers->createReversal(
             $stripeTransmissionRequestTransfer->getTransferIdOrFail(),

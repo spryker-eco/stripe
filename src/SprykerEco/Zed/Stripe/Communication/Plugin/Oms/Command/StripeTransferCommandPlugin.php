@@ -9,9 +9,9 @@ namespace SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command;
 
 use Generated\Shared\Transfer\OrderTransfer;
 use Orm\Zed\Sales\Persistence\SpySalesOrder;
-use SprykerEco\Zed\Kernel\Communication\AbstractPlugin;
 use Spryker\Zed\Oms\Business\Util\ReadOnlyArrayObject;
 use Spryker\Zed\Oms\Dependency\Plugin\Command\CommandByOrderInterface;
+use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 
 /**
  * Transfers captured funds to each merchant's Stripe connected account (marketplace only).
@@ -66,7 +66,7 @@ class StripeTransferCommandPlugin extends AbstractPlugin implements CommandByOrd
             }
 
             $amountsByMerchant[$merchantReference] = ($amountsByMerchant[$merchantReference] ?? 0)
-                + (int)$orderItem->getSumPriceToPayAggregation();
+                + (int)$orderItem->getPriceToPayAggregation();
         }
 
         return $amountsByMerchant;

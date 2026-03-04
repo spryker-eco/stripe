@@ -40,7 +40,7 @@ class StripeFormDataProvider implements StepEngineFormDataProviderInterface
      */
     public function getOptions(AbstractTransfer $dataTransfer): array
     {
-        $additionalPaymentData = (array)$dataTransfer->getAdditionalPaymentData();
+        $additionalPaymentData = (array)$dataTransfer->getPayment()?->getAdditionalPaymentData();
 
         return [
             'stripePublishableKey' => $additionalPaymentData['publishableKey'] ?? '',

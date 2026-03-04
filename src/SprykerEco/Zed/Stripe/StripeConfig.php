@@ -8,7 +8,7 @@
 namespace SprykerEco\Zed\Stripe;
 
 use SprykerEco\Shared\Stripe\StripeConstants;
-use SprykerEco\Zed\Kernel\AbstractBundleConfig;
+use Spryker\Zed\Kernel\AbstractBundleConfig;
 use Stripe\Event;
 
 class StripeConfig extends AbstractBundleConfig

@@ -7,8 +7,8 @@
 
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Installer;
 
+use Spryker\Zed\InstallerExtension\Dependency\Plugin\InstallerPluginInterface;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
-use Spryker\Zed\Installer\Dependency\Plugin\InstallerPluginInterface;
 
 /**
  * Registers Stripe as a merchant onboarding provider in the MerchantApp module.
@@ -28,7 +28,7 @@ class StripeMarketplaceInstallerPlugin extends AbstractPlugin implements Install
      *
      * @api
      */
-    public function runInstaller(): void
+    public function install(): void
     {
         $this->getFacade()->registerMerchantOnboarding();
     }

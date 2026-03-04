@@ -37,7 +37,7 @@ class PaymentFundsTransfer
     {
         $orderReference = $orderTransfer->getOrderReferenceOrFail();
 
-        $payment = $this->paymentReader->findPaymentByOrderReference($orderReference);
+        $payment = $this->paymentReader->getPaymentByOrderReference($orderReference);
         if ($payment === null || $payment->getLatestChargeId() === null) {
             $this->getLogger()->warning('Cannot transfer funds: no payment or charge ID found', [
                 'orderReference' => $orderReference,

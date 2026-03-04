@@ -14,7 +14,6 @@ use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
-use Generated\Shared\Transfer\MerchantAppOnboardingInitializationResponseTransfer;
 
 interface StripeFacadeInterface
 {

@@ -21,7 +21,7 @@ class PaymentMethodFilter
         $filteredMethods = new ArrayObject();
 
         foreach ($paymentMethodsTransfer->getMethods() as $paymentMethodTransfer) {
-            if ($paymentMethodTransfer->getPaymentProviderName() === SharedStripeConfig::PAYMENT_PROVIDER_NAME) {
+            if ($paymentMethodTransfer->getGroupName() === SharedStripeConfig::PAYMENT_PROVIDER_NAME) {
                 $filteredMethods->append($paymentMethodTransfer);
             }
         }

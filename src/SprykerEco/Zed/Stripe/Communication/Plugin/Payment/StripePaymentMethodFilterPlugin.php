@@ -9,8 +9,8 @@ namespace SprykerEco\Zed\Stripe\Communication\Plugin\Payment;
 
 use Generated\Shared\Transfer\PaymentMethodsTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
-use SprykerEco\Zed\Kernel\Communication\AbstractPlugin;
-use SprykerEco\Zed\PaymentExtension\Dependency\Plugin\PaymentMethodFilterPluginInterface;
+use Spryker\Zed\Kernel\Communication\AbstractPlugin;
+use Spryker\Zed\PaymentExtension\Dependency\Plugin\PaymentMethodFilterPluginInterface;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()

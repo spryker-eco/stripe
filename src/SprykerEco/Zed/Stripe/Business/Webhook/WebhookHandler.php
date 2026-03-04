@@ -58,7 +58,7 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response;
         }
 
-        if ($event->object !== 'event' || $event->type === null) {
+        if ($event->object !== 'event') {
             return $response->setMessage('Webhook request must be a Stripe event.');
         }
 
@@ -78,7 +78,7 @@ class WebhookHandler implements WebhookHandlerInterface
         Event $event,
     ): StripeWebhookProcessResponseTransfer {
         /** @var \Stripe\PaymentIntent $paymentIntent */
-        $paymentIntent = $event->data->object;
+        $paymentIntent = $event->data->offsetGet('object');
 
         if ($paymentIntent->status !== 'requires_capture') {
             return $response->setIsSuccessful(true);
@@ -106,7 +106,7 @@ class WebhookHandler implements WebhookHandlerInterface
         Event $event,
     ): StripeWebhookProcessResponseTransfer {
         /** @var \Stripe\PaymentIntent $paymentIntent */
-        $paymentIntent = $event->data->object;
+        $paymentIntent = $event->data->offsetGet('object');
         $orderReference = $paymentIntent->metadata[StripeConfig::METADATA_ORDER_REFERENCE] ?? null;
 
         if ($orderReference === null) {
@@ -129,7 +129,7 @@ class WebhookHandler implements WebhookHandlerInterface
         Event $event,
     ): StripeWebhookProcessResponseTransfer {
         /** @var \Stripe\PaymentIntent $paymentIntent */
-        $paymentIntent = $event->data->object;
+        $paymentIntent = $event->data->offsetGet('object');
         $orderReference = $paymentIntent->metadata[StripeConfig::METADATA_ORDER_REFERENCE] ?? null;
 
         if ($orderReference === null) {
@@ -156,8 +156,7 @@ class WebhookHandler implements WebhookHandlerInterface
         StripeWebhookProcessResponseTransfer $response,
         Event $event,
     ): StripeWebhookProcessResponseTransfer {
-        /** @var \Stripe\Charge $charge */
-        $charge = $event->data->object;
+        $charge = $event->data->offsetGet('object');
 
         if (!($charge instanceof Charge) || !$charge->captured) {
             // Charge failed before capture — treat as authorization failure handled by payment_intent.payment_failed
@@ -191,13 +190,13 @@ class WebhookHandler implements WebhookHandlerInterface
         StripeWebhookProcessResponseTransfer $response,
         Event $event,
     ): StripeWebhookProcessResponseTransfer {
-        $refund = $event->data->object;
+        $refund = $event->data->offsetGet('object');
         $refundStatus = $refund->status ?? null;
 
         $chargeId = is_string($refund->charge) ? $refund->charge : $refund->charge?->id;
         $paymentIntentId = is_string($refund->payment_intent ?? null)
             ? $refund->payment_intent
-            : ($refund->payment_intent?->id ?? null);
+            : $refund->payment_intent?->id;
 
         $orderReference = $this->resolveOrderReferenceFromPaymentIntentId($paymentIntentId);
 
@@ -257,7 +256,7 @@ class WebhookHandler implements WebhookHandlerInterface
                 ->setOrderReferences([$orderReference]),
         );
 
-        foreach ($statusCollection->getStatuses() as $statusTransfer) {
+        foreach ($statusCollection->getPaymentAppPaymentStates() as $statusTransfer) {
             if ($statusTransfer->getStatus() !== SharedStripeConfig::PAYMENT_STATUS_NEW) {
                 return false;
             }

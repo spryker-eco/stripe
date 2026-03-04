@@ -32,8 +32,7 @@ class MerchantOnboardingHandler
         StripeWebhookProcessResponseTransfer $response,
         Event $event,
     ): StripeWebhookProcessResponseTransfer {
-        /** @var \Stripe\Account $account */
-        $account = $event->data->object;
+        $account = $event->data->offsetGet('object');
 
         if (!($account instanceof Account)) {
             return $response->setIsSuccessful(true);

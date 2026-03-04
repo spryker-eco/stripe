@@ -54,7 +54,7 @@ class StripeIntents
 
             $paymentIntent = $stripeClient->paymentIntents->create($paymentIntentParams, $opts);
 
-            if (!$paymentIntent->__isset('id') || $paymentIntent->id === null) {
+            if (!$paymentIntent->__isset('id')) {
                 return $stripeIntentResponseTransfer
                     ->setMessage('Payment Intent creation failed: ID is missing in the response.');
             }
@@ -263,10 +263,11 @@ class StripeIntents
             $paymentIntentParams['metadata'][StripeConfig::METADATA_ORDER_REFERENCE] = $quoteTransfer->getOrderReference();
         }
 
-        if ($quoteTransfer->getAdditionalPaymentData()) {
+        $additionalPaymentData = $quoteTransfer->getPayment()?->getAdditionalPaymentData();
+        if ($additionalPaymentData) {
             $paymentIntentParams['metadata'] = array_merge(
                 $paymentIntentParams['metadata'],
-                $this->truncateMetadata($quoteTransfer->getAdditionalPaymentData()),
+                $this->truncateMetadata($additionalPaymentData),
             );
         }
 
@@ -286,29 +287,35 @@ class StripeIntents
             : 'Pre-Order Payment';
 
         $config = [
-            'amount' => $quoteTransfer->getGrandTotal(),
-            'currency' => $quoteTransfer->getCurrencyCode(),
+            'amount' => $quoteTransfer->getTotals()?->getGrandTotal(),
+            'currency' => $quoteTransfer->getCurrency()?->getCode(),
             'description' => $description,
             'automatic_payment_methods' => ['enabled' => true],
             'capture_method' => 'automatic',
         ];
 
-        if (
-            ($quoteTransfer->getShippingZip() || $quoteTransfer->getZip())
-            && ($quoteTransfer->getShippingCity() || $quoteTransfer->getCity())
-            && ($quoteTransfer->getShippingAddress1() || $quoteTransfer->getAddress1())
-        ) {
+        $shippingAddress = $quoteTransfer->getShippingAddress();
+        $billingAddress = $quoteTransfer->getBillingAddress();
+        $zip = $shippingAddress?->getZipCode() ?? $billingAddress?->getZipCode();
+        $city = $shippingAddress?->getCity() ?? $billingAddress?->getCity();
+        $address1 = $shippingAddress?->getAddress1() ?? $billingAddress?->getAddress1();
+
+        if ($zip !== null && $city !== null && $address1 !== null) {
+            $firstName = $shippingAddress?->getFirstName() ?? $billingAddress?->getFirstName() ?? $quoteTransfer->getCustomer()?->getFirstName();
+            $lastName = $shippingAddress?->getLastName() ?? $billingAddress?->getLastName() ?? $quoteTransfer->getCustomer()?->getLastName();
+            $countryIso = $shippingAddress?->getCountry()?->getIso2Code() ?? $billingAddress?->getCountry()?->getIso2Code();
+
             $config['shipping'] = [
-                'name' => trim(($quoteTransfer->getShippingFirstName() ?? $quoteTransfer->getCustomerFirstName()) . ' ' . ($quoteTransfer->getShippingLastName() ?? $quoteTransfer->getCustomerLastName())),
+                'name' => trim(($firstName ?? '') . ' ' . ($lastName ?? '')),
                 'address' => [
-                    'city' => $quoteTransfer->getShippingCity() ?? $quoteTransfer->getCity(),
-                    'country' => $quoteTransfer->getShippingCountryCode() ?? $quoteTransfer->getCountryCode(),
-                    'line1' => $quoteTransfer->getShippingAddress1() ?? $quoteTransfer->getAddress1(),
-                    'line2' => $quoteTransfer->getShippingAddress2() ?? $quoteTransfer->getAddress2(),
-                    'postal_code' => $quoteTransfer->getShippingZip() ?? $quoteTransfer->getZip(),
-                    'state' => $quoteTransfer->getShippingState() ?? $quoteTransfer->getState(),
+                    'city' => $city,
+                    'country' => $countryIso,
+                    'line1' => $address1,
+                    'line2' => $shippingAddress?->getAddress2() ?? $billingAddress?->getAddress2(),
+                    'postal_code' => $zip,
+                    'state' => $shippingAddress?->getState() ?? $billingAddress?->getState(),
                 ],
-                'phone' => $quoteTransfer->getShippingPhone() ?? $quoteTransfer->getPhone(),
+                'phone' => $shippingAddress?->getPhone() ?? $billingAddress?->getPhone(),
             ];
         }
 
@@ -330,13 +337,16 @@ class StripeIntents
             'revolut_pay' => ['capture_method' => 'manual'],
         ];
 
+        $currencyCode = $quoteTransfer->getCurrency()?->getCode();
+        $countryCode = $shippingAddress?->getCountry()?->getIso2Code() ?? $billingAddress?->getCountry()?->getIso2Code();
+
         // Bank transfer only supported for specific currencies
-        if (!in_array($quoteTransfer->getCurrencyCode(), ['EUR', 'USD', 'GBP', 'MXN', 'JPY'])) {
+        if (!in_array($currencyCode, ['EUR', 'USD', 'GBP', 'MXN', 'JPY'])) {
             return $config;
         }
 
         try {
-            $bankTransferConfig = $this->getBankTransferConfigurationForRegion($quoteTransfer->getCountryCode() ?? '');
+            $bankTransferConfig = $this->getBankTransferConfigurationForRegion($countryCode ?? '');
 
             $supportedCurrencies = [
                 'gb_bank_transfer' => ['GBP'],
@@ -346,7 +356,7 @@ class StripeIntents
                 'mx_bank_transfer' => ['MXN'],
             ];
 
-            if (!in_array(strtoupper($quoteTransfer->getCurrencyCode() ?? ''), $supportedCurrencies[$bankTransferConfig['type']], true)) {
+            if (!in_array(strtoupper($currencyCode ?? ''), $supportedCurrencies[$bankTransferConfig['type']], true)) {
                 return $config;
             }
 

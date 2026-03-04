@@ -9,7 +9,7 @@ namespace SprykerEco\Zed\Stripe\Communication\Controller;
 
 use Generated\Shared\Transfer\MerchantAppOnboardingInitializationRequestTransfer;
 use Generated\Shared\Transfer\MerchantAppOnboardingInitializationResponseTransfer;
-use SprykerEco\Zed\Kernel\Communication\Controller\AbstractController;
+use Spryker\Zed\Kernel\Communication\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
  * @method \SprykerEco\Zed\Stripe\Communication\StripeCommunicationFactory getFactory()
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
+ * @method \SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface getRepository()
  */
 class OnboardingController extends AbstractController
 {

@@ -30,7 +30,7 @@ class StripeCustomers
         $quoteTransfer = $stripeCustomerRequestTransfer->getQuoteOrFail();
 
         // Bank Account payments require a customer record. Without an email we skip customer creation.
-        if (!$quoteTransfer->getCustomerEmail()) {
+        if (!$quoteTransfer->getCustomer()?->getEmail()) {
             return $stripeCustomerResponseTransfer;
         }
 
@@ -39,7 +39,7 @@ class StripeCustomers
             $opts = $this->stripeClientFactory->getConnectedAccountOpts();
 
             $searchResult = $stripeClient->customers->search([
-                'query' => sprintf('email: "%s"', $quoteTransfer->getCustomerEmailOrFail()),
+                'query' => sprintf('email: "%s"', $quoteTransfer->getCustomerOrFail()->getEmailOrFail()),
             ], $opts);
 
             if ($searchResult->count() === 0) {
@@ -74,8 +74,8 @@ class StripeCustomers
 
             $customer = $stripeClient->customers->create(
                 [
-                    'name' => sprintf('%s %s', $quoteTransfer->getCustomerFirstName(), $quoteTransfer->getCustomerLastName()),
-                    'email' => $quoteTransfer->getCustomerEmailOrFail(),
+                    'name' => sprintf('%s %s', $quoteTransfer->getCustomer()?->getFirstName(), $quoteTransfer->getCustomer()?->getLastName()),
+                    'email' => $quoteTransfer->getCustomerOrFail()->getEmailOrFail(),
                     'metadata' => [
                         QuoteTransfer::CUSTOMER_REFERENCE => $quoteTransfer->getCustomerReference(),
                     ],

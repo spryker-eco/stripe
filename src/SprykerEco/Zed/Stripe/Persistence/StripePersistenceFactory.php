@@ -9,7 +9,7 @@ namespace SprykerEco\Zed\Stripe\Persistence;
 
 use Orm\Zed\Stripe\Persistence\SpyStripeMerchantQuery;
 use Orm\Zed\Stripe\Persistence\SpyStripePaymentQuery;
-use SprykerEco\Zed\Kernel\Persistence\AbstractPersistenceFactory;
+use Spryker\Zed\Kernel\Persistence\AbstractPersistenceFactory;
 use SprykerEco\Zed\Stripe\Persistence\Propel\Mapper\StripePaymentMapper;
 
 /**

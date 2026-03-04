@@ -71,7 +71,7 @@ class StripeRefunds
         Refund $stripeRefund,
         StripeRefundResponseTransfer $stripeRefundResponseTransfer,
     ): StripeRefundResponseTransfer {
-        if (!$stripeRefund->__isset('id') || $stripeRefund->id === null) {
+        if (!$stripeRefund->__isset('id')) {
             return $stripeRefundResponseTransfer->setIsSuccessful(false)
                 ->setMessage('Payment Refund creation failed: ID is missing in the response.');
         }
