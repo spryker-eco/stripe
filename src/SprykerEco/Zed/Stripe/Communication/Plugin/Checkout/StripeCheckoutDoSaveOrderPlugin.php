@@ -21,9 +21,8 @@ class StripeCheckoutDoSaveOrderPlugin extends AbstractPlugin implements Checkout
 {
     /**
      * {@inheritDoc}
-     * - Saves payment data to database after order is created.
-     * - Creates payment record in spy_stripe table.
-     * - Creates payment-item mapping records.
+     * - Persists a spy_stripe_payment row linking the order to the Stripe PaymentIntent.
+     * - Reads the transactionId from quoteTransfer->getPayment()->getStripe()->getTransactionId().
      *
      * @api
      *
@@ -34,6 +33,6 @@ class StripeCheckoutDoSaveOrderPlugin extends AbstractPlugin implements Checkout
      */
     public function saveOrder(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void
     {
-        $this->getFacade()->saveOrderPayment($quoteTransfer, $saveOrderTransfer);
+        $this->getFacade()->savePayment($quoteTransfer, $saveOrderTransfer);
     }
 }

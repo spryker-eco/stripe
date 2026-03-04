@@ -8,6 +8,7 @@
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Checkout;
 
 use Generated\Shared\Transfer\CheckoutResponseTransfer;
+use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use SprykerEco\Zed\CheckoutExtension\Dependency\Plugin\CheckoutPostSaveInterface;
 use SprykerEco\Zed\Kernel\Communication\AbstractPlugin;
@@ -21,9 +22,9 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
 {
     /**
      * {@inheritDoc}
-     * - Executes post-save hook after order is fully persisted.
-     * - Triggers payment authorization with provider.
-     * - May set redirect URL in checkout response for 3DS flow.
+     * - Verifies the Stripe PaymentIntent is in an authorized (requires_capture) state.
+     * - Authorization itself happens client-side via Stripe Elements; this step confirms the result.
+     * - Payment status is set by the payment_intent.amount_capturable_updated webhook, not here.
      *
      * @api
      *
@@ -34,6 +35,9 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
      */
     public function executeHook(QuoteTransfer $quoteTransfer, CheckoutResponseTransfer $checkoutResponseTransfer): void
     {
-        $this->getFacade()->executePostSaveHook($quoteTransfer, $checkoutResponseTransfer);
+        $orderTransfer = (new OrderTransfer())
+            ->setOrderReference($quoteTransfer->getOrderReferenceOrFail());
+
+        $this->getFacade()->authorizePayment($orderTransfer);
     }
 }
