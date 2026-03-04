@@ -7,7 +7,7 @@
 
 namespace SprykerEco\Yves\Stripe;
 
-use SprykerEco\Yves\Kernel\AbstractBundleConfig;
+use Spryker\Yves\Kernel\AbstractBundleConfig;
 
 class StripeConfig extends AbstractBundleConfig
 {
