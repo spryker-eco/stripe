@@ -14,9 +14,11 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
 {
     protected const ROUTE_STRIPE_NOTIFICATION = 'stripe-notification';
 
+    protected const ROUTE_STRIPE_PAYMENT = 'stripe-payment';
+
     /**
      * Specification:
-     * - Adds routes for webhook notification.
+     * - Adds routes for webhook notification and Stripe payment page.
      *
      * @param \Spryker\Yves\Router\Route\RouteCollection $routeCollection
      *
@@ -25,6 +27,7 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
     public function addRoutes(RouteCollection $routeCollection): RouteCollection
     {
         $routeCollection = $this->addStripeNotificationRoute($routeCollection);
+        $routeCollection = $this->addStripePaymentRoute($routeCollection);
 
         return $routeCollection;
     }
@@ -33,6 +36,14 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
     {
         $route = $this->buildPostRoute('/stripe/notification', 'Stripe', 'Notification', 'notificationAction');
         $routeCollection->add(static::ROUTE_STRIPE_NOTIFICATION, $route);
+
+        return $routeCollection;
+    }
+
+    protected function addStripePaymentRoute(RouteCollection $routeCollection): RouteCollection
+    {
+        $route = $this->buildGetRoute('/stripe/payment', 'Stripe', 'Payment', 'paymentAction');
+        $routeCollection->add(static::ROUTE_STRIPE_PAYMENT, $route);
 
         return $routeCollection;
     }

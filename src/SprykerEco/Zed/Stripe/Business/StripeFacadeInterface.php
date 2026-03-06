@@ -38,19 +38,28 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Persists a `spy_stripe_payment` record linking the order to the Stripe PaymentIntent.
-     * - Called from StripeCheckoutDoSaveOrderPlugin during order save.
+     * - Reads clientSecret and transactionId from spy_stripe_payment by orderReference.
+     * - Adds publishableKey from config.
+     * - Used by the Yves Stripe payment page to mount Stripe Elements.
      *
      * @api
      */
-    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void;
+    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer;
 
     /**
      * Specification:
-     * - Verifies the Stripe PaymentIntent is in an authorized state.
-     * - Authorization itself happens client-side; this step confirms the result.
-     * - Called from StripeAuthorizeCommandPlugin or StripeCheckoutPostSavePlugin.
-     * - Does NOT write payment status — status is set via webhook.
+     * - Persists a `spy_stripe_payment` record linking the order to the Stripe PaymentIntent.
+     * - Called from StripeCheckoutPostSavePlugin after PaymentIntent creation.
+     *
+     * @api
+     */
+    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId, string $clientSecret): void;
+
+    /**
+     * Specification:
+     * - Verifies the Stripe PaymentIntent is in an authorized (requires_capture) state.
+     * - Called from StripeAuthorizeCommandPlugin (OMS command).
+     * - Does NOT write payment status — status is set via payment_intent.amount_capturable_updated webhook.
      *
      * @api
      */
@@ -88,15 +97,6 @@ interface StripeFacadeInterface
      * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
     public function refundPayment(OrderTransfer $orderTransfer, array $orderItems): void;
-
-    /**
-     * Specification:
-     * - Filters the available payment methods to only include Stripe.
-     * - Called from StripePaymentMethodFilterPlugin.
-     *
-     * @api
-     */
-    public function filterPaymentMethods(PaymentMethodsTransfer $paymentMethodsTransfer, QuoteTransfer $quoteTransfer): PaymentMethodsTransfer;
 
     /**
      * Specification:

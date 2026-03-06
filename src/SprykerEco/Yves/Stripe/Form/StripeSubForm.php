@@ -13,7 +13,6 @@ use Spryker\Yves\StepEngine\Dependency\Form\AbstractSubFormType;
 use Spryker\Yves\StepEngine\Dependency\Form\SubFormInterface;
 use Spryker\Yves\StepEngine\Dependency\Form\SubFormProviderNameInterface;
 use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -22,8 +21,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class StripeSubForm extends AbstractSubFormType implements SubFormInterface, SubFormProviderNameInterface
 {
-    protected const string FIELD_TRANSACTION_ID = 'transactionId';
-
     public function getPropertyPath(): string
     {
         return PaymentTransfer::STRIPE;
@@ -43,6 +40,7 @@ class StripeSubForm extends AbstractSubFormType implements SubFormInterface, Sub
     {
         $resolver->setDefaults([
             'data_class' => StripeTransfer::class,
+            SubFormInterface::OPTIONS_FIELD_NAME => [],
         ]);
     }
 
@@ -51,16 +49,7 @@ class StripeSubForm extends AbstractSubFormType implements SubFormInterface, Sub
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $this->addTransactionIdField($builder);
-    }
-
-    protected function addTransactionIdField(FormBuilderInterface $builder): self
-    {
-        $builder->add(static::FIELD_TRANSACTION_ID, HiddenType::class, [
-            'required' => false,
-        ]);
-
-        return $this;
+        // Payment details are collected on the dedicated Stripe payment page after order placement.
     }
 
     protected function getTemplatePath(): string

@@ -15,5 +15,7 @@ interface StripeEntityManagerInterface
 
     public function updateTransactionId(string $orderReference, string $transactionId): void;
 
+    public function updatePaymentSecrets(string $orderReference, string $transactionId, string $clientSecret): void;
+
     public function saveMerchantStripeAccountId(string $merchantReference, string $stripeAccountId): void;
 }

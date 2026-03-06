@@ -7,6 +7,8 @@
 
 namespace SprykerEco\Zed\Stripe\Communication\Controller;
 
+use Generated\Shared\Transfer\OrderTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
 use Spryker\Zed\Kernel\Communication\Controller\AbstractGatewayController;
@@ -19,8 +21,13 @@ use Spryker\Zed\Kernel\Communication\Controller\AbstractGatewayController;
 class GatewayController extends AbstractGatewayController
 {
     public function processWebhookAction(
-        StripeWebhookPayloadTransfer $webhookPayloadTransfer
+        StripeWebhookPayloadTransfer $webhookPayloadTransfer,
     ): StripeWebhookProcessResponseTransfer {
         return $this->getFacade()->processWebhook($webhookPayloadTransfer);
+    }
+
+    public function getPaymentDetailsAction(OrderTransfer $orderTransfer): StripeIntentResponseTransfer
+    {
+        return $this->getFacade()->getPaymentDetails($orderTransfer->getOrderReferenceOrFail());
     }
 }

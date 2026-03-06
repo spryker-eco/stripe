@@ -9,7 +9,7 @@ namespace SprykerEco\Shared\Stripe;
 
 class StripeConfig
 {
-    public const string PAYMENT_PROVIDER_NAME = 'stripe';
+    public const string PAYMENT_PROVIDER_NAME = 'Stripe';
 
     public const string PAYMENT_METHOD_NAME = 'stripe';
 

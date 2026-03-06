@@ -42,6 +42,22 @@ class StripeEntityManager extends AbstractEntityManager implements StripeEntityM
         $paymentEntity->save();
     }
 
+    public function updatePaymentSecrets(string $orderReference, string $transactionId, string $clientSecret): void
+    {
+        $paymentEntity = $this->getFactory()
+            ->createStripePaymentQuery()
+            ->filterByOrderReference($orderReference)
+            ->findOne();
+
+        if ($paymentEntity === null) {
+            return;
+        }
+
+        $paymentEntity->setTransactionId($transactionId);
+        $paymentEntity->setClientSecret($clientSecret);
+        $paymentEntity->save();
+    }
+
     public function saveMerchantStripeAccountId(string $merchantReference, string $stripeAccountId): void
     {
         $merchantEntity = $this->getFactory()

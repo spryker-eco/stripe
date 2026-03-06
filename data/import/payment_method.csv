@@ -1,3 +1,2 @@
 payment_method_key,payment_method_name,payment_provider_key,payment_provider_name,is_active
-stripeCreditCard,Credit Card,Stripe,Payment Template,1
-stripeInvoice,Invoice,Stripe,Payment Template,1
+stripe,Multiple Methods,stripe,Stripe,1

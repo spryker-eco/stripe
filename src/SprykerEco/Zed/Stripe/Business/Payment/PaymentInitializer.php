@@ -11,11 +11,14 @@ use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\StripeConfig;
 
 class PaymentInitializer
 {
-    public function __construct(protected StripeIntents $stripeIntents)
-    {
+    public function __construct(
+        protected StripeIntents $stripeIntents,
+        protected StripeConfig $config,
+    ) {
     }
 
     public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer
@@ -23,6 +26,9 @@ class PaymentInitializer
         $stripeIntentRequestTransfer = (new StripeIntentRequestTransfer())
             ->setQuote($quoteTransfer);
 
-        return $this->stripeIntents->create($stripeIntentRequestTransfer);
+        $response = $this->stripeIntents->create($stripeIntentRequestTransfer);
+        $response->setPublishableKey($this->config->getPublishableKey());
+
+        return $response;
     }
 }

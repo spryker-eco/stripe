@@ -21,6 +21,7 @@ use SprykerEco\Zed\Stripe\Business\Payment\PaymentCapturer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsTransfer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentInitializer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentMethodFilter;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentPageResolver;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReader;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentSaver;
@@ -54,6 +55,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     {
         return new PaymentInitializer(
             $this->createStripeIntents(),
+            $this->getConfig(),
         );
     }
 
@@ -75,11 +77,6 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    public function createPaymentMethodFilter(): PaymentMethodFilter
-    {
-        return new PaymentMethodFilter();
-    }
-
     public function createMerchantOnboardingUrlGenerator(): MerchantOnboardingUrlGenerator
     {
         return new MerchantOnboardingUrlGenerator(
@@ -95,6 +92,16 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     {
         return new PaymentReader(
             $this->getRepository(),
+        );
+    }
+
+    public function createPaymentPageResolver(): PaymentPageResolver
+    {
+        return new PaymentPageResolver(
+            $this->createStripeIntents(),
+            $this->createPaymentReader(),
+            $this->getEntityManager(),
+            $this->getConfig(),
         );
     }
 

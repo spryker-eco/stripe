@@ -7,8 +7,8 @@
 
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Checkout;
 
+use Generated\Shared\Transfer\CheckoutErrorTransfer;
 use Generated\Shared\Transfer\CheckoutResponseTransfer;
-use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Spryker\Zed\CheckoutExtension\Dependency\Plugin\CheckoutPostSaveInterface;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
@@ -22,9 +22,12 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
 {
     /**
      * {@inheritDoc}
-     * - Verifies the Stripe PaymentIntent is in an authorized (requires_capture) state.
-     * - Authorization itself happens client-side via Stripe Elements; this step confirms the result.
-     * - Payment status is set by the payment_intent.amount_capturable_updated webhook, not here.
+     * - Reads orderReference and idSalesOrder from checkoutResponseTransfer->saveOrder.
+     * - Sets orderReference on quoteTransfer so the PaymentIntent description/metadata is correct.
+     * - Creates a Stripe PaymentIntent via StripeFacade::initializePayment() with the final grand total.
+     * - Calls StripeFacade::savePayment() with the returned transactionId and clientSecret.
+     * - On success: sets isExternalRedirect=true and redirectUrl to the Yves Stripe payment page.
+     * - On failure: adds a checkout error and sets isSuccess=false.
      *
      * @api
      *
@@ -35,9 +38,36 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
      */
     public function executeHook(QuoteTransfer $quoteTransfer, CheckoutResponseTransfer $checkoutResponseTransfer): void
     {
-        $orderTransfer = (new OrderTransfer())
-            ->setOrderReference($quoteTransfer->getOrderReferenceOrFail());
+        $saveOrderTransfer = $checkoutResponseTransfer->getSaveOrderOrFail();
+        $orderReference = $saveOrderTransfer->getOrderReferenceOrFail();
 
-        $this->getFacade()->authorizePayment($orderTransfer);
+        $quoteTransfer->setOrderReference($orderReference);
+
+        $intentResponse = $this->getFacade()->initializePayment($quoteTransfer);
+
+        if (!$intentResponse->getIsSuccessful()) {
+            $checkoutResponseTransfer
+                ->setIsSuccess(false)
+                ->addError(
+                    (new CheckoutErrorTransfer())
+                        ->setMessage('Stripe payment initialization failed. Please try again.'),
+                );
+
+            return;
+        }
+
+        $this->getFacade()->savePayment(
+            $quoteTransfer,
+            $saveOrderTransfer,
+            $intentResponse->getTransactionIdOrFail(),
+            $intentResponse->getClientSecretOrFail(),
+        );
+
+        $redirectUrl = $this->getConfig()->getStripePaymentPageBaseUrl()
+            . '?order=' . urlencode($orderReference);
+
+        $checkoutResponseTransfer
+            ->setIsExternalRedirect(true)
+            ->setRedirectUrl($redirectUrl);
     }
 }

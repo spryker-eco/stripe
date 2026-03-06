@@ -12,6 +12,7 @@
         <property name="fkSalesOrder" type="int"/>
         <property name="orderReference" type="string"/>
         <property name="transactionId" type="string" description="Stripe PaymentIntent ID (pi_xxx)"/>
+        <property name="clientSecret" type="string" description="Stripe PaymentIntent client_secret for Stripe Elements"/>
         <property name="amount" type="int" description="Amount in minor units (cents)"/>
         <property name="currencyCode" type="string"/>
         <property name="businessModel" type="string" description="direct|marketplace"/>
@@ -70,12 +71,14 @@
         <property name="grandTotal" type="int"/>
         <property name="currencyCode" type="string"/>
         <property name="clientSecret" type="string"/>
+        <property name="publishableKey" type="string"/>
         <property name="latestChargeId" type="string"/>
         <property name="message" type="string"/>
         <property name="redirectSuccessUrl" type="string"/>
         <property name="redirectCancelUrl" type="string"/>
         <property name="checkoutSummaryPageUrl" type="string"/>
         <property name="status" type="string"/>
+        <property name="idSalesOrder" type="int" description="FK to spy_sales_order — used to link to the customer order details page"/>
     </transfer>
 
     <transfer name="StripeIntentCaptureRequest" strict="true">

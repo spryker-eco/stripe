@@ -19,6 +19,8 @@
                 comment="direct|marketplace"/>
         <column name="latest_charge_id" required="false" type="VARCHAR" size="255"
                 comment="Marketplace only: latest Stripe charge ID"/>
+        <column name="client_secret" required="false" type="VARCHAR" size="500"
+                comment="Stripe PaymentIntent client_secret — used by Yves payment page to mount Stripe Elements"/>
 
         <foreign-key name="spy_stripe_payment-fk_sales_order" foreignTable="spy_sales_order" onDelete="CASCADE">
             <reference foreign="id_sales_order" local="fk_sales_order"/>

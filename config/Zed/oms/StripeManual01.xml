@@ -19,7 +19,6 @@
             <state name="cancelled" display="oms.state.cancelled"/>
             <state name="cancellation failed" display="oms.state.cancellation-failed"/>
             <state name="refunded" display="oms.state.refunded"/>
-            <state name="refund failed" display="oms.state.refund-failed"/>
             <state name="shipped" reserved="true" display="oms.state.shipped"/>
             <state name="delivered" display="oms.state.delivered"/>
             <state name="closed" display="oms.state.closed"/>
@@ -105,16 +104,6 @@
                 <source>captured</source>
                 <target>refunded</target>
                 <event>refund</event>
-            </transition>
-
-            <transition happy="true" condition="PaymentApp/IsRefunded">
-                <source>refunded</source>
-                <target>refunded</target>
-            </transition>
-
-            <transition condition="PaymentApp/IsRefundFailed">
-                <source>refunded</source>
-                <target>refund failed</target>
             </transition>
         </transitions>
 

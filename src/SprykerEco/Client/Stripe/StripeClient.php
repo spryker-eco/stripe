@@ -7,6 +7,7 @@
 
 namespace SprykerEco\Client\Stripe;
 
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
 use Spryker\Client\Kernel\AbstractClient;
@@ -25,5 +26,15 @@ class StripeClient extends AbstractClient implements StripeClientInterface
         StripeWebhookPayloadTransfer $webhookPayloadTransfer,
     ): StripeWebhookProcessResponseTransfer {
         return $this->getFactory()->createZedStub()->processWebhook($webhookPayloadTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer
+    {
+        return $this->getFactory()->createZedStub()->getPaymentDetails($orderReference);
     }
 }

@@ -29,22 +29,12 @@ class StripeFormDataProvider implements StepEngineFormDataProviderInterface
     }
 
     /**
-     * Returns view variables for the stripe.twig sub-form template.
-     * `stripePublishableKey` and `stripeClientSecret` are populated by
-     * StripeCheckoutPreConditionPlugin (Phase 12) which calls initializePayment()
-     * and stores the result in the quote's additionalPaymentData.
-     *
      * @param \Generated\Shared\Transfer\QuoteTransfer $dataTransfer
      *
      * @return array<string, mixed>
      */
     public function getOptions(AbstractTransfer $dataTransfer): array
     {
-        $additionalPaymentData = (array)$dataTransfer->getPayment()?->getAdditionalPaymentData();
-
-        return [
-            'stripePublishableKey' => $additionalPaymentData['publishableKey'] ?? '',
-            'stripeClientSecret' => $additionalPaymentData['clientSecret'] ?? '',
-        ];
+        return [];
     }
 }

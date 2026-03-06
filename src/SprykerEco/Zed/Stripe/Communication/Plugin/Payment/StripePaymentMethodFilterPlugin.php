@@ -23,7 +23,6 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
      * {@inheritDoc}
      * - Filters available payment methods based on quote and configuration,
      * - Can remove payment methods based on business rules.
-     * - Communicates with payment provider via AuthorizeAdapter.
      *
      * @api
      *
@@ -36,6 +35,7 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
         PaymentMethodsTransfer $paymentMethodsTransfer,
         QuoteTransfer $quoteTransfer,
     ): PaymentMethodsTransfer {
-        return $this->getFacade()->filterPaymentMethods($paymentMethodsTransfer, $quoteTransfer);
+        // Here you can filter out Stripe method based on project logic
+        return $paymentMethodsTransfer;
     }
 }

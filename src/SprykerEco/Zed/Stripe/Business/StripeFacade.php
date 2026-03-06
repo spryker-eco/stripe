@@ -52,11 +52,23 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      */
-    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void
+    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer
+    {
+        return $this->getFactory()
+            ->createPaymentPageResolver()
+            ->resolve($orderReference);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId, string $clientSecret): void
     {
         $this->getFactory()
             ->createPaymentSaver()
-            ->savePayment($quoteTransfer, $saveOrderTransfer);
+            ->savePayment($quoteTransfer, $saveOrderTransfer, $transactionId, $clientSecret);
     }
 
     /**
@@ -107,18 +119,6 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
         $this->getFactory()
             ->createOmsCommandHandler()
             ->refund($orderTransfer, $orderItems);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     */
-    public function filterPaymentMethods(PaymentMethodsTransfer $paymentMethodsTransfer, QuoteTransfer $quoteTransfer): PaymentMethodsTransfer
-    {
-        return $this->getFactory()
-            ->createPaymentMethodFilter()
-            ->filterPaymentMethods($paymentMethodsTransfer, $quoteTransfer);
     }
 
     /**

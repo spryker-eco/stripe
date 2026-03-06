@@ -7,6 +7,7 @@
 
 namespace SprykerEco\Client\Stripe;
 
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
 
@@ -23,4 +24,13 @@ interface StripeClientInterface
     public function processWebhook(
         StripeWebhookPayloadTransfer $webhookPayloadTransfer,
     ): StripeWebhookProcessResponseTransfer;
+
+    /**
+     * Specification:
+     * - Reads clientSecret, transactionId, and publishableKey from Zed for the given order.
+     * - Used by the Yves Stripe payment page to mount Stripe Elements.
+     *
+     * @api
+     */
+    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer;
 }
