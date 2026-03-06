@@ -8,6 +8,7 @@
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command;
 
 use Generated\Shared\Transfer\ItemTransfer;
+use Generated\Shared\Transfer\PaymentAmountRequestTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Orm\Zed\Sales\Persistence\SpySalesOrder;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
@@ -24,7 +25,7 @@ class StripeRefundCommandPlugin extends AbstractPlugin implements CommandByOrder
     /**
      * {@inheritDoc}
      * - Initiates a Stripe Refund for the given order items.
-     * - Refund amount is the sum of `priceToPayAggregation` for each item.
+     * - Refund amount is calculated via SalesPaymentFacade: sum of item refundable amounts + shipping on the last refund.
      * - Status transition is driven by the `charge.refund.updated` webhook.
      *
      * @api
@@ -37,16 +38,26 @@ class StripeRefundCommandPlugin extends AbstractPlugin implements CommandByOrder
      */
     public function run(array $orderItems, SpySalesOrder $orderEntity, ReadOnlyArrayObject $data): array
     {
+        $orderItemIds = array_map(
+            static fn ($orderItem): int => $orderItem->getIdSalesOrderItem(),
+            $orderItems,
+        );
+
+        $refundAmount = $this->getFactory()->getSalesPaymentFacade()->calculateRefundAmount(
+            (new PaymentAmountRequestTransfer())
+                ->setIdSalesOrder($orderEntity->getIdSalesOrder())
+                ->setOrderItemIds($orderItemIds),
+        );
+
         $orderTransfer = (new OrderTransfer())->setOrderReference($orderEntity->getOrderReference());
 
         $itemTransfers = array_map(
             static fn ($orderItem): ItemTransfer => (new ItemTransfer())
-                ->setSku($orderItem->getSku())
-                ->setRefundableAmount($orderItem->getPriceToPayAggregation()),
+                ->setSku($orderItem->getSku()),
             $orderItems,
         );
 
-        $this->getFacade()->refundPayment($orderTransfer, $itemTransfers);
+        $this->getFacade()->refundPayment($orderTransfer, $itemTransfers, $refundAmount);
 
         return $orderItems;
     }

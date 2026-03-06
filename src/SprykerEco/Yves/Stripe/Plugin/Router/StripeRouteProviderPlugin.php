@@ -42,7 +42,8 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
 
     protected function addStripePaymentRoute(RouteCollection $routeCollection): RouteCollection
     {
-        $route = $this->buildGetRoute('/stripe/payment', 'Stripe', 'Payment', 'paymentAction');
+        $route = $this->buildGetRoute('/stripe/payment/{orderReference}', 'Stripe', 'Payment', 'paymentAction');
+        $route->setRequirement('orderReference', '.+');
         $routeCollection->add(static::ROUTE_STRIPE_PAYMENT, $route);
 
         return $routeCollection;

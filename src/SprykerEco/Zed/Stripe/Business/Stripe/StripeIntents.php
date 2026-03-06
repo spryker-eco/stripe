@@ -149,7 +149,11 @@ class StripeIntents
                 return $stripeIntentCaptureResponseTransfer;
             }
 
-            $capturePaymentIntent = $stripeClient->paymentIntents->capture($transactionId, null, $opts);
+            $captureParams = $stripeIntentCaptureRequestTransfer->getAmount()
+                ? ['amount_to_capture' => $stripeIntentCaptureRequestTransfer->getAmount()]
+                : null;
+
+            $capturePaymentIntent = $stripeClient->paymentIntents->capture($transactionId, $captureParams, $opts);
 
             if (!$capturePaymentIntent->__isset('status') || $capturePaymentIntent->status !== 'succeeded') {
                 $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);

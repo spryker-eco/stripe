@@ -68,12 +68,13 @@ interface StripeFacadeInterface
     /**
      * Specification:
      * - Captures a previously authorized Stripe PaymentIntent.
+     * - When `$captureAmount` is non-zero, performs a partial capture for that amount.
      * - Called from StripeCaptureCommandPlugin.
      * - Does NOT write payment status — status is set via webhook.
      *
      * @api
      */
-    public function capturePayment(OrderTransfer $orderTransfer): void;
+    public function capturePayment(OrderTransfer $orderTransfer, int $captureAmount = 0): void;
 
     /**
      * Specification:
@@ -88,7 +89,7 @@ interface StripeFacadeInterface
     /**
      * Specification:
      * - Creates a Stripe Refund for the given order items.
-     * - Refund amount is the sum of priceToPayAggregation for each item.
+     * - Uses `$refundAmount` when provided; otherwise sums `refundableAmount` across `$orderItems`.
      * - Called from StripeRefundCommandPlugin.
      * - Does NOT write payment status — status is set via webhook.
      *
@@ -96,7 +97,7 @@ interface StripeFacadeInterface
      *
      * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems): void;
+    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void;
 
     /**
      * Specification:

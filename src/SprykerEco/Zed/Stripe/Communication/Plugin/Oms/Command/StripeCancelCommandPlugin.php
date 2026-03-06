@@ -22,8 +22,8 @@ class StripeCancelCommandPlugin extends AbstractPlugin implements CommandByOrder
 {
     /**
      * {@inheritDoc}
-     * - Cancels (voids) an authorized Stripe PaymentIntent.
-     * - Status transition is driven by the `payment_intent.canceled` webhook.
+     * - Cancels (voids) an authorized Stripe PaymentIntent via synchronous API call.
+     * - Transitions to `cancelled` immediately; no webhook confirmation is required.
      *
      * @api
      *

@@ -13,12 +13,12 @@ interface OmsCommandHandlerInterface
 {
     public function authorize(OrderTransfer $orderTransfer): void;
 
-    public function capture(OrderTransfer $orderTransfer): void;
+    public function capture(OrderTransfer $orderTransfer, int $captureAmount = 0): void;
 
     public function cancel(OrderTransfer $orderTransfer): void;
 
     /**
      * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function refund(OrderTransfer $orderTransfer, array $orderItems): void;
+    public function refund(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void;
 }

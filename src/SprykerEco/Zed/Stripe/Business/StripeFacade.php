@@ -55,7 +55,7 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
     public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer
     {
         return $this->getFactory()
-            ->createPaymentPageResolver()
+            ->createPaymentDetailsResolver()
             ->resolve($orderReference);
     }
 
@@ -88,11 +88,11 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      */
-    public function capturePayment(OrderTransfer $orderTransfer): void
+    public function capturePayment(OrderTransfer $orderTransfer, int $captureAmount = 0): void
     {
         $this->getFactory()
             ->createOmsCommandHandler()
-            ->capture($orderTransfer);
+            ->capture($orderTransfer, $captureAmount);
     }
 
     /**
@@ -114,11 +114,11 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems): void
+    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void
     {
         $this->getFactory()
             ->createOmsCommandHandler()
-            ->refund($orderTransfer, $orderItems);
+            ->refund($orderTransfer, $orderItems, $refundAmount);
     }
 
     /**

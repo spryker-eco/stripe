@@ -28,9 +28,9 @@ class OmsCommandHandler implements OmsCommandHandlerInterface
         $this->paymentAuthorizer->authorizePayment($orderTransfer);
     }
 
-    public function capture(OrderTransfer $orderTransfer): void
+    public function capture(OrderTransfer $orderTransfer, int $captureAmount = 0): void
     {
-        $this->paymentCapturer->capturePayment($orderTransfer);
+        $this->paymentCapturer->capturePayment($orderTransfer, $captureAmount);
     }
 
     public function cancel(OrderTransfer $orderTransfer): void
@@ -41,8 +41,8 @@ class OmsCommandHandler implements OmsCommandHandlerInterface
     /**
      * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function refund(OrderTransfer $orderTransfer, array $orderItems): void
+    public function refund(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void
     {
-        $this->paymentRefunder->refundPayment($orderTransfer, $orderItems);
+        $this->paymentRefunder->refundPayment($orderTransfer, $orderItems, $refundAmount);
     }
 }

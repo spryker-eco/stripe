@@ -30,12 +30,6 @@ interface StripeConstants
     // Environment: 'test'|'live'
     public const string STRIPE_ENVIRONMENT = 'STRIPE:STRIPE_ENVIRONMENT';
 
-    // Yves payment page base URL (without query string), e.g. https://yves.eu.spryker.local/DE/en/stripe/payment
-    public const string STRIPE_PAYMENT_PAGE_BASE_URL = 'STRIPE:STRIPE_PAYMENT_PAGE_BASE_URL';
-
-    // Yves checkout success URL used as return_url in stripe.confirmPayment()
-    public const string STRIPE_CHECKOUT_SUCCESS_URL = 'STRIPE:STRIPE_CHECKOUT_SUCCESS_URL';
-
     // Marketplace: Merchant Connect onboarding URLs
     public const string STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL = 'STRIPE:STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL';
 

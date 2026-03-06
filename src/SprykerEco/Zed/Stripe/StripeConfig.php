@@ -143,18 +143,6 @@ class StripeConfig extends AbstractBundleConfig
     }
 
     /**
-     * Base URL of the Yves Stripe payment page (no query string).
-     * Example: https://yves.eu.spryker.local/DE/en/stripe/payment
-     *
-     * @api
-     */
-    public function getStripePaymentPageBaseUrl(): string
-    {
-        //todo: should use router plugin constant
-        return '/stripe/payment';
-    }
-
-    /**
      * Returns the Stripe webhook event types this package handles.
      * Register these in the Stripe Dashboard for your webhook endpoint.
      *

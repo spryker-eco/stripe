@@ -82,7 +82,9 @@
                 <event>close</event>
             </transition>
 
-            <!-- Cancel from authorized (before capture) -->
+            <!-- Cancel from authorized (before capture).
+                 Stripe/Cancel is synchronous; PaymentApp/IsCanceled or IsCancellationFailed
+                 determines the final state based on the API result stored in PaymentApp. -->
             <transition>
                 <source>authorized</source>
                 <target>cancelled</target>

@@ -8,6 +8,8 @@
 namespace SprykerEco\Zed\Stripe\Communication;
 
 use Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory;
+use Spryker\Zed\SalesPayment\Business\SalesPaymentFacadeInterface;
+use SprykerEco\Zed\Stripe\StripeDependencyProvider;
 
 /**
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
@@ -17,4 +19,8 @@ use Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory;
  */
 class StripeCommunicationFactory extends AbstractCommunicationFactory
 {
+    public function getSalesPaymentFacade(): SalesPaymentFacadeInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES_PAYMENT);
+    }
 }

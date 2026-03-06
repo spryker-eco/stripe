@@ -26,7 +26,7 @@ class PaymentRefunder
     /**
      * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems): void
+    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void
     {
         $stripePaymentTransfer = $this->paymentReader->getPaymentByOrderReference(
             $orderTransfer->getOrderReferenceOrFail(),
@@ -39,13 +39,6 @@ class PaymentRefunder
 
             return;
         }
-
-        $refundAmount = (int)array_sum(
-            array_map(
-                static fn (ItemTransfer $item): int => (int)$item->getRefundableAmount(),
-                $orderItems,
-            ),
-        );
 
         $orderItemSkus = array_map(
             static fn (ItemTransfer $item): string => $item->getSkuOrFail(),

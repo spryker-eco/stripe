@@ -17,7 +17,7 @@ use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class PaymentPageResolver
+class PaymentDetailsResolver
 {
     /**
      * PaymentIntent statuses where the stored client_secret can be reused to collect payment.

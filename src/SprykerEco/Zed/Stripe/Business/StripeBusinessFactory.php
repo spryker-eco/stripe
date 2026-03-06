@@ -10,6 +10,7 @@ namespace SprykerEco\Zed\Stripe\Business;
 use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
 use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
+use Spryker\Zed\SalesPaymentDetail\Business\SalesPaymentDetailFacadeInterface;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingHandler;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingRegistrar;
@@ -20,8 +21,7 @@ use SprykerEco\Zed\Stripe\Business\Payment\PaymentCanceller;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentCapturer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsTransfer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentInitializer;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentMethodFilter;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentPageResolver;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentDetailsResolver;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReader;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentSaver;
@@ -48,6 +48,8 @@ class StripeBusinessFactory extends AbstractBusinessFactory
             $this->getPaymentAppFacade(),
             $this->createPaymentReader(),
             $this->createMerchantOnboardingHandler(),
+            $this->getSalesPaymentDetailFacade(),
+            $this->createStripeClientFactory(),
         );
     }
 
@@ -95,9 +97,9 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    public function createPaymentPageResolver(): PaymentPageResolver
+    public function createPaymentDetailsResolver(): PaymentDetailsResolver
     {
-        return new PaymentPageResolver(
+        return new PaymentDetailsResolver(
             $this->createStripeIntents(),
             $this->createPaymentReader(),
             $this->getEntityManager(),
@@ -118,6 +120,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         return new PaymentCapturer(
             $this->createStripeIntents(),
             $this->createPaymentReader(),
+            $this->getPaymentAppFacade(),
         );
     }
 
@@ -126,6 +129,8 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         return new PaymentCanceller(
             $this->createStripeIntents(),
             $this->createPaymentReader(),
+            $this->getPaymentAppFacade(),
+            $this->getSalesPaymentDetailFacade(),
         );
     }
 
@@ -221,5 +226,10 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     public function getMerchantAppFacade(): MerchantAppFacadeInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::FACADE_MERCHANT_APP);
+    }
+
+    public function getSalesPaymentDetailFacade(): SalesPaymentDetailFacadeInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES_PAYMENT_DETAIL);
     }
 }

@@ -9,6 +9,7 @@ namespace SprykerEco\Zed\Stripe;
 
 use Spryker\Zed\Kernel\AbstractBundleDependencyProvider;
 use Spryker\Zed\Kernel\Container;
+use SprykerEco\Zed\Stripe\Dependency\Facade\StripeToSalesPaymentDetailBridge;
 
 /**
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
@@ -19,11 +20,24 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
 
     public const string FACADE_MERCHANT_APP = 'FACADE_MERCHANT_APP';
 
+    public const string FACADE_SALES_PAYMENT_DETAIL = 'FACADE_SALES_PAYMENT_DETAIL';
+
+    public const string FACADE_SALES_PAYMENT = 'FACADE_SALES_PAYMENT';
+
     public function provideBusinessLayerDependencies(Container $container): Container
     {
         $container = parent::provideBusinessLayerDependencies($container);
         $container = $this->addPaymentAppFacade($container);
         $container = $this->addMerchantAppFacade($container);
+        $container = $this->addSalesPaymentDetailFacade($container);
+
+        return $container;
+    }
+
+    public function provideCommunicationLayerDependencies(Container $container): Container
+    {
+        $container = parent::provideCommunicationLayerDependencies($container);
+        $container = $this->addSalesPaymentFacade($container);
 
         return $container;
     }
@@ -41,6 +55,24 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container->set(static::FACADE_MERCHANT_APP, function (Container $container) {
             return $container->getLocator()->merchantApp()->facade();
+        });
+
+        return $container;
+    }
+
+    protected function addSalesPaymentDetailFacade(Container $container): Container
+    {
+        $container->set(static::FACADE_SALES_PAYMENT_DETAIL, function (Container $container) {
+            return $container->getLocator()->salesPaymentDetail()->facade();
+        });
+
+        return $container;
+    }
+
+    protected function addSalesPaymentFacade(Container $container): Container
+    {
+        $container->set(static::FACADE_SALES_PAYMENT, function (Container $container) {
+            return $container->getLocator()->salesPayment()->facade();
         });
 
         return $container;
