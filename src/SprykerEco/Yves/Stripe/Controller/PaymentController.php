@@ -21,7 +21,7 @@ class PaymentController extends AbstractController
 
     public function paymentAction(Request $request): Response
     {
-        $orderReference = (string)$request->attributes->get(static::PARAM_ORDER_REFERENCE, '');
+        $orderReference = (string)$request->query->get(static::PARAM_ORDER_REFERENCE, '');
 
         if ($orderReference === '') {
             return $this->redirectResponseInternal('home');
@@ -40,14 +40,14 @@ class PaymentController extends AbstractController
             return $this->redirectResponseInternal('home');
         }
 
-        $checkoutSuccessUrl = $this->getRouter()->generate('checkout-success', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $checkoutSuccessUrl = $this->getRouter()->generate('checkout-success', [], UrlGeneratorInterface::ABSOLUTE_PATH);
         $paymentPageUrl = $this->getRouter()->generate('stripe-payment', [
             static::PARAM_ORDER_REFERENCE => $orderReference,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $idSalesOrder = $paymentDetails->getIdSalesOrder();
         $orderDetailsUrl = $idSalesOrder !== null
-            ? $this->getRouter()->generate('customer/order/details', [], UrlGeneratorInterface::ABSOLUTE_URL) . '?id=' . $idSalesOrder
+            ? $this->getRouter()->generate('customer/order/details', [], UrlGeneratorInterface::ABSOLUTE_PATH) . '?id=' . $idSalesOrder
             : null;
 
         return $this->renderView(
