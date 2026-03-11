@@ -13,6 +13,9 @@ use Generated\Shared\Transfer\PaymentAuthorizedTransfer;
 use Generated\Shared\Transfer\PaymentCapturedTransfer;
 use Generated\Shared\Transfer\PaymentCaptureFailedTransfer;
 use Generated\Shared\Transfer\PaymentCreatedTransfer;
+use Generated\Shared\Transfer\PaymentPartiallyRefundedTransfer;
+use Generated\Shared\Transfer\PaymentRefundedTransfer;
+use Generated\Shared\Transfer\PaymentRefundFailedTransfer;
 use Generated\Shared\Transfer\PaymentUpdatedTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
@@ -72,6 +75,7 @@ class WebhookHandler implements WebhookHandlerInterface
             Event::PAYMENT_INTENT_SUCCEEDED => $this->handlePaymentSucceeded($response, $event),
             Event::PAYMENT_INTENT_PAYMENT_FAILED => $this->handlePaymentFailed($response, $event),
             Event::CHARGE_FAILED => $this->handleChargeFailed($response, $event),
+            Event::CHARGE_REFUNDED => $this->handleChargeRefunded($response, $event),
             Event::CHARGE_REFUND_UPDATED => $this->handleRefundUpdated($response, $event),
             Event::ACCOUNT_UPDATED => $this->merchantOnboardingHandler->handleAccountUpdated($response, $event),
             default => $response->setIsSuccessful(true),
@@ -231,8 +235,7 @@ class WebhookHandler implements WebhookHandlerInterface
 
         $orderReference = $this->resolveOrderReferenceFromPaymentIntentId($paymentIntentId);
 
-        if ($orderReference === null && $chargeId !== null) {
-            // Fall back to charge-based lookup if needed
+        if ($orderReference === null) {
             $this->getLogger()->warning('WebhookHandler: could not resolve orderReference for charge.refund.updated', [
                 'chargeId' => $chargeId,
                 'paymentIntentId' => $paymentIntentId,
@@ -241,13 +244,6 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
-        if ($orderReference === null) {
-            return $response->setIsSuccessful(true);
-        }
-
-        // PaymentMessageMapper does not support refund statuses — OMS refund state is managed
-        // via the refundPayment() command flow, not through savePaymentAppPaymentStatus().
-        // We only persist the updated refund details for audit/reference.
         if ($paymentIntentId !== null) {
             $this->salesPaymentDetailFacade->handlePaymentUpdated(
                 (new PaymentUpdatedTransfer())
@@ -256,6 +252,40 @@ class WebhookHandler implements WebhookHandlerInterface
                     ->setDetails((string)json_encode($this->extractRefundDetails($refund))),
             );
         }
+
+        if ($refund->status === Refund::STATUS_FAILED) {
+            $this->paymentAppFacade->savePaymentAppPaymentStatus(
+                (new PaymentRefundFailedTransfer())->setOrderReference($orderReference),
+            );
+        }
+
+        return $response->setIsSuccessful(true);
+    }
+
+    protected function handleChargeRefunded(
+        StripeWebhookProcessResponseTransfer $response,
+        Event $event,
+    ): StripeWebhookProcessResponseTransfer {
+        /** @var \Stripe\Charge $charge */
+        $charge = $event->data->offsetGet('object');
+        $paymentIntentId = is_string($charge->payment_intent) ? $charge->payment_intent : $charge->payment_intent?->id;
+        $orderReference = $this->resolveOrderReferenceFromPaymentIntentId($paymentIntentId);
+
+        if ($orderReference === null) {
+            $this->getLogger()->warning('WebhookHandler: could not resolve orderReference for charge.refunded', [
+                'chargeId' => $charge->id,
+                'paymentIntentId' => $paymentIntentId,
+            ]);
+
+            return $response->setIsSuccessful(true);
+        }
+
+        // Full refund when the total amount refunded equals the original charge amount
+        $statusTransfer = $charge->amount_refunded >= $charge->amount
+            ? (new PaymentRefundedTransfer())->setOrderReference($orderReference)
+            : (new PaymentPartiallyRefundedTransfer())->setOrderReference($orderReference);
+
+        $this->paymentAppFacade->savePaymentAppPaymentStatus($statusTransfer);
 
         return $response->setIsSuccessful(true);
     }

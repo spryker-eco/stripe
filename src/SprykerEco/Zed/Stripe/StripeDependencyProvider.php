@@ -9,7 +9,7 @@ namespace SprykerEco\Zed\Stripe;
 
 use Spryker\Zed\Kernel\AbstractBundleDependencyProvider;
 use Spryker\Zed\Kernel\Container;
-use SprykerEco\Zed\Stripe\Dependency\Facade\StripeToSalesPaymentDetailBridge;
+
 
 /**
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
@@ -23,6 +23,8 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
     public const string FACADE_SALES_PAYMENT_DETAIL = 'FACADE_SALES_PAYMENT_DETAIL';
 
     public const string FACADE_SALES_PAYMENT = 'FACADE_SALES_PAYMENT';
+
+    public const string FACADE_REFUND = 'FACADE_REFUND';
 
     public function provideBusinessLayerDependencies(Container $container): Container
     {
@@ -38,6 +40,7 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container = parent::provideCommunicationLayerDependencies($container);
         $container = $this->addSalesPaymentFacade($container);
+        $container = $this->addRefundFacade($container);
 
         return $container;
     }
@@ -73,6 +76,15 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container->set(static::FACADE_SALES_PAYMENT, function (Container $container) {
             return $container->getLocator()->salesPayment()->facade();
+        });
+
+        return $container;
+    }
+
+    protected function addRefundFacade(Container $container): Container
+    {
+        $container->set(static::FACADE_REFUND, function (Container $container) {
+            return $container->getLocator()->refund()->facade();
         });
 
         return $container;

@@ -18,7 +18,10 @@
             <state name="capture failed" display="oms.state.capture-failed"/>
             <state name="cancelled" display="oms.state.cancelled"/>
             <state name="cancellation failed" display="oms.state.cancellation-failed"/>
+            <state name="refund pending" reserved="true" display="oms.state.refund-pending"/>
+            <state name="refund confirmed" reserved="true" display="oms.state.refund-confirmed"/>
             <state name="refunded" display="oms.state.refunded"/>
+            <state name="refund failed" display="oms.state.refund-failed"/>
             <state name="shipped" reserved="true" display="oms.state.shipped"/>
             <state name="delivered" display="oms.state.delivered"/>
             <state name="closed" display="oms.state.closed"/>
@@ -101,11 +104,37 @@
                 <target>cancellation failed</target>
             </transition>
 
-            <!-- Refund from captured -->
+            <!-- Refund command submits refund request; charge.refund.updated webhook resolves final state -->
             <transition>
                 <source>captured</source>
-                <target>refunded</target>
+                <target>refund pending</target>
                 <event>refund</event>
+            </transition>
+
+            <!-- charge.refund.updated → REFUND CONFIRMED -->
+            <transition happy="true" condition="PaymentApp/IsRefunded">
+                <source>refund pending</source>
+                <target>refund confirmed</target>
+            </transition>
+
+            <!-- charge.refund.updated → REFUND FAILED -->
+            <transition condition="PaymentApp/IsRefundFailed">
+                <source>refund pending</source>
+                <target>refund failed</target>
+            </transition>
+
+            <!-- Save refund record and set canceled_amount on items -->
+            <transition happy="true">
+                <source>refund confirmed</source>
+                <target>refunded</target>
+                <event>confirm refund</event>
+            </transition>
+
+            <!-- Retry refund after failure -->
+            <transition>
+                <source>refund failed</source>
+                <target>refund pending</target>
+                <event>retry refund</event>
             </transition>
         </transitions>
 
@@ -117,6 +146,8 @@
             <event name="deliver" manual="true"/>
             <event name="close" manual="true"/>
             <event name="refund" manual="true" command="Stripe/Refund"/>
+            <event name="confirm refund" onEnter="true" command="Payment/Refund/Confirm"/>
+            <event name="retry refund" manual="true" command="Stripe/Refund"/>
         </events>
 
     </process>

@@ -13,6 +13,11 @@ class StripeConfig
 
     public const string PAYMENT_METHOD_NAME = 'stripe';
 
+    // Business model values
+    public const string BUSINESS_MODEL_DIRECT = 'direct';
+
+    public const string BUSINESS_MODEL_MARKETPLACE = 'marketplace';
+
     // Payment lifecycle status constants — used by WebhookHandler to select the correct
     // PaymentApp typed transfer (e.g. PaymentAuthorizedTransfer, PaymentCapturedTransfer).
     // OMS condition plugins are NOT defined here; they are owned by the PaymentApp module.
@@ -34,13 +39,7 @@ class StripeConfig
 
     public const string PAYMENT_STATUS_REFUNDED = 'refunded';
 
-    public const string PAYMENT_STATUS_REFUND_FAILED = 'refund_failed';
+    public const string PAYMENT_STATUS_PARTIALLY_REFUNDED = 'partially refunded';
 
-    // Business model values
-    public const string BUSINESS_MODEL_DIRECT = 'direct';
-
-    public const string BUSINESS_MODEL_MARKETPLACE = 'marketplace';
-
-    // Yves webhook route name (registered by StripeRouteProviderPlugin)
-    public const string WEBHOOK_ROUTE = 'stripe-webhook';
+    public const string PAYMENT_STATUS_REFUND_FAILED = 'refund failed';
 }

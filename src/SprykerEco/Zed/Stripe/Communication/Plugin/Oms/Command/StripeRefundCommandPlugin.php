@@ -8,7 +8,6 @@
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command;
 
 use Generated\Shared\Transfer\ItemTransfer;
-use Generated\Shared\Transfer\PaymentAmountRequestTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Orm\Zed\Sales\Persistence\SpySalesOrder;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
@@ -38,16 +37,7 @@ class StripeRefundCommandPlugin extends AbstractPlugin implements CommandByOrder
      */
     public function run(array $orderItems, SpySalesOrder $orderEntity, ReadOnlyArrayObject $data): array
     {
-        $orderItemIds = array_map(
-            static fn ($orderItem): int => $orderItem->getIdSalesOrderItem(),
-            $orderItems,
-        );
-
-        $refundAmount = $this->getFactory()->getSalesPaymentFacade()->calculateRefundAmount(
-            (new PaymentAmountRequestTransfer())
-                ->setIdSalesOrder($orderEntity->getIdSalesOrder())
-                ->setOrderItemIds($orderItemIds),
-        );
+        $refundTransfer = $this->getFactory()->getRefundFacade()->calculateRefund($orderItems, $orderEntity);
 
         $orderTransfer = (new OrderTransfer())->setOrderReference($orderEntity->getOrderReference());
 
@@ -57,7 +47,7 @@ class StripeRefundCommandPlugin extends AbstractPlugin implements CommandByOrder
             $orderItems,
         );
 
-        $this->getFacade()->refundPayment($orderTransfer, $itemTransfers, $refundAmount);
+        $this->getFacade()->refundPayment($orderTransfer, $itemTransfers, $refundTransfer->getAmountOrFail());
 
         return $orderItems;
     }
