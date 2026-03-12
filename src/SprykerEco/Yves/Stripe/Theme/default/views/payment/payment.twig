@@ -22,75 +22,20 @@
     <p>
         {{ 'stripe.payment.order.reference.text' | trans }} <strong><a href="{{ data.orderDetailsUrl }}" target="_blank">{{ data.orderReference }}</a></strong>.
     </p>
-    <div class="container" style="max-width: 600px; margin: 40px auto; padding: 0 20px;">
-        <div id="stripe-payment-element"></div>
-        <div id="stripe-payment-message" style="display:none; color: #df1b41; margin-top: 12px;"></div>
+    <stripe-payment
+        class="stripe-payment"
+        style="display: block; max-width: 800px; margin: 40px auto; padding: 0 20px;"
+        data-publishable-key="{{ data.stripePublishableKey | e('html_attr') }}"
+        data-client-secret="{{ data.stripeClientSecret | e('html_attr') }}"
+        data-checkout-success-url="{{ data.checkoutSuccessUrl | e('html_attr') }}"
+        data-payment-page-url="{{ data.paymentPageUrl | e('html_attr') }}"
+        data-error-failed="{{ 'stripe.payment.error.failed_redirect' | trans | e('html_attr') }}"
+    >
+        <div class="js-stripe-payment__payment-element"></div>
+        <div class="js-stripe-payment__message" style="display:none; color: #df1b41; margin-top: 12px;"></div>
 
-        <button id="stripe-submit" style="margin-top: 20px; width: 100%; padding: 12px;">
+        <button class="js-stripe-payment__submit button" style="margin-top: 20px; width: 100%; padding: 12px;">
             {{ 'stripe.payment.button.pay' | trans }}
         </button>
-    </div>
-{% endblock %}
-
-{% block footerScripts %}
-    {{ parent() }}
-    <script src="https://js.stripe.com/v3/"></script>
-    <script>
-        (function () {
-            var publishableKey = '{{ data.stripePublishableKey | e('js') }}';
-            var clientSecret = '{{ data.stripeClientSecret | e('js') }}';
-            var checkoutSuccessUrl = '{{ data.checkoutSuccessUrl | e('js') }}';
-            var paymentPageUrl = '{{ data.paymentPageUrl | e('js') }}';
-
-            if (!publishableKey || !clientSecret) {
-                console.error('[Stripe] Missing publishableKey or clientSecret.');
-                return;
-            }
-
-            var stripe = Stripe(publishableKey);
-            {# see https://docs.stripe.com/elements/appearance-api  #}
-            const appearance = {
-                theme: 'stripe'
-            };
-            var elements = stripe.elements({ clientSecret: clientSecret, appearance: appearance });
-            var paymentElement = elements.create('payment');
-            paymentElement.mount('#stripe-payment-element');
-
-            var submitButton = document.getElementById('stripe-submit');
-            var messageContainer = document.getElementById('stripe-payment-message');
-
-            // After a redirect-based payment (e.g. PayPal) fails, Stripe redirects back to
-            // this page (paymentPageUrl is used as return_url). Detect redirect_status=failed
-            // and show an error so the customer can retry with a different payment method.
-            var urlParams = new URLSearchParams(window.location.search);
-            var redirectStatus = urlParams.get('redirect_status');
-            if (redirectStatus === 'succeeded') {
-                window.location.replace(checkoutSuccessUrl);
-                return;
-            }
-            if (redirectStatus === 'failed') {
-                messageContainer.textContent = '{{ 'stripe.payment.error.failed_redirect' | trans | e('js') }}';
-                messageContainer.style.display = 'block';
-            }
-
-            submitButton.addEventListener('click', function () {
-                submitButton.disabled = true;
-                messageContainer.style.display = 'none';
-
-                stripe.confirmPayment({
-                    elements: elements,
-                    // Use the payment page itself as return_url so Stripe redirects back here
-                    // on both success and failure, allowing us to control the final navigation.
-                    confirmParams: { return_url: paymentPageUrl },
-                }).then(function (result) {
-                    if (result.error) {
-                        messageContainer.textContent = result.error.message;
-                        messageContainer.style.display = 'block';
-                        submitButton.disabled = false;
-                    }
-                    // For redirect-based methods Stripe handles the redirect automatically.
-                });
-            });
-        })();
-    </script>
+    </stripe-payment>
 {% endblock %}

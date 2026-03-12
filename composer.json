@@ -6,6 +6,7 @@
     "require": {
         "php": ">=8.3",
         "stripe/stripe-php": "^13.0",
+        "spryker-shop/checkout-page":"^3.36.0",
         "spryker/checkout-extension": "^1.5.0",
         "spryker/installer-extension": "^1.0.0",
         "spryker/kernel": "^3.81.0",

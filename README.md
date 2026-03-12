@@ -47,7 +47,8 @@ To check/fix code style and run static analysis, use:
 
 ```bash
 composer cs-fix # can be used standalone
-composer phpstan # only works together with Spryker project (uses autoloader from it)
+cd project-root # only works together with Spryker project (uses autoloader from it)
+vendor/bin/phpstan analyze -c vendor/spryker-eco/stripe/phpstan.neon vendor/spryker-eco/stripe
 ```
 
 For test execution, check the details in [tests/README.md](tests/README.md) file.
