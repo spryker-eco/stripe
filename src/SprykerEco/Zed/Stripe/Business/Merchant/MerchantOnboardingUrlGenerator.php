@@ -10,19 +10,19 @@ namespace SprykerEco\Zed\Stripe\Business\Merchant;
 use Generated\Shared\Transfer\StripeAccountLinksRequestTransfer;
 use Generated\Shared\Transfer\StripeAccountRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountLinks;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccounts;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountLinksInterface;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountsInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class MerchantOnboardingUrlGenerator
+class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorInterface
 {
     use LoggerTrait;
 
     public function __construct(
-        protected StripeAccounts $stripeAccounts,
-        protected StripeAccountLinks $stripeAccountLinks,
+        protected StripeAccountsInterface $stripeAccounts,
+        protected StripeAccountLinksInterface $stripeAccountLinks,
         protected StripeEntityManagerInterface $entityManager,
         protected StripeRepositoryInterface $repository,
         protected StripeConfig $config,
@@ -30,14 +30,7 @@ class MerchantOnboardingUrlGenerator
     }
 
     /**
-     * Generates a Stripe Connect onboarding URL for the given merchant.
-     * Creates a connected account if none exists, then returns an account link URL.
-     *
-     * @param string $merchantReference
-     * @param string $returnUrl URL Stripe redirects to after successful onboarding (falls back to config)
-     * @param string $refreshUrl URL Stripe redirects to if the account link expires (falls back to config)
-     *
-     * @return string Stripe account link URL, or empty string on failure
+     * {@inheritDoc}
      */
     public function generateOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): string
     {

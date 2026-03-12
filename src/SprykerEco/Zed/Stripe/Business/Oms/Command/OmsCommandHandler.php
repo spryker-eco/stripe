@@ -8,18 +8,18 @@
 namespace SprykerEco\Zed\Stripe\Business\Oms\Command;
 
 use Generated\Shared\Transfer\OrderTransfer;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentAuthorizer;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentCanceller;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentCapturer;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentAuthorizerInterface;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentCancellerInterface;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentCapturerInterface;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunderInterface;
 
 class OmsCommandHandler implements OmsCommandHandlerInterface
 {
     public function __construct(
-        protected PaymentAuthorizer $paymentAuthorizer,
-        protected PaymentCapturer $paymentCapturer,
-        protected PaymentCanceller $paymentCanceller,
-        protected PaymentRefunder $paymentRefunder,
+        protected PaymentAuthorizerInterface $paymentAuthorizer,
+        protected PaymentCapturerInterface $paymentCapturer,
+        protected PaymentCancellerInterface $paymentCanceller,
+        protected PaymentRefunderInterface $paymentRefunder,
     ) {
     }
 

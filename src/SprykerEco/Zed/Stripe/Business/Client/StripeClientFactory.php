@@ -7,7 +7,6 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Client;
 
-use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
 use SprykerEco\Zed\Stripe\StripeConfig;
 use Stripe\StripeClient;
 
@@ -28,18 +27,5 @@ class StripeClientFactory
         ]);
     }
 
-    /**
-     * Returns Stripe API request options for connected-account routing.
-     * In the direct business model, charges are created on the connected account (acct_xxx).
-     *
-     * @return array<string, string>|null
-     */
-    public function getConnectedAccountOpts(): ?array
-    {
-        if ($this->config->getBusinessModel() === SharedStripeConfig::BUSINESS_MODEL_DIRECT) {
-            return ['stripe_account' => $this->config->getAccountId()];
-        }
 
-        return null;
-    }
 }

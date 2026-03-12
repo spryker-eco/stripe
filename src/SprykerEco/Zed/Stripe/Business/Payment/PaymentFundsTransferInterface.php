@@ -9,7 +9,10 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 
 use Generated\Shared\Transfer\OrderTransfer;
 
-interface PaymentAuthorizerInterface
+interface PaymentFundsTransferInterface
 {
-    public function authorizePayment(OrderTransfer $orderTransfer): void;
+    /**
+     * @param int $amount Amount in minor units (cents).
+     */
+    public function transfer(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void;
 }

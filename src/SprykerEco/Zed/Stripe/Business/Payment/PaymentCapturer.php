@@ -13,19 +13,22 @@ use Generated\Shared\Transfer\StripeIntentCaptureRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
 use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 
-class PaymentCapturer
+class PaymentCapturer implements PaymentCapturerInterface
 {
     use LoggerTrait;
 
     public function __construct(
-        protected StripeIntents $stripeIntents,
-        protected PaymentReader $paymentReader,
+        protected StripeIntentsInterface $stripeIntents,
+        protected PaymentReaderInterface $paymentReader,
         protected PaymentAppFacadeInterface $paymentAppFacade,
     ) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function capturePayment(OrderTransfer $orderTransfer, int $captureAmount = 0): void
     {
         $orderReference = $orderTransfer->getOrderReferenceOrFail();

@@ -10,17 +10,23 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
 
-class PaymentReader
+class PaymentReader implements PaymentReaderInterface
 {
     public function __construct(protected StripeRepositoryInterface $repository)
     {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getPaymentByOrderReference(string $orderReference): ?StripePaymentTransfer
     {
         return $this->repository->findPaymentByOrderReference($orderReference);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getPaymentByTransactionId(string $transactionId): ?StripePaymentTransfer
     {
         return $this->repository->findPaymentByTransactionId($transactionId);

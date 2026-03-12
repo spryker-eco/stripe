@@ -10,18 +10,21 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 
-class PaymentAuthorizer
+class PaymentAuthorizer implements PaymentAuthorizerInterface
 {
     use LoggerTrait;
 
     public function __construct(
-        protected StripeIntents $stripeIntents,
-        protected PaymentReader $paymentReader,
+        protected StripeIntentsInterface $stripeIntents,
+        protected PaymentReaderInterface $paymentReader,
     ) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function authorizePayment(OrderTransfer $orderTransfer): void
     {
         $stripePaymentTransfer = $this->paymentReader->getPaymentByOrderReference(

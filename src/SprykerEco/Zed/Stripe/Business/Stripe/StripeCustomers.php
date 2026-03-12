@@ -14,7 +14,7 @@ use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use Stripe\Exception\ApiErrorException;
 
-class StripeCustomers
+class StripeCustomers implements StripeCustomersInterface
 {
     use LoggerTrait;
 
@@ -22,6 +22,9 @@ class StripeCustomers
     {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function searchOrCreate(StripeCustomerRequestTransfer $stripeCustomerRequestTransfer): StripeCustomerResponseTransfer
     {
         $stripeCustomerResponseTransfer = new StripeCustomerResponseTransfer();
@@ -36,11 +39,10 @@ class StripeCustomers
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
 
             $searchResult = $stripeClient->customers->search([
                 'query' => sprintf('email: "%s"', $quoteTransfer->getCustomerOrFail()->getEmailOrFail()),
-            ], $opts);
+            ]);
 
             if ($searchResult->count() === 0) {
                 return $this->create($stripeCustomerRequestTransfer);
@@ -70,18 +72,14 @@ class StripeCustomers
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
 
-            $customer = $stripeClient->customers->create(
-                [
-                    'name' => sprintf('%s %s', $quoteTransfer->getCustomer()?->getFirstName(), $quoteTransfer->getCustomer()?->getLastName()),
-                    'email' => $quoteTransfer->getCustomerOrFail()->getEmailOrFail(),
-                    'metadata' => [
-                        QuoteTransfer::CUSTOMER_REFERENCE => $quoteTransfer->getCustomerReference(),
-                    ],
+            $customer = $stripeClient->customers->create([
+                'name' => sprintf('%s %s', $quoteTransfer->getCustomer()?->getFirstName(), $quoteTransfer->getCustomer()?->getLastName()),
+                'email' => $quoteTransfer->getCustomerOrFail()->getEmailOrFail(),
+                'metadata' => [
+                    QuoteTransfer::CUSTOMER_REFERENCE => $quoteTransfer->getCustomerReference(),
                 ],
-                $opts,
-            );
+            ]);
 
             $stripeCustomerResponseTransfer->setIsSuccessful(true);
             $stripeCustomerResponseTransfer->setCustomerId($customer->id);

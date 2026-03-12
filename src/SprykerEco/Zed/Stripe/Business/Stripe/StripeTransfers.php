@@ -19,7 +19,7 @@ use Stripe\StripeClient;
 use Stripe\Transfer;
 use Stripe\TransferReversal;
 
-class StripeTransfers
+class StripeTransfers implements StripeTransfersInterface
 {
     use LoggerTrait;
 
@@ -27,6 +27,9 @@ class StripeTransfers
     {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function transfer(StripeTransmissionRequestTransfer $stripeTransmissionRequestTransfer): StripeTransmissionResponseTransfer
     {
         $stripeTransmissionResponseTransfer = new StripeTransmissionResponseTransfer();

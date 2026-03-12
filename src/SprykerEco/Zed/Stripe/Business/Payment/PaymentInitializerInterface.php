@@ -7,9 +7,10 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
-use Generated\Shared\Transfer\OrderTransfer;
+use Generated\Shared\Transfer\QuoteTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 
-interface PaymentAuthorizerInterface
+interface PaymentInitializerInterface
 {
-    public function authorizePayment(OrderTransfer $orderTransfer): void;
+    public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer;
 }

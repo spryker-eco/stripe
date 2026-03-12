@@ -14,7 +14,7 @@ use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Refund;
 
-class StripeRefunds
+class StripeRefunds implements StripeRefundsInterface
 {
     use LoggerTrait;
 
@@ -22,6 +22,9 @@ class StripeRefunds
     {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function create(StripeRefundRequestTransfer $stripeRefundRequestTransfer): StripeRefundResponseTransfer
     {
         $stripeRefundResponseTransfer = new StripeRefundResponseTransfer();
@@ -30,10 +33,9 @@ class StripeRefunds
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
 
             $paymentRefundParams = $this->createPaymentRefundParams($stripeRefundRequestTransfer);
-            $stripeRefund = $stripeClient->refunds->create($paymentRefundParams, $opts);
+            $stripeRefund = $stripeClient->refunds->create($paymentRefundParams);
 
             $stripeRefundResponseTransfer = $this->mapStripeRefundToResponseTransfer(
                 $stripeRefund,

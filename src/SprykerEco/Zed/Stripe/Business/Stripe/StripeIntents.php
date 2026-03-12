@@ -23,7 +23,7 @@ use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\ExceptionInterface;
 use Stripe\PaymentIntent;
 
-class StripeIntents
+class StripeIntents implements StripeIntentsInterface
 {
     use LoggerTrait;
 
@@ -31,11 +31,14 @@ class StripeIntents
 
     public function __construct(
         protected StripeClientFactory $stripeClientFactory,
-        protected StripeCustomers $stripeCustomers,
+        protected StripeCustomersInterface $stripeCustomers,
         protected StripeConfig $config,
     ) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function create(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
     {
         $quoteTransfer = $stripeIntentRequestTransfer->getQuoteOrFail();
@@ -44,7 +47,6 @@ class StripeIntents
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
 
             $stripeCustomerRequestTransfer = (new StripeCustomerRequestTransfer())->setQuote($quoteTransfer);
             $stripeCustomerResponseTransfer = $this->stripeCustomers->searchOrCreate($stripeCustomerRequestTransfer);
@@ -52,7 +54,7 @@ class StripeIntents
             $paymentIntentParams = $this->createPaymentIntentParams($quoteTransfer, $stripeCustomerResponseTransfer, $stripeIntentRequestTransfer);
             $paymentIntentParams = $this->addMetadata($quoteTransfer, $paymentIntentParams);
 
-            $paymentIntent = $stripeClient->paymentIntents->create($paymentIntentParams, $opts);
+            $paymentIntent = $stripeClient->paymentIntents->create($paymentIntentParams);
 
             if (!$paymentIntent->__isset('id')) {
                 return $stripeIntentResponseTransfer
@@ -79,6 +81,9 @@ class StripeIntents
         return $stripeIntentResponseTransfer;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function get(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
     {
         $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
@@ -88,8 +93,7 @@ class StripeIntents
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
-            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, [], $opts);
+            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
 
             $stripeIntentResponseTransfer->setIsSuccessful(true);
             $stripeIntentResponseTransfer
@@ -113,6 +117,9 @@ class StripeIntents
         return $stripeIntentResponseTransfer;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function capture(StripeIntentCaptureRequestTransfer $stripeIntentCaptureRequestTransfer): StripeIntentCaptureResponseTransfer
     {
         $stripeIntentCaptureResponseTransfer = new StripeIntentCaptureResponseTransfer();
@@ -122,8 +129,7 @@ class StripeIntents
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
-            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, [], $opts);
+            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
 
             // Already succeeded (e.g. Bank Account Payment — auto-captured)
             if ($paymentIntent->status === 'succeeded') {
@@ -153,7 +159,7 @@ class StripeIntents
                 ? ['amount_to_capture' => $stripeIntentCaptureRequestTransfer->getAmount()]
                 : null;
 
-            $capturePaymentIntent = $stripeClient->paymentIntents->capture($transactionId, $captureParams, $opts);
+            $capturePaymentIntent = $stripeClient->paymentIntents->capture($transactionId, $captureParams);
 
             if (!$capturePaymentIntent->__isset('status') || $capturePaymentIntent->status !== 'succeeded') {
                 $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
@@ -180,6 +186,9 @@ class StripeIntents
         return $stripeIntentCaptureResponseTransfer;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function cancel(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
     {
         $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
@@ -189,8 +198,7 @@ class StripeIntents
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $opts = $this->stripeClientFactory->getConnectedAccountOpts();
-            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, [], $opts);
+            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
 
             if ($paymentIntent->status === 'canceled') {
                 $stripeIntentResponseTransfer->setIsSuccessful(true);
@@ -214,7 +222,7 @@ class StripeIntents
                 return $stripeIntentResponseTransfer;
             }
 
-            $cancelPaymentIntent = $stripeClient->paymentIntents->cancel($transactionId, null, $opts);
+            $cancelPaymentIntent = $stripeClient->paymentIntents->cancel($transactionId);
 
             if (!$cancelPaymentIntent->__isset('status') || $cancelPaymentIntent->status !== 'canceled') {
                 $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);

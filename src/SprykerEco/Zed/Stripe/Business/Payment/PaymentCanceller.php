@@ -15,20 +15,23 @@ use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
 use Spryker\Zed\SalesPaymentDetail\Business\SalesPaymentDetailFacadeInterface;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 
-class PaymentCanceller
+class PaymentCanceller implements PaymentCancellerInterface
 {
     use LoggerTrait;
 
     public function __construct(
-        protected StripeIntents $stripeIntents,
-        protected PaymentReader $paymentReader,
+        protected StripeIntentsInterface $stripeIntents,
+        protected PaymentReaderInterface $paymentReader,
         protected PaymentAppFacadeInterface $paymentAppFacade,
         protected SalesPaymentDetailFacadeInterface $salesPaymentDetailFacade,
     ) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function cancelPayment(OrderTransfer $orderTransfer): void
     {
         $orderReference = $orderTransfer->getOrderReferenceOrFail();

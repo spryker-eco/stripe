@@ -13,7 +13,7 @@ use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use Stripe\Exception\ApiErrorException;
 
-class StripeAccountLinks
+class StripeAccountLinks implements StripeAccountLinksInterface
 {
     use LoggerTrait;
 
@@ -21,6 +21,9 @@ class StripeAccountLinks
     {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function create(StripeAccountLinksRequestTransfer $stripeAccountLinksRequestTransfer): StripeAccountLinksResponseTransfer
     {
         $stripeAccountLinksResponseTransfer = new StripeAccountLinksResponseTransfer();

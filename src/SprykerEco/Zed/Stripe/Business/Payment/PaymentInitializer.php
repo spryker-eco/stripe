@@ -10,17 +10,20 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class PaymentInitializer
+class PaymentInitializer implements PaymentInitializerInterface
 {
     public function __construct(
-        protected StripeIntents $stripeIntents,
+        protected StripeIntentsInterface $stripeIntents,
         protected StripeConfig $config,
     ) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer
     {
         $stripeIntentRequestTransfer = (new StripeIntentRequestTransfer())

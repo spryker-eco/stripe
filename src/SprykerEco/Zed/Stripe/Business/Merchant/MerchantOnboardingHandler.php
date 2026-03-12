@@ -18,7 +18,7 @@ use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use Stripe\Account;
 use Stripe\Event;
 
-class MerchantOnboardingHandler
+class MerchantOnboardingHandler implements MerchantOnboardingHandlerInterface
 {
     use LoggerTrait;
 
@@ -28,6 +28,9 @@ class MerchantOnboardingHandler
     ) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function handleAccountUpdated(
         StripeWebhookProcessResponseTransfer $response,
         Event $event,

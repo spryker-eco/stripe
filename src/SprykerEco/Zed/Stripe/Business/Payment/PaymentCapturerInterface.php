@@ -9,7 +9,7 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 
 use Generated\Shared\Transfer\OrderTransfer;
 
-interface PaymentAuthorizerInterface
+interface PaymentCapturerInterface
 {
-    public function authorizePayment(OrderTransfer $orderTransfer): void;
+    public function capturePayment(OrderTransfer $orderTransfer, int $captureAmount = 0): void;
 }

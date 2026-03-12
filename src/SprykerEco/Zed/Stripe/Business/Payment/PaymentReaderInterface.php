@@ -7,14 +7,11 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
-use Generated\Shared\Transfer\StripeTransfer;
-use Orm\Zed\Sales\Persistence\SpySalesOrderItem;
+use Generated\Shared\Transfer\StripePaymentTransfer;
 
 interface PaymentReaderInterface
 {
-    public function findPaymentByIdSalesOrder(int $idSalesOrder): ?StripeTransfer;
+    public function getPaymentByOrderReference(string $orderReference): ?StripePaymentTransfer;
 
-    public function findPaymentByOrderItem(SpySalesOrderItem $orderItemEntity): ?StripeTransfer;
-
-    public function findPaymentByProviderReference(string $providerReference): ?StripeTransfer;
+    public function getPaymentByTransactionId(string $transactionId): ?StripePaymentTransfer;
 }

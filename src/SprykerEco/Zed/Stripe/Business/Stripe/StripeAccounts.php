@@ -14,7 +14,7 @@ use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use Stripe\Exception\ApiErrorException;
 
-class StripeAccounts
+class StripeAccounts implements StripeAccountsInterface
 {
     use LoggerTrait;
 
@@ -22,6 +22,9 @@ class StripeAccounts
     {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function create(StripeAccountRequestTransfer $stripeAccountRequestTransfer): StripeAccountResponseTransfer
     {
         $stripeAccountResponseTransfer = new StripeAccountResponseTransfer();

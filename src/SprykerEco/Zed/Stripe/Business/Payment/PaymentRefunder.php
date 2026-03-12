@@ -11,20 +11,20 @@ use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeRefundRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefundsInterface;
 
-class PaymentRefunder
+class PaymentRefunder implements PaymentRefunderInterface
 {
     use LoggerTrait;
 
     public function __construct(
-        protected StripeRefunds $stripeRefunds,
-        protected PaymentReader $paymentReader,
+        protected StripeRefundsInterface $stripeRefunds,
+        protected PaymentReaderInterface $paymentReader,
     ) {
     }
 
     /**
-     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     * {@inheritDoc}
      */
     public function refundPayment(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void
     {

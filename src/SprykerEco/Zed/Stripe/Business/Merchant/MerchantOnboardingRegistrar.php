@@ -12,7 +12,7 @@ use Generated\Shared\Transfer\ReadyForMerchantAppOnboardingTransfer;
 use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class MerchantOnboardingRegistrar
+class MerchantOnboardingRegistrar implements MerchantOnboardingRegistrarInterface
 {
     public function __construct(
         protected MerchantAppFacadeInterface $merchantAppFacade,
@@ -21,8 +21,7 @@ class MerchantOnboardingRegistrar
     }
 
     /**
-     * Registers Stripe as a ready-to-use merchant onboarding provider.
-     * Stores strategy='redirect' and the initialize endpoint URL in the MerchantApp module.
+     * {@inheritDoc}
      */
     public function register(): void
     {

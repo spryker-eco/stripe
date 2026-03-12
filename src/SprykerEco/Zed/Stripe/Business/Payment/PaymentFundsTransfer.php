@@ -11,25 +11,23 @@ use Generated\Shared\Transfer\CurrencyTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeTransmissionRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfers;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfersInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class PaymentFundsTransfer
+class PaymentFundsTransfer implements PaymentFundsTransferInterface
 {
     use LoggerTrait;
 
     public function __construct(
-        protected StripeTransfers $stripeTransfers,
-        protected PaymentReader $paymentReader,
+        protected StripeTransfersInterface $stripeTransfers,
+        protected PaymentReaderInterface $paymentReader,
         protected StripeRepositoryInterface $repository,
     ) {
     }
 
     /**
-     * Transfers funds to the merchant's Stripe connected account.
-     *
-     * @param int $amount Amount in minor units (cents)
+     * {@inheritDoc}
      */
     public function transfer(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void
     {

@@ -9,7 +9,10 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 
 use Generated\Shared\Transfer\OrderTransfer;
 
-interface PaymentAuthorizerInterface
+interface PaymentRefunderInterface
 {
-    public function authorizePayment(OrderTransfer $orderTransfer): void;
+    /**
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     */
+    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void;
 }

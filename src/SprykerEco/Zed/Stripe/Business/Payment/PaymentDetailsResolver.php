@@ -13,11 +13,11 @@ use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Generated\Shared\Transfer\TotalsTransfer;
-use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class PaymentDetailsResolver
+class PaymentDetailsResolver implements PaymentDetailsResolverInterface
 {
     /**
      * PaymentIntent statuses where the stored client_secret can be reused to collect payment.
@@ -35,13 +35,16 @@ class PaymentDetailsResolver
     protected const COMPLETED_STATUSES = ['requires_capture', 'succeeded'];
 
     public function __construct(
-        protected StripeIntents $stripeIntents,
-        protected PaymentReader $paymentReader,
+        protected StripeIntentsInterface $stripeIntents,
+        protected PaymentReaderInterface $paymentReader,
         protected StripeEntityManagerInterface $entityManager,
         protected StripeConfig $config,
     ) {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function resolve(string $orderReference): StripeIntentResponseTransfer
     {
         $payment = $this->paymentReader->getPaymentByOrderReference($orderReference);

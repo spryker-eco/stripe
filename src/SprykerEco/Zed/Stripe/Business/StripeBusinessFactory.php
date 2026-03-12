@@ -31,6 +31,7 @@ use SprykerEco\Zed\Stripe\Business\Stripe\StripeCustomers;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfers;
+use SprykerEco\Zed\Stripe\Business\Webhook\StripeEventDetailsExtractor;
 use SprykerEco\Zed\Stripe\Business\Webhook\WebhookHandler;
 use SprykerEco\Zed\Stripe\StripeDependencyProvider;
 
@@ -49,7 +50,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
             $this->createPaymentReader(),
             $this->createMerchantOnboardingHandler(),
             $this->getSalesPaymentDetailFacade(),
-            $this->createStripeClientFactory(),
+            $this->createStripeEventDetailsExtractor(),
         );
     }
 
@@ -183,6 +184,13 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     protected function createStripeAccountLinks(): StripeAccountLinks
     {
         return new StripeAccountLinks(
+            $this->createStripeClientFactory(),
+        );
+    }
+
+    protected function createStripeEventDetailsExtractor(): StripeEventDetailsExtractor
+    {
+        return new StripeEventDetailsExtractor(
             $this->createStripeClientFactory(),
         );
     }
