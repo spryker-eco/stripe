@@ -45,3 +45,5 @@ stripe.payment.selection_message,You will be asked for the payment details secur
 stripe.payment.selection_message,Nach der Bestellung werden Sie sicher über Stripe zur Eingabe Ihrer Zahlungsdaten weitergeleitet.,de_DE
 stripe.payment.error.failed_redirect,Your payment was not completed. Please choose a different payment method and try again.,en_US
 stripe.payment.error.failed_redirect,Ihre Zahlung wurde nicht abgeschlossen. Bitte wählen Sie eine andere Zahlungsmethode und versuchen Sie es erneut.,de_DE
+stripe.payment.loading,Loading payment form…,en_US
+stripe.payment.loading,Zahlungsformular wird geladen…,de_DE

@@ -20,6 +20,7 @@ interface StripeElement {
 
 export default class StripePayment extends Component {
     protected paymentElementContainer: HTMLElement;
+    protected loader: HTMLElement;
     protected messageContainer: HTMLElement;
     protected submitButton: HTMLButtonElement;
 
@@ -27,6 +28,7 @@ export default class StripePayment extends Component {
 
     protected init(): void {
         this.paymentElementContainer = this.getElementsByClassName(`${this.jsName}__payment-element`)[0] as HTMLElement;
+        this.loader = this.getElementsByClassName(`${this.jsName}__loader`)[0] as HTMLElement;
         this.messageContainer = this.getElementsByClassName(`${this.jsName}__message`)[0] as HTMLElement;
         this.submitButton = this.getElementsByClassName(`${this.jsName}__submit`)[0] as HTMLButtonElement;
 
@@ -53,9 +55,42 @@ export default class StripePayment extends Component {
     ): void {
         const stripe = Stripe(publishableKey);
         // see https://docs.stripe.com/elements/appearance-api
-        const elements = stripe.elements({ clientSecret, appearance: { theme: 'stripe' } });
+        const elements = stripe.elements({
+            clientSecret,
+            appearance: {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary: '#1479bd',
+                    colorText: '#333333',
+                    colorDanger: '#df1b41',
+                    fontFamily: 'Arial, sans-serif',
+                    borderRadius: '0px',
+                    spacingUnit: '4px',
+                },
+                rules: {
+                    '.Input': {
+                        border: '1px solid #dadada',
+                        boxShadow: 'none',
+                    },
+                    '.Input:focus': {
+                        border: '1px solid #1479bd',
+                        boxShadow: 'none',
+                        outline: 'none',
+                    },
+                    '.Tab': {
+                        border: '1px solid #dadada',
+                        boxShadow: 'none',
+                    },
+                    '.Tab--selected': {
+                        border: '1px solid #1479bd',
+                        color: '#1479bd',
+                    },
+                },
+            },
+        });
         const paymentElement = elements.create('payment');
         paymentElement.mount(this.paymentElementContainer);
+        this.loader?.remove();
 
         this.handleRedirectStatus(checkoutSuccessUrl, errorFailed);
         this.mapEvents(stripe, elements, paymentPageUrl);
