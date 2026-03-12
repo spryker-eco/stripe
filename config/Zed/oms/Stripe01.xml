@@ -43,11 +43,17 @@
                 <target>authorization failed</target>
             </transition>
 
-            <!-- Cancel before capture -->
+            <!-- Cancel before capture (manual OMS action) -->
             <transition>
                 <source>payment pending</source>
                 <target>cancelled</target>
                 <event>cancel</event>
+            </transition>
+
+            <!-- payment_intent.canceled webhook → CANCELLED (e.g. canceled from Stripe dashboard) -->
+            <transition condition="PaymentApp/IsCanceled">
+                <source>payment pending</source>
+                <target>cancelled</target>
             </transition>
 
             <!-- Fulfillment -->

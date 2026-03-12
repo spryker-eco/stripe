@@ -10,6 +10,7 @@ namespace SprykerEco\Zed\Stripe\Business\Webhook;
 use Exception;
 use Generated\Shared\Transfer\PaymentAppPaymentStatusCriteriaTransfer;
 use Generated\Shared\Transfer\PaymentAuthorizedTransfer;
+use Generated\Shared\Transfer\PaymentCanceledTransfer;
 use Generated\Shared\Transfer\PaymentCapturedTransfer;
 use Generated\Shared\Transfer\PaymentCaptureFailedTransfer;
 use Generated\Shared\Transfer\PaymentCreatedTransfer;
@@ -74,6 +75,7 @@ class WebhookHandler implements WebhookHandlerInterface
             Event::PAYMENT_INTENT_AMOUNT_CAPTURABLE_UPDATED => $this->handleAmountCapturableUpdated($response, $event),
             Event::PAYMENT_INTENT_SUCCEEDED => $this->handlePaymentSucceeded($response, $event),
             Event::PAYMENT_INTENT_PAYMENT_FAILED => $this->handlePaymentFailed($response, $event),
+            Event::PAYMENT_INTENT_CANCELED => $this->handlePaymentIntentCanceled($response, $event),
             Event::CHARGE_FAILED => $this->handleChargeFailed($response, $event),
             Event::CHARGE_REFUNDED => $this->handleChargeRefunded($response, $event),
             Event::CHARGE_REFUND_UPDATED => $this->handleRefundUpdated($response, $event),
@@ -173,6 +175,36 @@ class WebhookHandler implements WebhookHandlerInterface
 
         $this->paymentAppFacade->savePaymentAppPaymentStatus(
             (new PaymentCaptureFailedTransfer())->setOrderReference($orderReference),
+        );
+
+        $this->salesPaymentDetailFacade->handlePaymentUpdated(
+            (new PaymentUpdatedTransfer())
+                ->setEntityReference($orderReference)
+                ->setPaymentReference($paymentIntent->id)
+                ->setDetails((string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent))),
+        );
+
+        return $response->setIsSuccessful(true);
+    }
+
+    protected function handlePaymentIntentCanceled(
+        StripeWebhookProcessResponseTransfer $response,
+        Event $event,
+    ): StripeWebhookProcessResponseTransfer {
+        /** @var \Stripe\PaymentIntent $paymentIntent */
+        $paymentIntent = $event->data->offsetGet('object');
+        $orderReference = $paymentIntent->metadata[StripeConfig::METADATA_ORDER_REFERENCE] ?? null;
+
+        if ($orderReference === null) {
+            $this->getLogger()->warning('WebhookHandler: orderReference missing from PaymentIntent metadata', [
+                'paymentIntentId' => $paymentIntent->id,
+            ]);
+
+            return $response->setIsSuccessful(true);
+        }
+
+        $this->paymentAppFacade->savePaymentAppPaymentStatus(
+            (new PaymentCanceledTransfer())->setOrderReference($orderReference),
         );
 
         $this->salesPaymentDetailFacade->handlePaymentUpdated(

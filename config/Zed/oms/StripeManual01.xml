@@ -94,13 +94,14 @@
                 <event>cancel</event>
             </transition>
 
+            <!-- payment_intent.canceled webhook → CANCELLED (e.g. canceled from Stripe dashboard after authorization) -->
             <transition condition="PaymentApp/IsCanceled">
-                <source>cancelled</source>
+                <source>authorized</source>
                 <target>cancelled</target>
             </transition>
 
             <transition condition="PaymentApp/IsCancellationFailed">
-                <source>cancelled</source>
+                <source>authorized</source>
                 <target>cancellation failed</target>
             </transition>
 

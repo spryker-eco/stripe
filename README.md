@@ -23,6 +23,16 @@ $config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';
 $config[StripeConstants::STRIPE_BUSINESS_MODEL] = 'direct'; // or marketplace
 ```
 
+>Note: For testing Google Pay and Apple Pay you need to register your external domain in Stripe [Payment method domains](https://dashboard.stripe.com/test/settings/payment_method_domains?enabled=true).
+> You can use `ngrok` for this.
+> 1. Download and install ngrok from https://ngrok.com/.
+> 2. Run `ngrok http --host-header=yves.eu.spryker.local 80` to expose your local environment to the internet (dynamic domain will be assigned).
+>
+> To use personal dev domain you need to register it in https://dashboard.ngrok.com/domains and then run
+> ```bash
+> ngrok http --domain=your-personal-domain.ngrok-free.dev --host-header=yves.eu.spryker.local 80
+> ```
+> 3. Open https://your-personal-domain.ngrok-free.dev in the browser and go to Stripe payment page.
 
 ## Support
 
