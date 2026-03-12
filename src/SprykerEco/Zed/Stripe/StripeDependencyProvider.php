@@ -10,7 +10,6 @@ namespace SprykerEco\Zed\Stripe;
 use Spryker\Zed\Kernel\AbstractBundleDependencyProvider;
 use Spryker\Zed\Kernel\Container;
 
-
 /**
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
  */

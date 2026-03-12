@@ -16,8 +16,6 @@ class StripeFormDataProvider implements StepEngineFormDataProviderInterface
 {
     /**
      * @param \Generated\Shared\Transfer\QuoteTransfer $dataTransfer
-     *
-     * @return \Generated\Shared\Transfer\QuoteTransfer
      */
     public function getData(AbstractTransfer $dataTransfer): QuoteTransfer
     {

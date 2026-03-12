@@ -29,8 +29,6 @@ class PaymentFundsTransfer
     /**
      * Transfers funds to the merchant's Stripe connected account.
      *
-     * @param \Generated\Shared\Transfer\OrderTransfer $orderTransfer
-     * @param string $merchantReference
      * @param int $amount Amount in minor units (cents)
      */
     public function transfer(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void

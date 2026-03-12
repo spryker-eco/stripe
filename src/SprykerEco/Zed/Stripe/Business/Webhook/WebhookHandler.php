@@ -13,6 +13,7 @@ use Generated\Shared\Transfer\PaymentAuthorizedTransfer;
 use Generated\Shared\Transfer\PaymentCapturedTransfer;
 use Generated\Shared\Transfer\PaymentCaptureFailedTransfer;
 use Generated\Shared\Transfer\PaymentCreatedTransfer;
+use Generated\Shared\Transfer\PaymentPartiallyCapturedTransfer;
 use Generated\Shared\Transfer\PaymentPartiallyRefundedTransfer;
 use Generated\Shared\Transfer\PaymentRefundedTransfer;
 use Generated\Shared\Transfer\PaymentRefundFailedTransfer;
@@ -33,6 +34,7 @@ use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
 use Stripe\Refund;
 use Stripe\Webhook;
+use Throwable;
 
 class WebhookHandler implements WebhookHandlerInterface
 {
@@ -133,9 +135,12 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
-        $this->paymentAppFacade->savePaymentAppPaymentStatus(
-            (new PaymentCapturedTransfer())->setOrderReference($orderReference),
-        );
+        // Partial capture when Stripe captured less than the authorized amount
+        $statusTransfer = $paymentIntent->amount_received < $paymentIntent->amount
+            ? (new PaymentPartiallyCapturedTransfer())->setOrderReference($orderReference)
+            : (new PaymentCapturedTransfer())->setOrderReference($orderReference);
+
+        $this->paymentAppFacade->savePaymentAppPaymentStatus($statusTransfer);
 
         $this->salesPaymentDetailFacade->handlePaymentUpdated(
             (new PaymentUpdatedTransfer())
@@ -440,7 +445,7 @@ class WebhookHandler implements WebhookHandlerInterface
     {
         try {
             $paymentMethod = $this->stripeClientFactory->create()->paymentMethods->retrieve($paymentMethodId);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $this->getLogger()->warning('WebhookHandler: could not retrieve PaymentMethod details', [
                 'paymentMethodId' => $paymentMethodId,
                 'error' => $exception->getMessage(),

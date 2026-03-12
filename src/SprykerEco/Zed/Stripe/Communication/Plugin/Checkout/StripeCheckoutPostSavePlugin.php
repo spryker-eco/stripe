@@ -30,11 +30,6 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
      * - On failure: adds a checkout error and sets isSuccess=false.
      *
      * @api
-     *
-     * @param \Generated\Shared\Transfer\QuoteTransfer $quoteTransfer
-     * @param \Generated\Shared\Transfer\CheckoutResponseTransfer $checkoutResponseTransfer
-     *
-     * @return void
      */
     public function executeHook(QuoteTransfer $quoteTransfer, CheckoutResponseTransfer $checkoutResponseTransfer): void
     {

@@ -19,10 +19,6 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
     /**
      * Specification:
      * - Adds routes for webhook notification and Stripe payment page.
-     *
-     * @param \Spryker\Yves\Router\Route\RouteCollection $routeCollection
-     *
-     * @return \Spryker\Yves\Router\Route\RouteCollection
      */
     public function addRoutes(RouteCollection $routeCollection): RouteCollection
     {

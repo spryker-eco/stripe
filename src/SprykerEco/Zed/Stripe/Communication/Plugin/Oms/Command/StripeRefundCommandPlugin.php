@@ -30,9 +30,7 @@ class StripeRefundCommandPlugin extends AbstractPlugin implements CommandByOrder
      * @api
      *
      * @param array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem> $orderItems
-     * @param \Orm\Zed\Sales\Persistence\SpySalesOrder $orderEntity
-     * @param \Spryker\Zed\Oms\Business\Util\ReadOnlyArrayObject $data
-     *
+
      * @return array<\Orm\Zed\Sales\Persistence\SpySalesOrderItem>
      */
     public function run(array $orderItems, SpySalesOrder $orderEntity, ReadOnlyArrayObject $data): array
