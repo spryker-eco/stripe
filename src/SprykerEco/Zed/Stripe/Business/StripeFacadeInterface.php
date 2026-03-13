@@ -128,4 +128,14 @@ interface StripeFacadeInterface
      * @api
      */
     public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void;
+
+    /**
+     * Specification:
+     * - Looks up the merchant's Stripe connected account ID by merchant reference.
+     * - Generates a single-use Stripe Express Dashboard login URL for the merchant.
+     * - Returns null if the merchant has no connected Stripe account or if the API call fails.
+     *
+     * @api
+     */
+    public function generateDashboardUrl(string $merchantReference): ?string;
 }

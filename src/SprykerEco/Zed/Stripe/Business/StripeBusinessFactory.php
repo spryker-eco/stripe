@@ -12,6 +12,7 @@ use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
 use Spryker\Zed\SalesPaymentDetail\Business\SalesPaymentDetailFacadeInterface;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
+use SprykerEco\Zed\Stripe\Business\Dashboard\DashboardUrlGenerator;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingHandler;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingRegistrar;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingUrlGenerator;
@@ -29,6 +30,7 @@ use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountLinks;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccounts;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeCustomers;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeLoginLinks;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfers;
 use SprykerEco\Zed\Stripe\Business\Webhook\StripeEventDetailsExtractor;
@@ -227,6 +229,21 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     protected function createStripeTransfers(): StripeTransfers
     {
         return new StripeTransfers(
+            $this->createStripeClientFactory(),
+        );
+    }
+
+    public function createDashboardUrlGenerator(): DashboardUrlGenerator
+    {
+        return new DashboardUrlGenerator(
+            $this->getRepository(),
+            $this->createStripeLoginLinks(),
+        );
+    }
+
+    protected function createStripeLoginLinks(): StripeLoginLinks
+    {
+        return new StripeLoginLinks(
             $this->createStripeClientFactory(),
         );
     }

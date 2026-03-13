@@ -75,59 +75,6 @@ class StripeConfig extends AbstractBundleConfig
         return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET, '');
     }
 
-    // Marketplace: Merchant onboarding URL helpers
-
-    /**
-     * Full URL of the OnboardingController::initializeAction endpoint.
-     * Registered via StripeMarketplaceInstallerPlugin so MerchantApp can POST to it.
-     *
-     * @api
-     */
-    public function getMerchantOnboardingInitializeUrl(): string
-    {
-        return '';
-    }
-
-    /**
-     * Stripe Connect account link return_url (fallback when not provided by the request).
-     *
-     * @api
-     */
-    public function getMerchantOnboardingReturnUrl(): string
-    {
-        return '';
-    }
-
-    /**
-     * Stripe Connect account link refresh_url (fallback when not provided by the request).
-     *
-     * @api
-     */
-    public function getMerchantOnboardingRefreshUrl(): string
-    {
-        return '';
-    }
-
-    /**
-     * App identifier registered with MerchantApp module.
-     *
-     * @api
-     */
-    public function getMerchantOnboardingAppIdentifier(): string
-    {
-        return 'stripe';
-    }
-
-    /**
-     * Onboarding type registered with MerchantApp module.
-     *
-     * @api
-     */
-    public function getMerchantOnboardingType(): string
-    {
-        return 'payment';
-    }
-
     /**
      * Returns the merchant onboarding states that Stripe can place a connected account in,
      * along with the UI texts shown in the Merchant Portal for each state.

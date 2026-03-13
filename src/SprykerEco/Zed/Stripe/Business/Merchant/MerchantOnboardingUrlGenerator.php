@@ -42,8 +42,8 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
 
         return $this->createAccountLink(
             $stripeAccountId,
-            $returnUrl ?: $this->config->getMerchantOnboardingReturnUrl(),
-            $refreshUrl ?: $this->config->getMerchantOnboardingRefreshUrl(),
+            $returnUrl,
+            $refreshUrl,
         );
     }
 

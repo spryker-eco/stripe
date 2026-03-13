@@ -25,6 +25,8 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
 
     public const string FACADE_REFUND = 'FACADE_REFUND';
 
+    public const string FACADE_MERCHANT_USER = 'FACADE_MERCHANT_USER';
+
     public function provideBusinessLayerDependencies(Container $container): Container
     {
         $container = parent::provideBusinessLayerDependencies($container);
@@ -40,6 +42,7 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
         $container = parent::provideCommunicationLayerDependencies($container);
         $container = $this->addSalesPaymentFacade($container);
         $container = $this->addRefundFacade($container);
+        $container = $this->addMerchantUserFacade($container);
 
         return $container;
     }
@@ -84,6 +87,15 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container->set(static::FACADE_REFUND, function (Container $container) {
             return $container->getLocator()->refund()->facade();
+        });
+
+        return $container;
+    }
+
+    protected function addMerchantUserFacade(Container $container): Container
+    {
+        $container->set(static::FACADE_MERCHANT_USER, function (Container $container) {
+            return $container->getLocator()->merchantUser()->facade();
         });
 
         return $container;

@@ -155,4 +155,16 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
             ->createPaymentFundsTransfer()
             ->transfer($orderTransfer, $merchantReference, $amount);
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function generateDashboardUrl(string $merchantReference): ?string
+    {
+        return $this->getFactory()
+            ->createDashboardUrlGenerator()
+            ->generateDashboardUrl($merchantReference);
+    }
 }
