@@ -18,22 +18,4 @@ interface StripeConstants
     public const string STRIPE_PUBLISHABLE_KEY = 'STRIPE:STRIPE_PUBLISHABLE_KEY';
 
     public const string STRIPE_WEBHOOK_SECRET = 'STRIPE:STRIPE_WEBHOOK_SECRET';
-
-    // Marketplace (optional)
-    public const string STRIPE_ACCOUNT_ID = 'STRIPE:STRIPE_ACCOUNT_ID';
-
-    public const string STRIPE_WEBHOOK_SECRET_CONNECT = 'STRIPE:STRIPE_WEBHOOK_SECRET_CONNECT';
-
-    // Business model: 'direct'|'marketplace'
-    public const string STRIPE_BUSINESS_MODEL = 'STRIPE:STRIPE_BUSINESS_MODEL';
-
-    // Environment: 'test'|'live'
-    public const string STRIPE_ENVIRONMENT = 'STRIPE:STRIPE_ENVIRONMENT';
-
-    // Marketplace: Merchant Connect onboarding URLs
-    public const string STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL = 'STRIPE:STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL';
-
-    public const string STRIPE_MERCHANT_ONBOARDING_RETURN_URL = 'STRIPE:STRIPE_MERCHANT_ONBOARDING_RETURN_URL';
-
-    public const string STRIPE_MERCHANT_ONBOARDING_REFRESH_URL = 'STRIPE:STRIPE_MERCHANT_ONBOARDING_REFRESH_URL';
 }

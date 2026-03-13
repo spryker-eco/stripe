@@ -7,6 +7,7 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Merchant;
 
+use Generated\Shared\Transfer\MerchantOnboardingStateTransfer;
 use Generated\Shared\Transfer\OnboardingTransfer;
 use Generated\Shared\Transfer\ReadyForMerchantAppOnboardingTransfer;
 use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
@@ -31,8 +32,20 @@ class MerchantOnboardingRegistrar implements MerchantOnboardingRegistrarInterfac
 
         $readyTransfer = (new ReadyForMerchantAppOnboardingTransfer())
             ->setType($this->config->getMerchantOnboardingType())
+            ->setAppName(StripeConfig::APP_NAME)
             ->setAppIdentifier($this->config->getMerchantOnboardingAppIdentifier())
             ->setOnboarding($onboardingTransfer);
+
+        foreach ($this->config->getMerchantOnboardingStates() as $stateName => $attributes) {
+            $stateTransfer = (new MerchantOnboardingStateTransfer())
+                ->setName($stateName);
+
+            foreach ($attributes as $key => $value) {
+                $stateTransfer->addAttribute($key, $value);
+            }
+
+            $readyTransfer->addMerchantOnboardingState($stateTransfer);
+        }
 
         $this->merchantAppFacade->handleReadyForMerchantAppOnboarding($readyTransfer);
     }

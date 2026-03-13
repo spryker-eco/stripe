@@ -32,7 +32,6 @@ class PaymentSaver
             ->setFkSalesOrder($saveOrderTransfer->getIdSalesOrderOrFail())
             ->setAmount($quoteTransfer->getTotals() !== null ? $quoteTransfer->getTotals()->getGrandTotal() : null)
             ->setCurrencyCode($quoteTransfer->getCurrency() !== null ? $quoteTransfer->getCurrency()->getCode() : null)
-            ->setBusinessModel($this->config->getBusinessModel())
             ->setTransactionId($transactionId)
             ->setClientSecret($clientSecret);
 

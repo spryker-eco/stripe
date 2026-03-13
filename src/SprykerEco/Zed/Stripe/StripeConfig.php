@@ -13,6 +13,8 @@ use Stripe\Event;
 
 class StripeConfig extends AbstractBundleConfig
 {
+    public const string APP_NAME = 'Stripe';
+
     /**
      * Stripe API version pinned for this package.
      */
@@ -26,6 +28,28 @@ class StripeConfig extends AbstractBundleConfig
     public const string METADATA_MERCHANT_NAME = 'merchantName';
 
     public const string METADATA_ITEM_REFERENCES = 'itemReferences';
+
+    // Merchant onboarding state names (mirrors Stripe account requirements_due / capabilities status)
+    public const string ONBOARDING_STATUS_COMPLETED = 'completed';
+
+    public const string ONBOARDING_STATUS_ENABLED = 'enabled';
+
+    public const string ONBOARDING_STATUS_RESTRICTED = 'restricted';
+
+    public const string ONBOARDING_STATUS_RESTRICTED_SOON = 'restricted soon';
+
+    public const string ONBOARDING_STATUS_PENDING = 'pending';
+
+    public const string ONBOARDING_STATUS_REJECTED = 'rejected';
+
+    // Keys for the attributes array inside each MerchantOnboardingState
+    public const string ONBOARDING_STATE_ATTR_STATUS_TEXT = 'statusText';
+
+    public const string ONBOARDING_STATE_ATTR_DISPLAY_TEXT = 'displayText';
+
+    public const string ONBOARDING_STATE_ATTR_BUTTON_TEXT = 'buttonText';
+
+    public const string ONBOARDING_STATE_ATTR_BUTTON_INFO = 'buttonInfo';
 
     /**
      * @api
@@ -51,44 +75,6 @@ class StripeConfig extends AbstractBundleConfig
         return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET, '');
     }
 
-    /**
-     * @api
-     *
-     * @return string 'direct'|'marketplace'
-     */
-    public function getBusinessModel(): string
-    {
-        return (string)$this->get(StripeConstants::STRIPE_BUSINESS_MODEL, 'direct');
-    }
-
-    /**
-     * @api
-     *
-     * @return string 'test'|'live'
-     */
-    public function getEnvironment(): string
-    {
-        return (string)$this->get(StripeConstants::STRIPE_ENVIRONMENT, 'test');
-    }
-
-    // Marketplace-only methods
-
-    /**
-     * @api
-     */
-    public function getAccountId(): string
-    {
-        return (string)$this->get(StripeConstants::STRIPE_ACCOUNT_ID, '');
-    }
-
-    /**
-     * @api
-     */
-    public function getConnectedAccountWebhookSecret(): string
-    {
-        return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT, '');
-    }
-
     // Marketplace: Merchant onboarding URL helpers
 
     /**
@@ -99,7 +85,7 @@ class StripeConfig extends AbstractBundleConfig
      */
     public function getMerchantOnboardingInitializeUrl(): string
     {
-        return (string)$this->get(StripeConstants::STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL, '');
+        return '';
     }
 
     /**
@@ -109,7 +95,7 @@ class StripeConfig extends AbstractBundleConfig
      */
     public function getMerchantOnboardingReturnUrl(): string
     {
-        return (string)$this->get(StripeConstants::STRIPE_MERCHANT_ONBOARDING_RETURN_URL, '');
+        return '';
     }
 
     /**
@@ -119,7 +105,7 @@ class StripeConfig extends AbstractBundleConfig
      */
     public function getMerchantOnboardingRefreshUrl(): string
     {
-        return (string)$this->get(StripeConstants::STRIPE_MERCHANT_ONBOARDING_REFRESH_URL, '');
+        return '';
     }
 
     /**
@@ -140,6 +126,57 @@ class StripeConfig extends AbstractBundleConfig
     public function getMerchantOnboardingType(): string
     {
         return 'payment';
+    }
+
+    /**
+     * Returns the merchant onboarding states that Stripe can place a connected account in,
+     * along with the UI texts shown in the Merchant Portal for each state.
+     * Override to customise labels without changing business logic.
+     *
+     * @api
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function getMerchantOnboardingStates(): array
+    {
+        return [
+            static::ONBOARDING_STATUS_COMPLETED => [
+                static::ONBOARDING_STATE_ATTR_STATUS_TEXT => 'Completed',
+                static::ONBOARDING_STATE_ATTR_DISPLAY_TEXT => 'Your %s account has been successfully connected to the Marketplace account. You can get your payout.',
+                static::ONBOARDING_STATE_ATTR_BUTTON_TEXT => '',
+                static::ONBOARDING_STATE_ATTR_BUTTON_INFO => 'You are connected to the Marketplace account',
+            ],
+            static::ONBOARDING_STATUS_ENABLED => [
+                static::ONBOARDING_STATE_ATTR_STATUS_TEXT => 'Enabled',
+                static::ONBOARDING_STATE_ATTR_DISPLAY_TEXT => 'Your %s account has been successfully connected to the Marketplace account. %s may require more information once transaction volume increases.',
+                static::ONBOARDING_STATE_ATTR_BUTTON_TEXT => 'Update Profile',
+                static::ONBOARDING_STATE_ATTR_BUTTON_INFO => 'You are connected to the Marketplace account',
+            ],
+            static::ONBOARDING_STATUS_RESTRICTED => [
+                static::ONBOARDING_STATE_ATTR_STATUS_TEXT => 'Restricted',
+                static::ONBOARDING_STATE_ATTR_DISPLAY_TEXT => 'You are required to provide more details for your %s account. This step is required so that your payouts are not paused.',
+                static::ONBOARDING_STATE_ATTR_BUTTON_TEXT => 'Continue Onboarding',
+                static::ONBOARDING_STATE_ATTR_BUTTON_INFO => 'You are required to provide more details to %s',
+            ],
+            static::ONBOARDING_STATUS_RESTRICTED_SOON => [
+                static::ONBOARDING_STATE_ATTR_STATUS_TEXT => 'Restricted soon',
+                static::ONBOARDING_STATE_ATTR_DISPLAY_TEXT => 'You are required to provide more details for your %s account. This step is required so that your payouts are not paused.',
+                static::ONBOARDING_STATE_ATTR_BUTTON_TEXT => 'Continue Onboarding',
+                static::ONBOARDING_STATE_ATTR_BUTTON_INFO => 'You are required to provide more details to %s',
+            ],
+            static::ONBOARDING_STATUS_PENDING => [
+                static::ONBOARDING_STATE_ATTR_STATUS_TEXT => 'Pending',
+                static::ONBOARDING_STATE_ATTR_DISPLAY_TEXT => 'Click the button below to get connected to the Marketplace account. This step is required for you to get your payout.',
+                static::ONBOARDING_STATE_ATTR_BUTTON_TEXT => 'Continue Onboarding',
+                static::ONBOARDING_STATE_ATTR_BUTTON_INFO => 'Connect to the Marketplace account',
+            ],
+            static::ONBOARDING_STATUS_REJECTED => [
+                static::ONBOARDING_STATE_ATTR_STATUS_TEXT => 'Rejected',
+                static::ONBOARDING_STATE_ATTR_DISPLAY_TEXT => 'Your %s account has been rejected by the Marketplace. Payouts are paused. Please contact the Marketplace to resolve this.',
+                static::ONBOARDING_STATE_ATTR_BUTTON_TEXT => '',
+                static::ONBOARDING_STATE_ATTR_BUTTON_INFO => 'Your %s account is disabled from the Marketplace account',
+            ],
+        ];
     }
 
     /**

@@ -56,7 +56,7 @@ class WebhookHandler implements WebhookHandlerInterface
 
         try {
             $rawPayload = $webhookPayloadTransfer->getRawPayloadOrFail();
-            $webhookSecret = $this->resolveWebhookSecret($rawPayload);
+            $webhookSecret = $this->config->getWebhookSecret();
             $signatureHeader = $webhookPayloadTransfer->getSignatureHeaderOrFail();
 
             $event = $this->constructEvent($rawPayload, $signatureHeader, $webhookSecret);
@@ -386,24 +386,5 @@ class WebhookHandler implements WebhookHandlerInterface
         } catch (SignatureVerificationException $exception) {
             throw new Exception(sprintf('Webhook signature verification failed: %s', $exception->getMessage()), 0, $exception);
         }
-    }
-
-    /**
-     * Select the appropriate webhook secret depending on business model and event type.
-     * For marketplace + account.updated: use connected account secret.
-     * Otherwise: use the standard webhook secret.
-     */
-    protected function resolveWebhookSecret(string $rawPayload): string
-    {
-        if ($this->config->getBusinessModel() === SharedStripeConfig::BUSINESS_MODEL_MARKETPLACE) {
-            $content = (array)json_decode($rawPayload, true);
-            $eventType = $content['type'] ?? '';
-
-            if ($eventType === Event::ACCOUNT_UPDATED) {
-                return $this->config->getConnectedAccountWebhookSecret();
-            }
-        }
-
-        return $this->config->getWebhookSecret();
     }
 }
