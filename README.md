@@ -306,7 +306,7 @@ Copy the **Signing secret** from the webhook configuration and set it as `STRIPE
 ### Step 16: Register your domain in the Stripe Dashboard
 
 For Google Pay and Apple Pay payment method required step is your site domains registration.
-Go to [Settings > Payments > Payment method domains](https://dashboard.stripe.com/settings/payment_method_domains?enabled=true) and add your domains.
+Go to [Settings > Payments > Payment method domains](https://dashboard.stripe.com/settings/payment_method_domains) and add your domains.
 
 ---
 
