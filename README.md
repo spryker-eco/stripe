@@ -2,7 +2,65 @@
 [![Latest Stable Version](https://poser.pugx.org/spryker-eco/algolia/v/stable.svg)](https://packagist.org/packages/spryker-eco/algolia)
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%208.3-8892BF.svg)](https://php.net/)
 
-For Webhooks locally
+
+## Integration
+
+## Data Import
+
+### Import Payment Methods
+
+The module provides pre-configured data import files for payment methods, store assignments, and translations.
+
+#### Option 1: Import Using Module's Configuration File
+
+```bash
+docker/sdk cli
+vendor/bin/console data:import --config=vendor/spryker-eco/stripe/data/import/stripe.yml
+```
+
+#### Option 2: Copy File Content and Import Individually
+Copy file's content from `vendor/spryker-eco/stripe/data/import/*.csv` to the same files in you project `data/import/common/common/`.
+Then run:
+
+```bash
+docker/sdk cli
+vendor/bin/console data:import payment-method
+vendor/bin/console data:import payment-method-store
+vendor/bin/console data:import glossary
+```
+
+#### Option 3: Add to Project's Main Import Configuration
+
+Add the import actions to your project's main data import configuration file and include in your regular import pipeline.
+
+### Customize Payment Methods
+
+Before importing, you can customize the payment method data:
+
+**File:** `vendor/your-org/your-psp/data/import/payment_method.csv`
+- Update payment method names
+- Enable/disable methods
+- Add additional payment methods
+
+**File:** `vendor/your-org/your-psp/data/import/payment_method_store.csv`
+- Configure which stores each payment method is available in
+
+**File:** `vendor/your-org/your-psp/data/import/glossary.csv`
+- Customize translations for payment method names
+- Add additional locales
+
+### Verify Import
+
+Check Back Office:
+1. Go to **Administration → Payment → Payment Methods**
+2. Verify payment methods appear with correct names and provider
+3. Verify methods are assigned to correct stores
+4. Go to **Administration → Glossary** and verify translations
+5. Enable method for the store and validate Storefront Checkout payment step
+
+
+
+## For Webhooks in local development environments
 
 1. Install [Stripe CLI](https://docs.stripe.com/stripe-cli)
 2. Run:
