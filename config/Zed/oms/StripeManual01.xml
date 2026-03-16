@@ -36,13 +36,13 @@
             </transition>
 
             <!-- payment_intent.amount_capturable_updated → AUTHORIZED -->
-            <transition happy="true" condition="PaymentApp/IsAuthorized">
+            <transition happy="true" condition="Payment/IsAuthorized">
                 <source>payment pending</source>
                 <target>authorized</target>
             </transition>
 
             <!-- payment_intent.payment_failed → AUTHORIZATION_FAILED -->
-            <transition condition="PaymentApp/IsAuthorizationFailed">
+            <transition condition="Payment/IsAuthorizationFailed">
                 <source>payment pending</source>
                 <target>authorization failed</target>
             </transition>
@@ -55,13 +55,13 @@
             </transition>
 
             <!-- payment_intent.succeeded → CAPTURED -->
-            <transition happy="true" condition="PaymentApp/IsCaptured">
+            <transition happy="true" condition="Payment/IsCaptured">
                 <source>capture pending</source>
                 <target>captured</target>
             </transition>
 
             <!-- charge.failed (captured=true) → CAPTURE_FAILED -->
-            <transition condition="PaymentApp/IsCaptureFailed">
+            <transition condition="Payment/IsCaptureFailed">
                 <source>capture pending</source>
                 <target>capture failed</target>
             </transition>
@@ -86,7 +86,7 @@
             </transition>
 
             <!-- Cancel from authorized (before capture).
-                 Stripe/Cancel is synchronous; PaymentApp/IsCanceled or IsCancellationFailed
+                 Stripe/Cancel is synchronous; Payment/IsCanceled or IsCancellationFailed
                  determines the final state based on the API result stored in PaymentApp. -->
             <transition>
                 <source>authorized</source>
@@ -95,12 +95,12 @@
             </transition>
 
             <!-- payment_intent.canceled webhook → CANCELLED (e.g. canceled from Stripe dashboard after authorization) -->
-            <transition condition="PaymentApp/IsCanceled">
+            <transition condition="Payment/IsCanceled">
                 <source>authorized</source>
                 <target>cancelled</target>
             </transition>
 
-            <transition condition="PaymentApp/IsCancellationFailed">
+            <transition condition="Payment/IsCancellationFailed">
                 <source>authorized</source>
                 <target>cancellation failed</target>
             </transition>
@@ -113,13 +113,13 @@
             </transition>
 
             <!-- charge.refund.updated → REFUND CONFIRMED -->
-            <transition happy="true" condition="PaymentApp/IsRefunded">
+            <transition happy="true" condition="Payment/IsRefunded">
                 <source>refund pending</source>
                 <target>refund confirmed</target>
             </transition>
 
             <!-- charge.refund.updated → REFUND FAILED -->
-            <transition condition="PaymentApp/IsRefundFailed">
+            <transition condition="Payment/IsRefundFailed">
                 <source>refund pending</source>
                 <target>refund failed</target>
             </transition>
