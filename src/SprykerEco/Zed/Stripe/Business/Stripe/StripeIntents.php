@@ -51,7 +51,7 @@ class StripeIntents implements StripeIntentsInterface
             $stripeCustomerRequestTransfer = (new StripeCustomerRequestTransfer())->setQuote($quoteTransfer);
             $stripeCustomerResponseTransfer = $this->stripeCustomers->searchOrCreate($stripeCustomerRequestTransfer);
 
-            $paymentIntentParams = $this->createPaymentIntentParams($quoteTransfer, $stripeCustomerResponseTransfer, $stripeIntentRequestTransfer);
+            $paymentIntentParams = $this->createPaymentIntentParams($quoteTransfer, $stripeCustomerResponseTransfer);
             $paymentIntentParams = $this->addMetadata($quoteTransfer, $paymentIntentParams);
 
             $paymentIntent = $stripeClient->paymentIntents->create($paymentIntentParams);
@@ -291,8 +291,7 @@ class StripeIntents implements StripeIntentsInterface
      */
     protected function createPaymentIntentParams(
         QuoteTransfer $quoteTransfer,
-        StripeCustomerResponseTransfer $stripeCustomerResponseTransfer,
-        StripeIntentRequestTransfer $stripeIntentRequestTransfer,
+        StripeCustomerResponseTransfer $stripeCustomerResponseTransfer
     ): array {
         $description = $quoteTransfer->getOrderReference()
             ? 'Order Reference: ' . $quoteTransfer->getOrderReference()

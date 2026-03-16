@@ -70,22 +70,22 @@ $commandCollection->add(new StripeRefundCommandPlugin(), 'Stripe/Refund');
 $commandCollection->add(new StripeCancelCommandPlugin(), 'Stripe/Cancel');
 ```
 
-Also update the existing `Payment/` condition registrations to use the `PaymentApp/` prefix (required by the Stripe OMS process), and add the refund conditions:
+Also add the refund conditions:
 
 ```php
 use Spryker\Zed\PaymentApp\Communication\Plugin\Oms\IsPaymentAppPaymentStatusRefundedConditionPlugin;
 use Spryker\Zed\PaymentApp\Communication\Plugin\Oms\IsPaymentAppPaymentStatusRefundFailedConditionPlugin;
 
-// In extendConditionPlugins(), rename existing Payment/ → PaymentApp/ and add:
-$conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizationFailedConditionPlugin(), 'PaymentApp/IsAuthorizationFailed');
-$conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizedConditionPlugin(), 'PaymentApp/IsAuthorized');
-$conditionCollection->add(new IsPaymentAppPaymentStatusCanceledConditionPlugin(), 'PaymentApp/IsCanceled');
-$conditionCollection->add(new IsPaymentAppPaymentStatusCancellationFailedConditionPlugin(), 'PaymentApp/IsCancellationFailed');
-$conditionCollection->add(new IsPaymentAppPaymentStatusCapturedConditionPlugin(), 'PaymentApp/IsCaptured');
-$conditionCollection->add(new IsPaymentAppPaymentStatusCaptureFailedConditionPlugin(), 'PaymentApp/IsCaptureFailed');
-$conditionCollection->add(new IsPaymentAppPaymentStatusCaptureRequestedConditionPlugin(), 'PaymentApp/IsCaptureRequested');
-$conditionCollection->add(new IsPaymentAppPaymentStatusRefundedConditionPlugin(), 'PaymentApp/IsRefunded');
-$conditionCollection->add(new IsPaymentAppPaymentStatusRefundFailedConditionPlugin(), 'PaymentApp/IsRefundFailed');
+// In extendConditionPlugins()
+$conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizationFailedConditionPlugin(), 'Payment/IsAuthorizationFailed');
+$conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizedConditionPlugin(), 'Payment/IsAuthorized');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCanceledConditionPlugin(), 'Payment/IsCanceled');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCancellationFailedConditionPlugin(), 'Payment/IsCancellationFailed');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCapturedConditionPlugin(), 'Payment/IsCaptured');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCaptureFailedConditionPlugin(), 'Payment/IsCaptureFailed');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCaptureRequestedConditionPlugin(), 'Payment/IsCaptureRequested');
+$conditionCollection->add(new IsPaymentAppPaymentStatusRefundedConditionPlugin(), 'Payment/IsRefunded');
+$conditionCollection->add(new IsPaymentAppPaymentStatusRefundFailedConditionPlugin(), 'Payment/IsRefundFailed');
 ```
 
 ---
