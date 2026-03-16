@@ -5,20 +5,236 @@
 
 ## Integration
 
-## Data Import
+### Step 1: Install the package
 
-### Import Payment Methods
+```bash
+composer require spryker-eco/stripe
+```
+
+---
+
+### Step 2: Remove old ACP MessageBroker plugins (if exist)
+
+**File:** `src/Pyz/Zed/MessageBroker/MessageBrokerDependencyProvider.php`
+
+Remove these imports and their instantiations from `getMessageHandlerPlugins()`:
+
+```php
+// Remove these use statements:
+use Spryker\Zed\Payment\Communication\Plugin\MessageBroker\PaymentMethodMessageHandlerPlugin;
+use Spryker\Zed\Payment\Communication\Plugin\MessageBroker\PaymentOperationsMessageHandlerPlugin;
+use Spryker\Zed\PaymentApp\Communication\Plugin\MessageBroker\PaymentAppOperationsMessageHandlerPlugin;
+use Spryker\Zed\SalesPaymentDetail\Communication\Plugin\MessageBroker\SalesPaymentDetailMessageHandlerPlugin;
+use Spryker\Zed\MerchantApp\Communication\Plugin\MessageBroker\MerchantAppOnboardingMessageHandlerPlugin;
+```
+
+---
+
+### Step 3: Update OMS configuration
+
+**File:** `config/Shared/config_default.php`
+
+Add the Stripe OMS process location and activate the state machine:
+
+```php
+$config[OmsConstants::PROCESS_LOCATION] = [
+    OmsConfig::DEFAULT_PROCESS_LOCATION,
+    APPLICATION_ROOT_DIR . '/vendor/spryker-eco/stripe/config/Zed/oms', // Add this line
+];
+
+$config[OmsConstants::ACTIVE_PROCESSES] = [
+    'StripeManual01', // Replace ForeignPaymentB2CStateMachine01 with this
+];
+
+$config[SalesConstants::PAYMENT_METHOD_STATEMACHINE_MAPPING] = [
+    \SprykerEco\Shared\Stripe\StripeConfig::PAYMENT_PROVIDER_NAME => 'StripeManual01', // Add this line
+];
+```
+
+---
+
+### Step 4: Register Stripe OMS command and condition plugins
+
+**File:** `src/Pyz/Zed/Oms/OmsDependencyProvider.php`
+
+Add Stripe command plugins to `extendCommandPlugins()`:
+
+```php
+use SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command\StripeCancelCommandPlugin;
+use SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command\StripeCaptureCommandPlugin;
+use SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command\StripeRefundCommandPlugin;
+
+// In extendCommandPlugins():
+$commandCollection->add(new StripeCaptureCommandPlugin(), 'Stripe/Capture');
+$commandCollection->add(new StripeRefundCommandPlugin(), 'Stripe/Refund');
+$commandCollection->add(new StripeCancelCommandPlugin(), 'Stripe/Cancel');
+```
+
+Also update the existing `Payment/` condition registrations to use the `PaymentApp/` prefix (required by the Stripe OMS process), and add the refund conditions:
+
+```php
+use Spryker\Zed\PaymentApp\Communication\Plugin\Oms\IsPaymentAppPaymentStatusRefundedConditionPlugin;
+use Spryker\Zed\PaymentApp\Communication\Plugin\Oms\IsPaymentAppPaymentStatusRefundFailedConditionPlugin;
+
+// In extendConditionPlugins(), rename existing Payment/ → PaymentApp/ and add:
+$conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizationFailedConditionPlugin(), 'PaymentApp/IsAuthorizationFailed');
+$conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizedConditionPlugin(), 'PaymentApp/IsAuthorized');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCanceledConditionPlugin(), 'PaymentApp/IsCanceled');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCancellationFailedConditionPlugin(), 'PaymentApp/IsCancellationFailed');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCapturedConditionPlugin(), 'PaymentApp/IsCaptured');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCaptureFailedConditionPlugin(), 'PaymentApp/IsCaptureFailed');
+$conditionCollection->add(new IsPaymentAppPaymentStatusCaptureRequestedConditionPlugin(), 'PaymentApp/IsCaptureRequested');
+$conditionCollection->add(new IsPaymentAppPaymentStatusRefundedConditionPlugin(), 'PaymentApp/IsRefunded');
+$conditionCollection->add(new IsPaymentAppPaymentStatusRefundFailedConditionPlugin(), 'PaymentApp/IsRefundFailed');
+```
+
+---
+
+### Step 5: Register Stripe checkout post-save plugin
+
+**File:** `src/Pyz/Zed/Checkout/CheckoutDependencyProvider.php`
+
+```php
+use SprykerEco\Zed\Stripe\Communication\Plugin\Checkout\StripeCheckoutPostSavePlugin;
+
+// In getCheckoutPostHooks():
+new StripeCheckoutPostSavePlugin(),
+```
+
+---
+
+### Step 6: Register Stripe Yves checkout plugins
+
+**File:** `src/Pyz/Yves/CheckoutPage/CheckoutPageDependencyProvider.php`
+
+```php
+use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
+use SprykerEco\Yves\Stripe\Plugin\StepEngine\StripeStepHandlerPlugin;
+use SprykerEco\Yves\Stripe\Plugin\StepEngine\StripeSubFormPlugin;
+
+// In extendPaymentMethodHandler():
+$paymentMethodHandler->add(new StripeStepHandlerPlugin(), SharedStripeConfig::PAYMENT_METHOD_NAME);
+
+// In extendSubFormPluginCollection():
+$paymentSubFormPluginCollection->add(new StripeSubFormPlugin());
+```
+
+---
+
+### Step 7: Register payment method filter plugin
+
+**File:** `src/Pyz/Zed/Payment/PaymentDependencyProvider.php`
+
+```php
+use SprykerEco\Zed\Stripe\Communication\Plugin\Payment\StripePaymentMethodFilterPlugin;
+
+// In getPaymentMethodFilterPlugins():
+new StripePaymentMethodFilterPlugin(),
+```
+
+---
+
+### Step 8: Register the Stripe route provider
+
+**File:** `src/Pyz/Yves/Router/RouterDependencyProvider.php`
+
+```php
+use SprykerEco\Yves\Stripe\Plugin\Router\StripeRouteProviderPlugin;
+
+// In getRouteProvider():
+new StripeRouteProviderPlugin(),
+```
+
+---
+
+### Step 9: Register the marketplace installer plugin (marketplace only)
+
+**File:** `src/Pyz/Zed/Installer/InstallerDependencyProvider.php`
+
+```php
+use SprykerEco\Zed\Stripe\Communication\Plugin\Installer\StripeMarketplaceInstallerPlugin;
+
+// In getInstallerPlugins():
+new StripeMarketplaceInstallerPlugin(),
+```
+
+---
+
+### Step 10: Allow the Stripe controllers in Merchant Portal security config
+
+By default, Merchant Portal rejects all routes that do not match the portal pattern. The `/stripe/*` endpoint must be excluded from authentication.
+
+**File:** `src/Pyz/Zed/SecurityMerchantPortalGui/SecurityMerchantPortalGuiConfig.php`
+
+```php
+<?php
+
+namespace Pyz\Zed\SecurityMerchantPortalGui;
+
+use Spryker\Zed\SecurityMerchantPortalGui\SecurityMerchantPortalGuiConfig as SprykerSecurityMerchantPortalGuiConfig;
+
+class SecurityMerchantPortalGuiConfig extends SprykerSecurityMerchantPortalGuiConfig
+{
+    protected const MERCHANT_PORTAL_ROUTE_PATTERN = '^/((.+)-merchant-portal-gui|multi-factor-auth-merchant-portal/(merchant-user|user-management)|_profiler|stripe)/';
+
+    protected const IGNORABLE_PATH_PATTERN = '^/(security-merchant-portal-gui|multi-factor-auth-merchant-portal|_profiler|stripe)';
+}
+```
+
+---
+
+### Step 11: Add Stripe payment form to the checkout payment template
+
+**File:** `src/Pyz/Yves/CheckoutPage/Theme/default/views/payment/payment.twig`
+
+Add the Stripe form entry to the `customForms` map:
+
+```twig
+{% define data = {
+    customForms: {
+        'Payone/credit_card': ['credit-card', 'payone'],
+        'Stripe/stripe': ['stripe'],
+    },
+} %}
+```
+
+---
+
+### Step 12: Configure Stripe credentials
+
+**File:** `config/Shared/config_local.php`
+
+```php
+use SprykerEco\Shared\Stripe\StripeConstants;
+
+$config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_live_***';       // from Stripe Dashboard → API keys
+$config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_live_***';  // from Stripe Dashboard → API keys
+$config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';     // from Stripe Dashboard → Webhooks
+```
+
+---
+
+### Step 13: Import payment methods
+
+#### Data Import
+
+##### Import Payment Methods
 
 The module provides pre-configured data import files for payment methods, store assignments, and translations.
 
-#### Option 1: Import Using Module's Configuration File
+###### Option 1: Import Using Module's Configuration File
+
+>Recommended for development phase.
 
 ```bash
 docker/sdk cli
 vendor/bin/console data:import --config=vendor/spryker-eco/stripe/data/import/stripe.yml
 ```
 
-#### Option 2: Copy File Content and Import Individually
+###### Option 2: Copy File Content and Import Individually
+
+>Recommended when the integration is tested and tuned.
+
 Copy file's content from `vendor/spryker-eco/stripe/data/import/*.csv` to the same files in you project `data/import/common/common/`.
 Then run:
 
@@ -29,23 +245,19 @@ vendor/bin/console data:import payment-method-store
 vendor/bin/console data:import glossary
 ```
 
-#### Option 3: Add to Project's Main Import Configuration
-
-Add the import actions to your project's main data import configuration file and include in your regular import pipeline.
-
-### Customize Payment Methods
+##### Customize Payment Methods
 
 Before importing, you can customize the payment method data:
 
-**File:** `vendor/your-org/your-psp/data/import/payment_method.csv`
+**File:** `vendor/spryker-eco/stripe/data/import/payment_method.csv`
 - Update payment method names
 - Enable/disable methods
 - Add additional payment methods
 
-**File:** `vendor/your-org/your-psp/data/import/payment_method_store.csv`
+**File:** `vendor/spryker-eco/stripe/data/import/payment_method_store.csv`
 - Configure which stores each payment method is available in
 
-**File:** `vendor/your-org/your-psp/data/import/glossary.csv`
+**File:** `vendor/spryker-eco/stripe/data/import/glossary.csv`
 - Customize translations for payment method names
 - Add additional locales
 
@@ -59,8 +271,65 @@ Check Back Office:
 5. Enable method for the store and validate Storefront Checkout payment step
 
 
+### Step 14: Run Code Generation and DB migration
 
-## For Webhooks in local development environments
+```bash
+
+# Apply DB schema changes (spy_stripe_payment, spy_stripe_merchant)
+vendor/bin/console propel:install
+
+# Generate new transfer objects
+vendor/bin/console transfer:generate
+```
+
+---
+
+### Step 15: Register the Stripe webhook in the Stripe Dashboard
+
+Point the webhook to your storefront notification endpoint:
+
+```
+https://your-domain.com/stripe/notification
+```
+
+Select at minimum these event types:
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+- `payment_intent.canceled`
+- `charge.refunded`
+- `account.updated` (marketplace only)
+
+Copy the **Signing secret** from the webhook configuration and set it as `STRIPE_WEBHOOK_SECRET` in your config.
+
+---
+
+### Step 16: Register your domain in the Stripe Dashboard
+
+For Google Pay and Apple Pay payment method required step is your site domains registration.
+Go to [Settings > Payments > Payment method domains](https://dashboard.stripe.com/settings/payment_method_domains?enabled=true) and add your domains.
+
+---
+
+### Step 17: Verify the migration
+
+1. Place a test order and confirm the payment step renders Stripe Elements.
+2. Complete payment and confirm the order transitions to the authorized state.
+3. Capture the order from the Back Office and verify `Stripe/Capture` OMS command triggers successfully.
+4. Send a test webhook event from the Stripe Dashboard and confirm the order status updates.
+
+---
+
+## Development
+
+To check/fix code style and run static analysis, use:
+
+```bash
+composer cs-fix # can be used standalone
+cd project-root # only works together with Spryker project (uses autoloader from it)
+vendor/bin/phpstan analyze -c vendor/spryker-eco/stripe/phpstan.neon vendor/spryker-eco/stripe
+```
+
+### For Webhooks in local development environments
 
 1. Install [Stripe CLI](https://docs.stripe.com/stripe-cli)
 2. Run:
@@ -92,25 +361,17 @@ $config[StripeConstants::STRIPE_BUSINESS_MODEL] = 'direct'; // or marketplace
 > ```
 > 3. Open https://your-personal-domain.ngrok-free.dev in the browser and go to Stripe payment page.
 
+---
+
+
+---
+
 ## Support
 
 For issues or questions:
 - Check [Spryker Stripe documentation](https://docs.spryker.com/docs/pbc/all/payment-service-provider/latest/base-shop/third-party-integrations/stripe/stripe)
 - Review [Stripe documentation](https://docs.stripe.com/)
 - Contact Spryker support
-
-## Development
-
-To check/fix code style and run static analysis, use:
-
-```bash
-composer cs-fix # can be used standalone
-cd project-root # only works together with Spryker project (uses autoloader from it)
-vendor/bin/phpstan analyze -c vendor/spryker-eco/stripe/phpstan.neon vendor/spryker-eco/stripe
-```
-
-For test execution, check the details in [tests/README.md](tests/README.md) file.
-
 
 ## License
 
