@@ -103,9 +103,29 @@
                 <event>payout</event>
             </transition>
 
-            <!-- Refund can be triggered from sent-to-merchant state -->
+            <!-- Refund can be triggered before payout (sent to merchant, delivered, payout failed)
+                 or after payout (closed) -->
             <transition>
                 <source>sent to merchant</source>
+                <target>refund pending</target>
+                <event>refund</event>
+            </transition>
+
+            <transition>
+                <source>merchant payout ready</source>
+                <target>refund pending</target>
+                <event>refund</event>
+            </transition>
+
+            <transition>
+                <source>payout failed</source>
+                <target>refund pending</target>
+                <event>refund</event>
+            </transition>
+
+            <!-- Refund after payout was completed -->
+            <transition>
+                <source>closed</source>
                 <target>refund pending</target>
                 <event>refund</event>
             </transition>
@@ -136,10 +156,17 @@
                 <event>retry refund</event>
             </transition>
 
-            <!-- After refund confirmed, reverse the merchant payout (StripeMerchantPayoutReverse subprocess) -->
-            <transition happy="true">
+            <!-- After refund: if a payout transfer was previously made, reverse it.
+                 If no payout was made (e.g. refunded before payout), go directly to cancelled. -->
+            <transition condition="Stripe/IsTransferSuccessful">
                 <source>refunded</source>
                 <target>merchant payout reverse ready</target>
+                <event>reverse payout</event>
+            </transition>
+
+            <transition>
+                <source>refunded</source>
+                <target>cancelled</target>
                 <event>reverse payout</event>
             </transition>
 
