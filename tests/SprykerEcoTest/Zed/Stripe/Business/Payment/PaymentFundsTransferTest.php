@@ -45,6 +45,8 @@ class PaymentFundsTransferTest extends Unit
 
     protected const ITEM_PRICE = 1000;
 
+    protected const ITEM_SKU = 'SKU-001';
+
     public function testTransferSkipsWhenNoPaymentFound(): void
     {
         // Arrange
@@ -138,10 +140,14 @@ class PaymentFundsTransferTest extends Unit
         $stripeTransfersMock->expects($this->once())
             ->method('transfer')
             ->with($this->callback(function ($request): bool {
+                $metadata = $request->getMetadata();
+
                 return $request->getSourceTransaction() === static::CHARGE_ID
                     && $request->getDestination() === static::STRIPE_ACCOUNT_ID
                     && $request->getTransferGroup() === static::ORDER_REFERENCE
-                    && $request->getAmount() === (string)static::ITEM_PRICE;
+                    && $request->getAmount() === (string)static::ITEM_PRICE
+                    && isset($metadata['SKUs'])
+                    && str_contains($metadata['SKUs'], static::ITEM_SKU . ' x 1');
             }))
             ->willReturn((new StripeTransmissionResponseTransfer())->setIsSuccessful(true)->setTransferId('tr_test_001'));
 
@@ -281,9 +287,9 @@ class PaymentFundsTransferTest extends Unit
         return $mock;
     }
 
-    protected function createItemTransfer(int $price): ItemTransfer
+    protected function createItemTransfer(int $price, string $sku = self::ITEM_SKU, int $quantity = 1): ItemTransfer
     {
-        return (new ItemTransfer())->setSumPriceToPayAggregation($price);
+        return (new ItemTransfer())->setSumPriceToPayAggregation($price)->setSku($sku)->setQuantity($quantity);
     }
 
     protected function createPaymentFundsTransfer(

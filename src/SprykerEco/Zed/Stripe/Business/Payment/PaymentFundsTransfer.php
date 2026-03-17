@@ -87,6 +87,7 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
             ->setMetadata([
                 StripeConfig::METADATA_ORDER_REFERENCE => $orderReference,
                 StripeConfig::METADATA_MERCHANT_REFERENCE => $merchantReference,
+                StripeConfig::METADATA_SKUS => implode(', ', $this->collectItemSkus($orderItems)),
             ]);
 
         $response = $this->stripeTransfers->transfer($request);
@@ -108,6 +109,33 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
                 ->setIsSuccessful($response->getIsSuccessful() === true)
                 ->setIsReversed(false),
         );
+    }
+
+    /**
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     *
+     * @return array<string>
+     */
+    protected function collectItemSkus(array $orderItems): array
+    {
+        $skuQuantities = [];
+
+        foreach ($orderItems as $itemTransfer) {
+            if ($itemTransfer->getSku() === null) {
+                continue;
+            }
+
+            $sku = $itemTransfer->getSku();
+            $skuQuantities[$sku] = ($skuQuantities[$sku] ?? 0) + (int)$itemTransfer->getQuantity();
+        }
+
+        $result = [];
+
+        foreach ($skuQuantities as $sku => $quantity) {
+            $result[] = sprintf('%s x %d', $sku, $quantity);
+        }
+
+        return $result;
     }
 
     /**
