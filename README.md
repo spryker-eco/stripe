@@ -43,11 +43,11 @@ $config[OmsConstants::PROCESS_LOCATION] = [
 ];
 
 $config[OmsConstants::ACTIVE_PROCESSES] = [
-    'StripeManual01', // Replace ForeignPaymentB2CStateMachine01 with this
+    'StripeManual01', // Replace ForeignPaymentStateMachine01 and ForeignPaymentB2CStateMachine01 with Stripe process
 ];
 
 $config[SalesConstants::PAYMENT_METHOD_STATEMACHINE_MAPPING] = [
-    \SprykerEco\Shared\Stripe\StripeConfig::PAYMENT_PROVIDER_NAME => 'StripeManual01', // Add this line
+    \SprykerEco\Shared\Stripe\StripeConfig::PAYMENT_PROVIDER_NAME => 'StripeManual01', // replace ForeignPaymentStateMachine01 mapping with Stripe process
 ];
 ```
 
@@ -70,11 +70,9 @@ $commandCollection->add(new StripeRefundCommandPlugin(), 'Stripe/Refund');
 $commandCollection->add(new StripeCancelCommandPlugin(), 'Stripe/Cancel');
 ```
 
-Also add the refund conditions:
+Also add payment conditions:
 
 ```php
-use Spryker\Zed\PaymentApp\Communication\Plugin\Oms\IsPaymentAppPaymentStatusRefundedConditionPlugin;
-use Spryker\Zed\PaymentApp\Communication\Plugin\Oms\IsPaymentAppPaymentStatusRefundFailedConditionPlugin;
 
 // In extendConditionPlugins()
 $conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizationFailedConditionPlugin(), 'Payment/IsAuthorizationFailed');
@@ -121,7 +119,9 @@ $paymentSubFormPluginCollection->add(new StripeSubFormPlugin());
 
 ---
 
-### Step 7: Register payment method filter plugin
+### Step 7: Register payment method filter plugin (optional)
+
+Only if you need to apply some filtering logic, for example, hide Stripe or other payment methods based on the Quote. In this case, you need to extend `StripePaymentMethodFilterPlugin`.
 
 **File:** `src/Pyz/Zed/Payment/PaymentDependencyProvider.php`
 
@@ -160,7 +160,7 @@ new StripeMarketplaceInstallerPlugin(),
 
 ---
 
-### Step 10: Allow the Stripe controllers in Merchant Portal security config
+### Step 10: Allow the Stripe controllers in the Merchant Portal security config
 
 By default, Merchant Portal rejects all routes that do not match the portal pattern. The `/stripe/*` endpoint must be excluded from authentication.
 
