@@ -9,6 +9,7 @@ namespace SprykerEco\Zed\Stripe;
 
 use Spryker\Zed\Kernel\AbstractBundleDependencyProvider;
 use Spryker\Zed\Kernel\Container;
+use Spryker\Zed\SalesPaymentMerchantExtension\Communication\Dependency\Plugin\MerchantPayoutCalculatorPluginInterface;
 
 /**
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
@@ -27,12 +28,28 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
 
     public const string FACADE_MERCHANT_USER = 'FACADE_MERCHANT_USER';
 
+    public const string FACADE_SALES = 'FACADE_SALES';
+
+    /**
+     * Override in project-level StripeDependencyProvider to enable commission-aware payouts.
+     * Register {@link \Spryker\Zed\SalesPaymentMerchantSalesMerchantCommission\Communication\Plugin\SalesPaymentMerchant\PayoutAmountMerchantPayoutCalculatorPlugin}.
+     */
+    public const string PLUGIN_MERCHANT_PAYOUT_AMOUNT_CALCULATOR = 'PLUGIN_MERCHANT_PAYOUT_AMOUNT_CALCULATOR';
+
+    /**
+     * Override in project-level StripeDependencyProvider to enable commission-aware reverse payouts.
+     * Register {@link \Spryker\Zed\SalesPaymentMerchantSalesMerchantCommission\Communication\Plugin\SalesPaymentMerchant\PayoutReverseAmountMerchantPayoutCalculatorPlugin}.
+     */
+    public const string PLUGIN_MERCHANT_PAYOUT_REVERSE_AMOUNT_CALCULATOR = 'PLUGIN_MERCHANT_PAYOUT_REVERSE_AMOUNT_CALCULATOR';
+
     public function provideBusinessLayerDependencies(Container $container): Container
     {
         $container = parent::provideBusinessLayerDependencies($container);
         $container = $this->addPaymentAppFacade($container);
         $container = $this->addMerchantAppFacade($container);
         $container = $this->addSalesPaymentDetailFacade($container);
+        $container = $this->addMerchantPayoutAmountCalculatorPlugin($container);
+        $container = $this->addMerchantPayoutReverseAmountCalculatorPlugin($container);
 
         return $container;
     }
@@ -43,6 +60,7 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
         $container = $this->addSalesPaymentFacade($container);
         $container = $this->addRefundFacade($container);
         $container = $this->addMerchantUserFacade($container);
+        $container = $this->addSalesFacade($container);
 
         return $container;
     }
@@ -99,5 +117,48 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
         });
 
         return $container;
+    }
+
+    protected function addSalesFacade(Container $container): Container
+    {
+        $container->set(static::FACADE_SALES, function (Container $container) {
+            return $container->getLocator()->sales()->facade();
+        });
+
+        return $container;
+    }
+
+    /**
+     * The plugin interface from SalesPaymentMerchantExtension is supported for backward compatibility with the ACP approach fron SalesPaymentMerchant
+     */
+    protected function addMerchantPayoutAmountCalculatorPlugin(Container $container): Container
+    {
+        $container->set(static::PLUGIN_MERCHANT_PAYOUT_AMOUNT_CALCULATOR, function (): ?MerchantPayoutCalculatorPluginInterface {
+            return $this->getMerchantPayoutAmountCalculatorPlugin();
+        });
+
+        return $container;
+    }
+
+    /**
+     * The plugin interface from SalesPaymentMerchantExtension is supported for backward compatibility with the ACP approach fron SalesPaymentMerchant
+     */
+    protected function addMerchantPayoutReverseAmountCalculatorPlugin(Container $container): Container
+    {
+        $container->set(static::PLUGIN_MERCHANT_PAYOUT_REVERSE_AMOUNT_CALCULATOR, function (): ?MerchantPayoutCalculatorPluginInterface {
+            return $this->getMerchantPayoutReverseAmountCalculatorPlugin();
+        });
+
+        return $container;
+    }
+
+    protected function getMerchantPayoutAmountCalculatorPlugin(): ?MerchantPayoutCalculatorPluginInterface
+    {
+        return null;
+    }
+
+    protected function getMerchantPayoutReverseAmountCalculatorPlugin(): ?MerchantPayoutCalculatorPluginInterface
+    {
+        return null;
     }
 }

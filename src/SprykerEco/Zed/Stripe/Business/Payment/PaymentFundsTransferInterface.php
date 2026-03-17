@@ -12,7 +12,10 @@ use Generated\Shared\Transfer\OrderTransfer;
 interface PaymentFundsTransferInterface
 {
     /**
-     * @param int $amount Amount in minor units (cents).
+     * Transfers captured funds to the merchant's Stripe connected account.
+     * Calculates the payout amount per item using the configured payout calculator plugin.
+     *
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems Items belonging to this merchant for this OMS transition.
      */
-    public function transfer(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void;
+    public function transfer(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void;
 }

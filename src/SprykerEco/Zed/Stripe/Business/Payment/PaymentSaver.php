@@ -11,13 +11,11 @@ use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
-use SprykerEco\Zed\Stripe\StripeConfig;
 
 class PaymentSaver
 {
     public function __construct(
         protected StripeEntityManagerInterface $entityManager,
-        protected StripeConfig $config,
     ) {
     }
 
@@ -25,15 +23,13 @@ class PaymentSaver
         QuoteTransfer $quoteTransfer,
         SaveOrderTransfer $saveOrderTransfer,
         string $transactionId,
-        string $clientSecret,
     ): void {
         $stripePaymentTransfer = (new StripePaymentTransfer())
             ->setOrderReference($saveOrderTransfer->getOrderReferenceOrFail())
             ->setFkSalesOrder($saveOrderTransfer->getIdSalesOrderOrFail())
             ->setAmount($quoteTransfer->getTotals() !== null ? $quoteTransfer->getTotals()->getGrandTotal() : null)
             ->setCurrencyCode($quoteTransfer->getCurrency() !== null ? $quoteTransfer->getCurrency()->getCode() : null)
-            ->setTransactionId($transactionId)
-            ->setClientSecret($clientSecret);
+            ->setTransactionId($transactionId);
 
         $this->entityManager->createPayment($stripePaymentTransfer);
     }

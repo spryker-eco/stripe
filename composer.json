@@ -1,7 +1,7 @@
 {
     "name": "spryker-eco/stripe",
-    "description": "Spryker Stripe integration",
-    "license": "MIT",
+    "description": "Stripe module",
+    "license": "proprietary",
     "type": "library",
     "require": {
         "php": ">=8.3",
@@ -24,11 +24,16 @@
         "spryker/router": "^1.25.2",
         "spryker/sales": "^11.78.0",
         "spryker/sales-payment": "^1.0.0",
+        "spryker/sales-payment-merchant-extension": "^1.0.0",
         "spryker/sales-payment-detail": "^1.5.0",
         "spryker/step-engine": "^3.7.0",
         "spryker/symfony": "^3.19.0",
         "spryker/transfer": "^3.27.0",
         "spryker/zed-request": "^3.26.0"
+    },
+    "suggest": {
+        "spryker/merchant-sales-order": "When project is a marketplace merchant orders and you use StripeManualMarketplace01.xml in OMS.",
+        "spryker/merchant-sales-merchant-commission": "Required for commission-aware merchant payouts. Override getMerchantPayoutAmountCalculatorPlugin() and getMerchantPayoutReverseAmountCalculatorPlugin() in your project StripeDependencyProvider to enable."
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1",

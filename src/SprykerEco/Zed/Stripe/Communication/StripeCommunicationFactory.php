@@ -10,6 +10,7 @@ namespace SprykerEco\Zed\Stripe\Communication;
 use Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory;
 use Spryker\Zed\MerchantUser\Business\MerchantUserFacadeInterface;
 use Spryker\Zed\Refund\Business\RefundFacadeInterface;
+use Spryker\Zed\Sales\Business\SalesFacadeInterface;
 use Spryker\Zed\SalesPayment\Business\SalesPaymentFacadeInterface;
 use SprykerEco\Zed\Stripe\StripeDependencyProvider;
 
@@ -34,5 +35,10 @@ class StripeCommunicationFactory extends AbstractCommunicationFactory
     public function getMerchantUserFacade(): MerchantUserFacadeInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::FACADE_MERCHANT_USER);
+    }
+
+    public function getSalesFacade(): SalesFacadeInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES);
     }
 }

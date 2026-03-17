@@ -179,6 +179,9 @@ class StripeRefundsTest extends Unit
         $this->assertSame('Connection error', $response->getMessage());
     }
 
+    /**
+     * @param array<string, mixed> $refundData
+     */
     protected function createStripeRefundsWithResponse(array $refundData): StripeRefunds
     {
         $refund = Refund::constructFrom($refundData);

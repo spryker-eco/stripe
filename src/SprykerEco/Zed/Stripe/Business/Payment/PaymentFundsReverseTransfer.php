@@ -8,7 +8,6 @@
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
 use Generated\Shared\Transfer\CurrencyTransfer;
-use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
 use Generated\Shared\Transfer\StripeTransmissionRequestTransfer;
@@ -20,7 +19,7 @@ use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class PaymentFundsTransfer implements PaymentFundsTransferInterface
+class PaymentFundsReverseTransfer implements PaymentFundsReverseTransferInterface
 {
     use LoggerTrait;
 
@@ -29,29 +28,20 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
         protected PaymentReaderInterface $paymentReader,
         protected StripeRepositoryInterface $repository,
         protected StripeEntityManagerInterface $entityManager,
-        protected MerchantPayoutCalculatorPluginInterface $amountCalculator,
+        protected MerchantPayoutCalculatorPluginInterface $reverseAmountCalculator,
     ) {
     }
 
     /**
      * {@inheritDoc}
      */
-    public function transfer(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void
+    public function reverseTransfer(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void
     {
         $orderReference = $orderTransfer->getOrderReferenceOrFail();
 
         $payment = $this->paymentReader->getPaymentByOrderReference($orderReference);
         if ($payment === null || $payment->getLatestChargeId() === null) {
-            $this->getLogger()->warning('Cannot transfer funds: no payment or charge ID found', [
-                'orderReference' => $orderReference,
-            ]);
-
-            return;
-        }
-
-        $merchant = $this->repository->findMerchantByReference($merchantReference);
-        if ($merchant === null || $merchant->getStripeAccountId() === null) {
-            $this->getLogger()->warning('Cannot transfer funds: merchant has no Stripe account', [
+            $this->getLogger()->warning('Cannot reverse transfer: no payment or charge ID found', [
                 'orderReference' => $orderReference,
                 'merchantReference' => $merchantReference,
             ]);
@@ -59,15 +49,41 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
             return;
         }
 
-        $amount = $this->calculateTotalPayoutAmount($orderItems, $orderTransfer);
+        $previousPayout = $this->repository->findSuccessfulMerchantPayoutByOrderReferenceAndMerchantReference(
+            $orderReference,
+            $merchantReference,
+        );
 
+        if ($previousPayout === null || $previousPayout->getTransferId() === null) {
+            $this->getLogger()->warning('Cannot reverse transfer: no previous successful transfer found', [
+                'orderReference' => $orderReference,
+                'merchantReference' => $merchantReference,
+            ]);
+
+            return;
+        }
+
+        $merchant = $this->repository->findMerchantByReference($merchantReference);
+        if ($merchant === null || $merchant->getStripeAccountId() === null) {
+            $this->getLogger()->warning('Cannot reverse transfer: merchant has no Stripe account', [
+                'orderReference' => $orderReference,
+                'merchantReference' => $merchantReference,
+            ]);
+
+            return;
+        }
+
+        $amount = $this->calculateTotalReversePayoutAmount($orderItems, $orderTransfer);
+
+        // Negative amount signals createReversal() inside StripeTransfers::makeTransfer()
         $request = (new StripeTransmissionRequestTransfer())
-            ->setAmount((string)$amount)
+            ->setAmount((string)(-abs($amount)))
             ->setCurrency((new CurrencyTransfer())->setCode($payment->getCurrencyCodeOrFail()))
             ->setDestination($merchant->getStripeAccountIdOrFail())
             ->setDescription(MessageBuilder::transmissionRequestDescription($orderReference, $merchantReference))
             ->setSourceTransaction($payment->getLatestChargeIdOrFail())
             ->setTransferGroup($orderReference)
+            ->setTransferId($previousPayout->getTransferIdOrFail())
             ->setMetadata([
                 StripeConfig::METADATA_ORDER_REFERENCE => $orderReference,
                 StripeConfig::METADATA_MERCHANT_REFERENCE => $merchantReference,
@@ -76,7 +92,7 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
         $response = $this->stripeTransfers->transfer($request);
 
         if (!$response->getIsSuccessful()) {
-            $this->getLogger()->error('Fund transfer to merchant failed', [
+            $this->getLogger()->error('Fund transfer reversal to merchant failed', [
                 'orderReference' => $orderReference,
                 'merchantReference' => $merchantReference,
                 'message' => $response->getMessage(),
@@ -87,22 +103,22 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
             (new StripeMerchantPayoutTransfer())
                 ->setOrderReference($orderReference)
                 ->setMerchantReference($merchantReference)
-                ->setAmount($amount)
+                ->setAmount(-abs($amount))
                 ->setTransferId($response->getTransferId())
                 ->setIsSuccessful($response->getIsSuccessful() === true)
-                ->setIsReversed(false),
+                ->setIsReversed(true),
         );
     }
 
     /**
      * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    protected function calculateTotalPayoutAmount(array $orderItems, OrderTransfer $orderTransfer): int
+    protected function calculateTotalReversePayoutAmount(array $orderItems, OrderTransfer $orderTransfer): int
     {
         $total = 0;
 
         foreach ($orderItems as $itemTransfer) {
-            $total += $this->amountCalculator->calculatePayoutAmount($itemTransfer, $orderTransfer);
+            $total += $this->reverseAmountCalculator->calculatePayoutAmount($itemTransfer, $orderTransfer);
         }
 
         return $total;

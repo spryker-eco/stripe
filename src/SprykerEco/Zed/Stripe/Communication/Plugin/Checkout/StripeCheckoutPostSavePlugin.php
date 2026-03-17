@@ -25,7 +25,7 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
      * - Reads orderReference and idSalesOrder from checkoutResponseTransfer->saveOrder.
      * - Sets orderReference on quoteTransfer so the PaymentIntent description/metadata is correct.
      * - Creates a Stripe PaymentIntent via StripeFacade::initializePayment() with the final grand total.
-     * - Calls StripeFacade::savePayment() with the returned transactionId and clientSecret.
+     * - Calls StripeFacade::savePayment() with the returned transactionId.
      * - On success: sets isExternalRedirect=true and redirectUrl to the Yves Stripe payment page.
      * - On failure: adds a checkout error and sets isSuccess=false.
      *
@@ -55,7 +55,6 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
             $quoteTransfer,
             $saveOrderTransfer,
             $intentResponse->getTransactionIdOrFail(),
-            $intentResponse->getClientSecretOrFail(),
         );
 
         // todo: use constants, ref to \SprykerEco\Yves\Stripe\Plugin\Router\StripeRouteProviderPlugin

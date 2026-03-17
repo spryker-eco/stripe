@@ -12,10 +12,8 @@
         <property name="fkSalesOrder" type="int"/>
         <property name="orderReference" type="string"/>
         <property name="transactionId" type="string" description="Stripe PaymentIntent ID (pi_xxx)"/>
-        <property name="clientSecret" type="string" description="Stripe PaymentIntent client_secret for Stripe Elements"/>
         <property name="amount" type="int" description="Amount in minor units (cents)"/>
         <property name="currencyCode" type="string"/>
-        <property name="businessModel" type="string" description="direct|marketplace"/>
         <property name="latestChargeId" type="string" description="Marketplace only"/>
     </transfer>
 
@@ -26,7 +24,6 @@
     <transfer name="StripeWebhookPayload" strict="true">
         <property name="rawPayload" type="string"/>
         <property name="signatureHeader" type="string"/>
-        <property name="isLiveMode" type="bool"/>
     </transfer>
 
     <transfer name="StripeWebhookProcessResponse" strict="true">
@@ -35,32 +32,11 @@
     </transfer>
 
     <!-- ========================================================================
-         ZED REQUEST WRAPPERS (Client → Zed via ZedRequest gateway)
-         ======================================================================== -->
-
-    <transfer name="StripeApiRequest" strict="true">
-        <property name="webhookPayload" type="StripeWebhookPayload"/>
-    </transfer>
-
-    <transfer name="StripeApiResponse" strict="true">
-        <property name="isSuccess" type="bool"/>
-        <property name="errorResponse" type="StripeApiErrorResponse"/>
-        <property name="webhookProcessResponse" type="StripeWebhookProcessResponse"/>
-    </transfer>
-
-    <transfer name="StripeApiErrorResponse" strict="true">
-        <property name="statusCode" type="int"/>
-        <property name="message" type="string"/>
-        <property name="body" type="string"/>
-    </transfer>
-
-    <!-- ========================================================================
          STRIPE SDK WRAPPERS (internal Stripe API calls from Zed Business layer)
          Migrated from ACP app; StripeConfig removed — config read from StripeConfig directly.
          ======================================================================== -->
 
     <transfer name="StripeIntentRequest" strict="true">
-        <property name="payment" type="Payment"/>
         <property name="quote" type="Quote"/>
         <property name="transactionId" type="string"/>
     </transfer>
@@ -74,9 +50,6 @@
         <property name="publishableKey" type="string"/>
         <property name="latestChargeId" type="string"/>
         <property name="message" type="string"/>
-        <property name="redirectSuccessUrl" type="string"/>
-        <property name="redirectCancelUrl" type="string"/>
-        <property name="checkoutSummaryPageUrl" type="string"/>
         <property name="status" type="string"/>
         <property name="idSalesOrder" type="int" description="FK to spy_sales_order — used to link to the customer order details page"/>
     </transfer>
@@ -84,12 +57,10 @@
     <transfer name="StripeIntentCaptureRequest" strict="true">
         <property name="transactionId" type="string"/>
         <property name="amount" type="int"/>
-        <property name="payment" type="Payment"/>
     </transfer>
 
     <transfer name="StripeIntentCaptureResponse" strict="true">
         <property name="isSuccessful" type="bool"/>
-        <property name="transactionId" type="string"/>
         <property name="status" type="string"/>
         <property name="message" type="string"/>
     </transfer>
@@ -108,7 +79,6 @@
         <property name="transactionId" type="string"/>
         <property name="amount" type="int"/>
         <property name="orderItemSkus" type="string[]" singular="orderItemSku"/>
-        <property name="payment" type="Payment"/>
     </transfer>
 
     <transfer name="StripeRefundResponse" strict="true">
@@ -131,7 +101,6 @@
 
     <transfer name="StripeAccountLinksRequest" strict="true">
         <property name="accountLinksConfig" type="array"/>
-        <property name="stripeAccount" type="StripeAccount"/>
     </transfer>
 
     <transfer name="StripeAccountLinksResponse" strict="true">
@@ -145,7 +114,6 @@
     </transfer>
 
     <transfer name="StripeTransmissionRequest" strict="true">
-        <property name="payment" type="Payment"/>
         <property name="transferId" type="string"/>
         <property name="sourceTransaction" type="string"/>
         <property name="transferGroup" type="string"/>
@@ -169,21 +137,15 @@
         <property name="stripeAccountId" type="string"/>
     </transfer>
 
-    <!-- Marketplace: fund transfer collection -->
-    <transfer name="PaymentTransmissionsRequest" strict="true">
-        <property name="paymentTransmissions" type="PaymentTransmission[]" singular="paymentTransmission"/>
-    </transfer>
-
-    <transfer name="PaymentTransmissionsResponse" strict="true">
-        <property name="paymentTransmissions" type="PaymentTransmission[]" singular="paymentTransmission"/>
-    </transfer>
-
-    <transfer name="PaymentTransmission" strict="true">
+    <!-- Marketplace: persisted payout record per order+merchant -->
+    <transfer name="StripeMerchantPayout" strict="true">
+        <property name="idStripeMerchantPayout" type="int"/>
+        <property name="orderReference" type="string"/>
+        <property name="merchantReference" type="string"/>
+        <property name="transferId" type="string" description="Stripe transfer ID (tr_xxx); null when transfer failed"/>
+        <property name="amount" type="int" description="Amount in minor units; negative for reversals"/>
         <property name="isSuccessful" type="bool"/>
-        <property name="message" type="string"/>
-        <property name="previousPaymentTransmission" type="PaymentTransmission" description="When there was already a transfer made for the given data, we pass this value to be able to reverse a transfer."/>
-        <property name="payment" type="Payment"/>
-        <property name="transferId" type="string"/>
+        <property name="isReversed" type="bool" description="true for reversal records"/>
     </transfer>
 
     <!-- ========================================================================

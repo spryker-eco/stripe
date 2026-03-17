@@ -8,13 +8,17 @@
 namespace SprykerEcoTest\Zed\Stripe\Business\Payment;
 
 use Codeception\Test\Unit;
+use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeMerchantTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Generated\Shared\Transfer\StripeTransmissionResponseTransfer;
+use Spryker\Zed\SalesPaymentMerchantExtension\Communication\Dependency\Plugin\MerchantPayoutCalculatorPluginInterface;
+use SprykerEco\Zed\Stripe\Business\Merchant\Calculator\StripeMerchantPayoutAmountCalculatorFallback;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsTransfer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReaderInterface;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfersInterface;
+use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
 
 /**
@@ -37,6 +41,8 @@ class PaymentFundsTransferTest extends Unit
 
     protected const STRIPE_ACCOUNT_ID = 'acct_test_xyz';
 
+    protected const ITEM_PRICE = 1000;
+
     public function testTransferSkipsWhenNoPaymentFound(): void
     {
         // Arrange
@@ -52,7 +58,7 @@ class PaymentFundsTransferTest extends Unit
         $fundsTransfer->transfer(
             (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
             static::MERCHANT_REFERENCE,
-            1000,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
         );
     }
 
@@ -76,7 +82,7 @@ class PaymentFundsTransferTest extends Unit
         $fundsTransfer->transfer(
             (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
             static::MERCHANT_REFERENCE,
-            1000,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
         );
     }
 
@@ -99,7 +105,7 @@ class PaymentFundsTransferTest extends Unit
         $fundsTransfer->transfer(
             (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
             static::MERCHANT_REFERENCE,
-            1000,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
         );
     }
 
@@ -123,7 +129,7 @@ class PaymentFundsTransferTest extends Unit
         $fundsTransfer->transfer(
             (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
             static::MERCHANT_REFERENCE,
-            1000,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
         );
     }
 
@@ -137,8 +143,35 @@ class PaymentFundsTransferTest extends Unit
                 return $request->getSourceTransaction() === static::CHARGE_ID
                     && $request->getDestination() === static::STRIPE_ACCOUNT_ID
                     && $request->getTransferGroup() === static::ORDER_REFERENCE
-                    && $request->getAmount() === '1000';
+                    && $request->getAmount() === (string)static::ITEM_PRICE;
             }))
+            ->willReturn((new StripeTransmissionResponseTransfer())->setIsSuccessful(true)->setTransferId('tr_test_001'));
+
+        $entityManagerMock = $this->createMock(StripeEntityManagerInterface::class);
+        $entityManagerMock->expects($this->once())->method('saveMerchantPayout');
+
+        $fundsTransfer = $this->createPaymentFundsTransfer(
+            $stripeTransfersMock,
+            $this->createPaymentReaderMock(),
+            $this->createRepositoryMock(),
+            $entityManagerMock,
+        );
+
+        // Act
+        $fundsTransfer->transfer(
+            (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
+            static::MERCHANT_REFERENCE,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
+        );
+    }
+
+    public function testTransferSumsAmountsFromMultipleItemsViaCalculator(): void
+    {
+        // Arrange — two items for the same merchant; amounts are summed via the fallback calculator
+        $stripeTransfersMock = $this->createMock(StripeTransfersInterface::class);
+        $stripeTransfersMock->expects($this->once())
+            ->method('transfer')
+            ->with($this->callback(fn($request): bool => $request->getAmount() === '1500'))
             ->willReturn((new StripeTransmissionResponseTransfer())->setIsSuccessful(true));
 
         $fundsTransfer = $this->createPaymentFundsTransfer(
@@ -151,7 +184,65 @@ class PaymentFundsTransferTest extends Unit
         $fundsTransfer->transfer(
             (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
             static::MERCHANT_REFERENCE,
-            1000,
+            [
+                $this->createItemTransfer(600),
+                $this->createItemTransfer(900),
+            ],
+        );
+    }
+
+    public function testTransferUsesCustomCalculatorPlugin(): void
+    {
+        // Arrange — custom plugin halves the price (simulates commission deduction)
+        $calculatorMock = $this->createMock(MerchantPayoutCalculatorPluginInterface::class);
+        $calculatorMock->method('calculatePayoutAmount')->willReturn(500);
+
+        $stripeTransfersMock = $this->createMock(StripeTransfersInterface::class);
+        $stripeTransfersMock->expects($this->once())
+            ->method('transfer')
+            ->with($this->callback(fn($request): bool => $request->getAmount() === '500'))
+            ->willReturn((new StripeTransmissionResponseTransfer())->setIsSuccessful(true));
+
+        $fundsTransfer = $this->createPaymentFundsTransfer(
+            $stripeTransfersMock,
+            $this->createPaymentReaderMock(),
+            $this->createRepositoryMock(),
+            null,
+            $calculatorMock,
+        );
+
+        // Act
+        $fundsTransfer->transfer(
+            (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
+            static::MERCHANT_REFERENCE,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
+        );
+    }
+
+    public function testTransferPersistsFailedPayoutRecord(): void
+    {
+        // Arrange — Stripe transfer fails; payout record must still be saved (is_successful=false)
+        $stripeTransfersMock = $this->createMock(StripeTransfersInterface::class);
+        $stripeTransfersMock->method('transfer')
+            ->willReturn((new StripeTransmissionResponseTransfer())->setIsSuccessful(false)->setMessage('API error'));
+
+        $entityManagerMock = $this->createMock(StripeEntityManagerInterface::class);
+        $entityManagerMock->expects($this->once())
+            ->method('saveMerchantPayout')
+            ->with($this->callback(fn($payout): bool => $payout->getIsSuccessful() === false));
+
+        $fundsTransfer = $this->createPaymentFundsTransfer(
+            $stripeTransfersMock,
+            $this->createPaymentReaderMock(),
+            $this->createRepositoryMock(),
+            $entityManagerMock,
+        );
+
+        // Act
+        $fundsTransfer->transfer(
+            (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
+            static::MERCHANT_REFERENCE,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
         );
     }
 
@@ -181,15 +272,24 @@ class PaymentFundsTransferTest extends Unit
         return $mock;
     }
 
+    protected function createItemTransfer(int $price): ItemTransfer
+    {
+        return (new ItemTransfer())->setSumPriceToPayAggregation($price);
+    }
+
     protected function createPaymentFundsTransfer(
         StripeTransfersInterface $stripeTransfers,
         PaymentReaderInterface $paymentReader,
         ?StripeRepositoryInterface $repository = null,
+        ?StripeEntityManagerInterface $entityManager = null,
+        ?MerchantPayoutCalculatorPluginInterface $amountCalculator = null,
     ): PaymentFundsTransfer {
         return new PaymentFundsTransfer(
             $stripeTransfers,
             $paymentReader,
             $repository ?? $this->createRepositoryMock(),
+            $entityManager ?? $this->createMock(StripeEntityManagerInterface::class),
+            $amountCalculator ?? new StripeMerchantPayoutAmountCalculatorFallback(),
         );
     }
 }

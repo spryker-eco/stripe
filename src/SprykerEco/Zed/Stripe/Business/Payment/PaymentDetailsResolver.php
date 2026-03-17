@@ -20,7 +20,7 @@ use SprykerEco\Zed\Stripe\StripeConfig;
 class PaymentDetailsResolver implements PaymentDetailsResolverInterface
 {
     /**
-     * PaymentIntent statuses where the stored client_secret can be reused to collect payment.
+     * PaymentIntent statuses where the live client_secret from Stripe API can be used to collect payment.
      *
      * @var list<string>
      */
@@ -65,14 +65,9 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
 
         $idSalesOrder = $payment->getFkSalesOrder();
 
-        // Stripe API unreachable — fall back to stored client_secret optimistically
+        // Stripe API unreachable — client_secret is not stored, cannot proceed
         if (!$liveResponse->getIsSuccessful()) {
-            return (new StripeIntentResponseTransfer())
-                ->setIsSuccessful(true)
-                ->setTransactionId($transactionId)
-                ->setClientSecret($payment->getClientSecret())
-                ->setPublishableKey($this->config->getPublishableKey())
-                ->setIdSalesOrder($idSalesOrder);
+            return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
         }
 
         $status = $liveResponse->getStatus();
@@ -94,7 +89,7 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
             return (new StripeIntentResponseTransfer())
                 ->setIsSuccessful(true)
                 ->setTransactionId($transactionId)
-                ->setClientSecret($liveResponse->getClientSecret() ?? $payment->getClientSecret())
+                ->setClientSecret($liveResponse->getClientSecret())
                 ->setPublishableKey($this->config->getPublishableKey())
                 ->setIdSalesOrder($idSalesOrder);
         }
@@ -117,10 +112,9 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
             return $newResponse;
         }
 
-        $this->entityManager->updatePaymentSecrets(
+        $this->entityManager->updateTransactionId(
             $orderReference,
             $newResponse->getTransactionIdOrFail(),
-            $newResponse->getClientSecretOrFail(),
         );
 
         return $newResponse

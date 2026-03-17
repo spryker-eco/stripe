@@ -7,7 +7,6 @@
 
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command;
 
-use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Orm\Zed\Sales\Persistence\SpySalesOrder;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
@@ -15,23 +14,23 @@ use Spryker\Zed\Oms\Business\Util\ReadOnlyArrayObject;
 use Spryker\Zed\Oms\Dependency\Plugin\Command\CommandByOrderInterface;
 
 /**
- * Transfers captured funds to each merchant's Stripe connected account (marketplace only).
+ * Reverses previously made Stripe Connect transfers to merchants (marketplace only).
  * Fetches the full OrderTransfer (with commission data) and passes ItemTransfer[] per merchant
- * to the facade so that the configured payout calculator plugin can deduce commissions.
+ * to the facade so that the configured reverse payout calculator plugin can deduce commission refunds.
  *
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
  * @method \SprykerEco\Zed\Stripe\Communication\StripeCommunicationFactory getFactory()
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
  */
-class StripeTransferCommandPlugin extends AbstractPlugin implements CommandByOrderInterface
+class StripeReverseTransferCommandPlugin extends AbstractPlugin implements CommandByOrderInterface
 {
     /**
      * {@inheritDoc}
      * - Fetches the full OrderTransfer (including commission fields) via Sales facade.
      * - Groups matching ItemTransfers by merchantReference.
-     * - For each merchant group, calls StripeFacade::transferFunds() so the configured
-     *   MerchantPayoutCalculatorPlugin can calculate commission-adjusted amounts.
-     * - Requires spy_stripe_merchant.stripe_account_id to be set for each merchant.
+     * - For each merchant group, calls StripeFacade::reverseFunds() so the configured
+     *   MerchantPayoutReverseCalculatorPlugin can calculate commission-adjusted reversal amounts.
+     * - Reads the previous transfer ID from spy_stripe_merchant_payout to pass to createReversal().
      *
      * @api
      *
@@ -52,7 +51,7 @@ class StripeTransferCommandPlugin extends AbstractPlugin implements CommandByOrd
         $itemTransfersByMerchant = $this->groupItemTransfersByMerchant($orderItems, $orderTransfer);
 
         foreach ($itemTransfersByMerchant as $merchantReference => $merchantItemTransfers) {
-            $this->getFacade()->transferFunds($orderTransfer, $merchantReference, $merchantItemTransfers);
+            $this->getFacade()->reverseFunds($orderTransfer, $merchantReference, $merchantItemTransfers);
         }
 
         return $orderItems;

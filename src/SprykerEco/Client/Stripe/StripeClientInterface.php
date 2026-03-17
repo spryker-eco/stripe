@@ -27,7 +27,7 @@ interface StripeClientInterface
 
     /**
      * Specification:
-     * - Reads clientSecret, transactionId, and publishableKey from Zed for the given order.
+     * - Fetches clientSecret live from Stripe API and publishableKey from config for the given order.
      * - Used by the Yves Stripe payment page to mount Stripe Elements.
      *
      * @api

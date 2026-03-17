@@ -63,11 +63,11 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      */
-    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId, string $clientSecret): void
+    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId): void
     {
         $this->getFactory()
             ->createPaymentSaver()
-            ->savePayment($quoteTransfer, $saveOrderTransfer, $transactionId, $clientSecret);
+            ->savePayment($quoteTransfer, $saveOrderTransfer, $transactionId);
     }
 
     /**
@@ -149,11 +149,14 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      */
-    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void
+    /**
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     */
+    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void
     {
         $this->getFactory()
             ->createPaymentFundsTransfer()
-            ->transfer($orderTransfer, $merchantReference, $amount);
+            ->transfer($orderTransfer, $merchantReference, $orderItems);
     }
 
     /**
@@ -166,5 +169,42 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
         return $this->getFactory()
             ->createDashboardUrlGenerator()
             ->generateDashboardUrl($merchantReference);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    /**
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     */
+    public function reverseFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void
+    {
+        $this->getFactory()
+            ->createPaymentFundsReverseTransfer()
+            ->reverseTransfer($orderTransfer, $merchantReference, $orderItems);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function isTransferSuccessful(string $orderReference, string $merchantReference): bool
+    {
+        return $this->getRepository()
+            ->findSuccessfulMerchantPayoutByOrderReferenceAndMerchantReference($orderReference, $merchantReference) !== null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function isReverseTransferSuccessful(string $orderReference, string $merchantReference): bool
+    {
+        return $this->getRepository()
+            ->findSuccessfulMerchantPayoutReversalByOrderReferenceAndMerchantReference($orderReference, $merchantReference) !== null;
     }
 }

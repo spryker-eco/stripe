@@ -11,7 +11,10 @@ use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
 use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
 use Spryker\Zed\SalesPaymentDetail\Business\SalesPaymentDetailFacadeInterface;
+use Spryker\Zed\SalesPaymentMerchantExtension\Communication\Dependency\Plugin\MerchantPayoutCalculatorPluginInterface;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
+use SprykerEco\Zed\Stripe\Business\Merchant\Calculator\StripeMerchantPayoutAmountCalculatorFallback;
+use SprykerEco\Zed\Stripe\Business\Merchant\Calculator\StripeMerchantPayoutReverseAmountCalculatorFallback;
 use SprykerEco\Zed\Stripe\Business\Dashboard\DashboardUrlGenerator;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingHandler;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingRegistrar;
@@ -21,6 +24,7 @@ use SprykerEco\Zed\Stripe\Business\Payment\PaymentAuthorizer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentCanceller;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentCapturer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentDetailsResolver;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsReverseTransfer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsTransfer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentInitializer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReader;
@@ -68,7 +72,6 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     {
         return new PaymentSaver(
             $this->getEntityManager(),
-            $this->getConfig(),
         );
     }
 
@@ -223,7 +226,42 @@ class StripeBusinessFactory extends AbstractBusinessFactory
             $this->createStripeTransfers(),
             $this->createPaymentReader(),
             $this->getRepository(),
+            $this->getEntityManager(),
+            $this->createMerchantPayoutAmountCalculator(),
         );
+    }
+
+    public function createPaymentFundsReverseTransfer(): PaymentFundsReverseTransfer
+    {
+        return new PaymentFundsReverseTransfer(
+            $this->createStripeTransfers(),
+            $this->createPaymentReader(),
+            $this->getRepository(),
+            $this->getEntityManager(),
+            $this->createMerchantPayoutReverseAmountCalculator(),
+        );
+    }
+
+    public function createMerchantPayoutAmountCalculator(): MerchantPayoutCalculatorPluginInterface
+    {
+        return $this->getMerchantPayoutAmountCalculatorPlugin()
+            ?? new StripeMerchantPayoutAmountCalculatorFallback();
+    }
+
+    public function createMerchantPayoutReverseAmountCalculator(): MerchantPayoutCalculatorPluginInterface
+    {
+        return $this->getMerchantPayoutReverseAmountCalculatorPlugin()
+            ?? new StripeMerchantPayoutReverseAmountCalculatorFallback();
+    }
+
+    public function getMerchantPayoutAmountCalculatorPlugin(): ?MerchantPayoutCalculatorPluginInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::PLUGIN_MERCHANT_PAYOUT_AMOUNT_CALCULATOR);
+    }
+
+    public function getMerchantPayoutReverseAmountCalculatorPlugin(): ?MerchantPayoutCalculatorPluginInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::PLUGIN_MERCHANT_PAYOUT_REVERSE_AMOUNT_CALCULATOR);
     }
 
     protected function createStripeTransfers(): StripeTransfers

@@ -7,6 +7,7 @@
 
 namespace SprykerEco\Zed\Stripe\Persistence;
 
+use Orm\Zed\Stripe\Persistence\SpyStripeMerchantPayoutQuery;
 use Orm\Zed\Stripe\Persistence\SpyStripeMerchantQuery;
 use Orm\Zed\Stripe\Persistence\SpyStripePaymentQuery;
 use Spryker\Zed\Kernel\Persistence\AbstractPersistenceFactory;
@@ -27,6 +28,11 @@ class StripePersistenceFactory extends AbstractPersistenceFactory
     public function createStripeMerchantQuery(): SpyStripeMerchantQuery
     {
         return SpyStripeMerchantQuery::create();
+    }
+
+    public function createStripeMerchantPayoutQuery(): SpyStripeMerchantPayoutQuery
+    {
+        return SpyStripeMerchantPayoutQuery::create();
     }
 
     public function createStripePaymentMapper(): StripePaymentMapper

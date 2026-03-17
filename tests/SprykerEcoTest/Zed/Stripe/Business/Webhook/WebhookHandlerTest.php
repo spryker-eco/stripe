@@ -506,7 +506,7 @@ class WebhookHandlerTest extends Unit
 
         $handler = $this->createWebhookHandler(paymentAppFacade: $paymentAppFacadeMock);
 
-        $payload = json_encode([
+        $payload = (string)json_encode([
             'object' => 'event',
             'type' => 'some.unknown.event',
             'data' => ['object' => []],

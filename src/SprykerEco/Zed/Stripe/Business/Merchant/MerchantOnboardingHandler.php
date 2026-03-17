@@ -18,6 +18,23 @@ use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use Stripe\Account;
 use Stripe\Event;
 
+
+/**
+ * [MerchantOnboardingHandler::handleAccountUpdated()]
+ * ↓ maps Stripe fields (payouts_enabled, details_submitted) → MerchantApp status constant
+ * [MerchantAppFacade::handleMerchantAppOnboardingStatusChanged(MerchantAppOnboardingStatusChangedTransfer)]
+ * ↓
+ * [MerchantApp module] → spy_merchant_app_onboarding_status.status
+ *
+ * Status mapping: (Stripe fields → `MerchantAppOnboardingStatus` constants):
+ *
+ * | Stripe `account` fields   | MerchantApp status |
+ * |---------------------------|--------------------|
+ * | `details_submitted=false` | `INCOMPLETE` |
+ * | `details_submitted=true`, `payouts_enabled=false` | `PENDING` / `RESTRICTED` |
+ * | `details_submitted=true`, `payouts_enabled=true` | `ENABLED` |
+ * | `requirements.disabled_reason` set | `REJECTED` / `RESTRICTED` |
+ */
 class MerchantOnboardingHandler implements MerchantOnboardingHandlerInterface
 {
     use LoggerTrait;

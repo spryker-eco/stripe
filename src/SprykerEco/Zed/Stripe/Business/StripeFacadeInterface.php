@@ -37,7 +37,8 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Reads clientSecret and transactionId from spy_stripe_payment by orderReference.
+     * - Reads transactionId from spy_stripe_payment by orderReference.
+     * - Fetches clientSecret live from Stripe API using the transactionId.
      * - Adds publishableKey from config.
      * - Used by the Yves Stripe payment page to mount Stripe Elements.
      *
@@ -52,7 +53,7 @@ interface StripeFacadeInterface
      *
      * @api
      */
-    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId, string $clientSecret): void;
+    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId): void;
 
     /**
      * Specification:
@@ -123,11 +124,14 @@ interface StripeFacadeInterface
      * Specification:
      * - Transfers funds to the merchant's Stripe connected account (marketplace only).
      * - Reads the payment's latest charge ID and the merchant's Stripe account ID.
+     * - Calculates the payout amount per item using the configured MerchantPayoutCalculatorPlugin.
      * - Called from StripeTransferCommandPlugin via OMS command.
      *
      * @api
+     *
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
-    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, int $amount): void;
+    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void;
 
     /**
      * Specification:
@@ -138,4 +142,36 @@ interface StripeFacadeInterface
      * @api
      */
     public function generateDashboardUrl(string $merchantReference): ?string;
+
+    /**
+     * Specification:
+     * - Reverses a previously made Stripe Connect transfer to the merchant (marketplace only).
+     * - Reads the persisted transferId from spy_stripe_merchant_payout to pass to createReversal().
+     * - Calculates the reversal amount per item using the configured MerchantPayoutReverseCalculatorPlugin.
+     * - Persists the reversal result to spy_stripe_merchant_payout (is_reversed=true).
+     * - Called from StripeReverseTransferCommandPlugin via OMS command.
+     *
+     * @api
+     *
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     */
+    public function reverseFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void;
+
+    /**
+     * Specification:
+     * - Returns true when a successful forward transfer record exists for the given order+merchant.
+     * - Used by the IsStripeTransferSuccessful OMS condition plugin.
+     *
+     * @api
+     */
+    public function isTransferSuccessful(string $orderReference, string $merchantReference): bool;
+
+    /**
+     * Specification:
+     * - Returns true when a successful reversal record exists for the given order+merchant.
+     * - Used by the IsStripeReverseTransferSuccessful OMS condition plugin.
+     *
+     * @api
+     */
+    public function isReverseTransferSuccessful(string $orderReference, string $merchantReference): bool;
 }
