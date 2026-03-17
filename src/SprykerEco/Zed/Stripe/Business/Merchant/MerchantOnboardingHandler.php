@@ -85,22 +85,19 @@ class MerchantOnboardingHandler implements MerchantOnboardingHandlerInterface
 
     protected function resolveOnboardingStatus(Account $account): string
     {
-        /** @var array<string, mixed> $capabilities */
-        $capabilities = (array)($account['capabilities'] ?? []);
-
-        /** @var array<string, mixed> $requirements */
-        $requirements = (array)($account['requirements'] ?? []);
+        // Use ArrayAccess on StripeObject — (array) cast does not work for nested StripeObjects
+        $requirementsObject = $account['requirements'] ?? null;
 
         /** @var array<string> $currentlyDue */
-        $currentlyDue = (array)($requirements['currently_due'] ?? []);
+        $currentlyDue = $requirementsObject ? (array)($requirementsObject['currently_due'] ?? []) : [];
 
         /** @var array<string> $pastDue */
-        $pastDue = (array)($requirements['past_due'] ?? []);
+        $pastDue = $requirementsObject ? (array)($requirementsObject['past_due'] ?? []) : [];
 
         /** @var array<string> $eventuallyDue */
-        $eventuallyDue = (array)($requirements['eventually_due'] ?? []);
+        $eventuallyDue = $requirementsObject ? (array)($requirementsObject['eventually_due'] ?? []) : [];
 
-        $disabledReason = (string)($requirements['disabled_reason'] ?? '');
+        $disabledReason = (string)($requirementsObject ? ($requirementsObject['disabled_reason'] ?? '') : '');
 
         if ($disabledReason !== '' && $disabledReason !== '0' && str_contains($disabledReason, 'rejected')) {
             $this->getLogger()->info(MessageBuilder::accountRejected(), ['disabledReason' => $disabledReason]);
@@ -109,13 +106,16 @@ class MerchantOnboardingHandler implements MerchantOnboardingHandlerInterface
         }
 
         if ($account->charges_enabled && $account->payouts_enabled) {
-            $pendingVerification = (array)($requirements['pending_verification'] ?? []);
+            /** @var array<string> $pendingVerification */
+            $pendingVerification = $requirementsObject ? (array)($requirementsObject['pending_verification'] ?? []) : [];
             if (count($pendingVerification) > 0) {
                 return MerchantAppOnboardingStatusInterface::PENDING;
             }
 
+            $transferCapability = $account['capabilities'] ? ($account['capabilities']['transfers'] ?? null) : null;
+
             if (!$disabledReason && count($currentlyDue) === 0) {
-                if (!isset($capabilities['transfers']) || $capabilities['transfers'] !== 'active') {
+                if ($transferCapability !== 'active') {
                     return MerchantAppOnboardingStatusInterface::PENDING;
                 }
 

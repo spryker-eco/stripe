@@ -67,6 +67,26 @@ class PaymentFundsReverseTransferTest extends Unit
         );
     }
 
+    public function testReverseTransferSkipsWhenStripeIntentHasNoChargeId(): void
+    {
+        // Arrange — payment record exists but PaymentIntent has not been charged yet
+        $stripeTransfersMock = $this->createMock(StripeTransfersInterface::class);
+        $stripeTransfersMock->expects($this->never())->method('transfer');
+
+        $stripeIntentsMock = $this->createMock(StripeIntentsInterface::class);
+        $stripeIntentsMock->method('get')
+            ->willReturn((new StripeIntentResponseTransfer())->setIsSuccessful(true));
+
+        $reverseTransfer = $this->createPaymentFundsReverseTransfer($stripeTransfersMock, null, null, null, null, $stripeIntentsMock);
+
+        // Act
+        $reverseTransfer->reverseTransfer(
+            (new OrderTransfer())->setOrderReference(static::ORDER_REFERENCE),
+            static::MERCHANT_REFERENCE,
+            [$this->createItemTransfer(static::ITEM_PRICE)],
+        );
+    }
+
     public function testReverseTransferSkipsWhenNoPreviousSuccessfulPayoutFound(): void
     {
         // Arrange — no previous successful payout record exists
