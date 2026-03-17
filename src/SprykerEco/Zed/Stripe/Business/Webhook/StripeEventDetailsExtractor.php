@@ -156,7 +156,7 @@ class StripeEventDetailsExtractor implements StripeEventDetailsExtractorInterfac
             'charge' => is_string($refund->charge) ? $refund->charge : $refund->charge?->id,
             'payment intent' => is_string($refund->payment_intent) ? $refund->payment_intent : $refund->payment_intent?->id,
             'reason' => $refund->reason,
-            'failure reason' => $refund->failure_reason,
+            'failure reason' => $refund->__isset('failure_reason') ? $refund->failure_reason : null,
             'created' => $refund->created ? date('Y-m-d H:i:s', $refund->created) : null,
         ];
 
@@ -182,7 +182,7 @@ class StripeEventDetailsExtractor implements StripeEventDetailsExtractorInterfac
         }
 
         /** @var array<string, mixed> $cardData */
-        $cardData = (array)($paymentMethod->card?->toArray() ?? []);
+        $cardData = $paymentMethod->__isset('card') ? (array)$paymentMethod->card->toArray() : [];
         if (!$cardData) {
             // Non-card payment method — return type only
             return ['type' => $paymentMethod->type];

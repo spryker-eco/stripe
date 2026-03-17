@@ -88,7 +88,11 @@ class StripeRefunds implements StripeRefundsInterface
             ->setRefundId($stripeRefund->id);
 
         if ($stripeRefund->status === Refund::STATUS_FAILED) {
-            return $stripeRefundResponseTransfer->setMessage($stripeRefund->failure_reason);
+            return $stripeRefundResponseTransfer->setMessage(
+                $stripeRefund->__isset('failure_reason')
+                    ? $stripeRefund->failure_reason
+                    : sprintf('Refund failed with status "%s"', $stripeRefund->status),
+            );
         }
 
         if ($stripeRefund->status !== Refund::STATUS_SUCCEEDED) {
