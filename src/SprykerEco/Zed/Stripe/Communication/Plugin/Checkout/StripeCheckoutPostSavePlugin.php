@@ -57,7 +57,7 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
             $intentResponse->getTransactionIdOrFail(),
         );
 
-        // todo: use constants, ref to \SprykerEco\Yves\Stripe\Plugin\Router\StripeRouteProviderPlugin
+        // TODO: use constants and ref to \SprykerEco\Yves\Stripe\Plugin\Router\StripeRouteProviderPlugin
         $redirectUrl = '/stripe/payment?orderReference=' . rawurlencode($orderReference);
 
         $checkoutResponseTransfer

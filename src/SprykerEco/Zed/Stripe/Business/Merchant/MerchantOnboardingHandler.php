@@ -75,7 +75,8 @@ class MerchantOnboardingHandler implements MerchantOnboardingHandlerInterface
         $statusChangedTransfer = (new MerchantAppOnboardingStatusChangedTransfer())
             ->setMerchantReference($merchantReference)
             ->setAppIdentifier(SharedStripeConfig::PAYMENT_PROVIDER_NAME)
-            ->setStatus($status);
+            ->setStatus($status)
+            ->setType(SharedStripeConfig::ONBOARDING_TYPE);
 
         $this->merchantAppFacade->handleMerchantAppOnboardingStatusChanged($statusChangedTransfer);
 

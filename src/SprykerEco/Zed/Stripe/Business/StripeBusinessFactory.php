@@ -224,6 +224,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     {
         return new PaymentFundsTransfer(
             $this->createStripeTransfers(),
+            $this->createStripeIntents(),
             $this->createPaymentReader(),
             $this->getRepository(),
             $this->getEntityManager(),
@@ -235,6 +236,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     {
         return new PaymentFundsReverseTransfer(
             $this->createStripeTransfers(),
+            $this->createStripeIntents(),
             $this->createPaymentReader(),
             $this->getRepository(),
             $this->getEntityManager(),

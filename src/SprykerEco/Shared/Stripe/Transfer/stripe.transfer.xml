@@ -14,7 +14,6 @@
         <property name="transactionId" type="string" description="Stripe PaymentIntent ID (pi_xxx)"/>
         <property name="amount" type="int" description="Amount in minor units (cents)"/>
         <property name="currencyCode" type="string"/>
-        <property name="latestChargeId" type="string" description="Marketplace only"/>
     </transfer>
 
     <!-- ========================================================================

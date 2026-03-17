@@ -15,8 +15,6 @@
         <column name="amount" required="false" type="INTEGER"
                 comment="Amount in minor units (cents)"/>
         <column name="currency_code" required="false" type="VARCHAR" size="10"/>
-        <column name="latest_charge_id" required="false" type="VARCHAR" size="255"
-                comment="Marketplace only: latest Stripe charge ID"/>
 
         <foreign-key name="spy_stripe_payment-fk_sales_order" foreignTable="spy_sales_order" onDelete="CASCADE">
             <reference foreign="id_sales_order" local="fk_sales_order"/>

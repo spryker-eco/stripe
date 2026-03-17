@@ -11,10 +11,12 @@ use Generated\Shared\Transfer\CurrencyTransfer;
 use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
+use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeTransmissionRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
 use Spryker\Zed\SalesPaymentMerchantExtension\Communication\Dependency\Plugin\MerchantPayoutCalculatorPluginInterface;
 use SprykerEco\Zed\Stripe\Business\Message\MessageBuilder;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfersInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
@@ -26,6 +28,7 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
 
     public function __construct(
         protected StripeTransfersInterface $stripeTransfers,
+        protected StripeIntentsInterface $stripeIntents,
         protected PaymentReaderInterface $paymentReader,
         protected StripeRepositoryInterface $repository,
         protected StripeEntityManagerInterface $entityManager,
@@ -41,9 +44,22 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
         $orderReference = $orderTransfer->getOrderReferenceOrFail();
 
         $payment = $this->paymentReader->getPaymentByOrderReference($orderReference);
-        if ($payment === null || $payment->getLatestChargeId() === null) {
-            $this->getLogger()->warning('Cannot transfer funds: no payment or charge ID found', [
+        if ($payment === null || $payment->getTransactionId() === null) {
+            $this->getLogger()->warning('Cannot transfer funds: no payment found', [
                 'orderReference' => $orderReference,
+            ]);
+
+            return;
+        }
+
+        $intentResponse = $this->stripeIntents->get(
+            (new StripeIntentRequestTransfer())->setTransactionId($payment->getTransactionIdOrFail()),
+        );
+
+        if ($intentResponse->getLatestChargeId() === null) {
+            $this->getLogger()->warning('Cannot transfer funds: PaymentIntent has no charge ID yet', [
+                'orderReference' => $orderReference,
+                'transactionId' => $payment->getTransactionId(),
             ]);
 
             return;
@@ -63,10 +79,10 @@ class PaymentFundsTransfer implements PaymentFundsTransferInterface
 
         $request = (new StripeTransmissionRequestTransfer())
             ->setAmount((string)$amount)
-            ->setCurrency((new CurrencyTransfer())->setCode($payment->getCurrencyCodeOrFail()))
+            ->setCurrency((new CurrencyTransfer())->setCode($intentResponse->getCurrencyCodeOrFail()))
             ->setDestination($merchant->getStripeAccountIdOrFail())
             ->setDescription(MessageBuilder::transmissionRequestDescription($orderReference, $merchantReference))
-            ->setSourceTransaction($payment->getLatestChargeIdOrFail())
+            ->setSourceTransaction($intentResponse->getLatestChargeIdOrFail())
             ->setTransferGroup($orderReference)
             ->setMetadata([
                 StripeConfig::METADATA_ORDER_REFERENCE => $orderReference,

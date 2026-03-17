@@ -10,10 +10,12 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 use Generated\Shared\Transfer\CurrencyTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
+use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeTransmissionRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
 use Spryker\Zed\SalesPaymentMerchantExtension\Communication\Dependency\Plugin\MerchantPayoutCalculatorPluginInterface;
 use SprykerEco\Zed\Stripe\Business\Message\MessageBuilder;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfersInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
@@ -25,6 +27,7 @@ class PaymentFundsReverseTransfer implements PaymentFundsReverseTransferInterfac
 
     public function __construct(
         protected StripeTransfersInterface $stripeTransfers,
+        protected StripeIntentsInterface $stripeIntents,
         protected PaymentReaderInterface $paymentReader,
         protected StripeRepositoryInterface $repository,
         protected StripeEntityManagerInterface $entityManager,
@@ -40,10 +43,23 @@ class PaymentFundsReverseTransfer implements PaymentFundsReverseTransferInterfac
         $orderReference = $orderTransfer->getOrderReferenceOrFail();
 
         $payment = $this->paymentReader->getPaymentByOrderReference($orderReference);
-        if ($payment === null || $payment->getLatestChargeId() === null) {
-            $this->getLogger()->warning('Cannot reverse transfer: no payment or charge ID found', [
+        if ($payment === null || $payment->getTransactionId() === null) {
+            $this->getLogger()->warning('Cannot reverse transfer: no payment found', [
                 'orderReference' => $orderReference,
                 'merchantReference' => $merchantReference,
+            ]);
+
+            return;
+        }
+
+        $intentResponse = $this->stripeIntents->get(
+            (new StripeIntentRequestTransfer())->setTransactionId($payment->getTransactionIdOrFail()),
+        );
+
+        if ($intentResponse->getLatestChargeId() === null) {
+            $this->getLogger()->warning('Cannot reverse transfer: PaymentIntent has no charge ID yet', [
+                'orderReference' => $orderReference,
+                'transactionId' => $payment->getTransactionId(),
             ]);
 
             return;
@@ -78,10 +94,10 @@ class PaymentFundsReverseTransfer implements PaymentFundsReverseTransferInterfac
         // Negative amount signals createReversal() inside StripeTransfers::makeTransfer()
         $request = (new StripeTransmissionRequestTransfer())
             ->setAmount((string)(-abs($amount)))
-            ->setCurrency((new CurrencyTransfer())->setCode($payment->getCurrencyCodeOrFail()))
+            ->setCurrency((new CurrencyTransfer())->setCode($intentResponse->getCurrencyCodeOrFail()))
             ->setDestination($merchant->getStripeAccountIdOrFail())
             ->setDescription(MessageBuilder::transmissionRequestDescription($orderReference, $merchantReference))
-            ->setSourceTransaction($payment->getLatestChargeIdOrFail())
+            ->setSourceTransaction($intentResponse->getLatestChargeIdOrFail())
             ->setTransferGroup($orderReference)
             ->setTransferId($previousPayout->getTransferIdOrFail())
             ->setMetadata([

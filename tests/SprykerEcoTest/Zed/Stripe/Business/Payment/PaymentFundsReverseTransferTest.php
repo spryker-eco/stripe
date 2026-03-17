@@ -12,12 +12,14 @@ use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
 use Generated\Shared\Transfer\StripeMerchantTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Generated\Shared\Transfer\StripeTransmissionResponseTransfer;
 use Spryker\Zed\SalesPaymentMerchantExtension\Communication\Dependency\Plugin\MerchantPayoutCalculatorPluginInterface;
 use SprykerEco\Zed\Stripe\Business\Merchant\Calculator\StripeMerchantPayoutReverseAmountCalculatorFallback;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsReverseTransfer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReaderInterface;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfersInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
@@ -220,7 +222,18 @@ class PaymentFundsReverseTransferTest extends Unit
         $mock->method('getPaymentByOrderReference')->willReturn(
             (new StripePaymentTransfer())
                 ->setOrderReference(static::ORDER_REFERENCE)
-                ->setTransactionId(static::TRANSACTION_ID)
+                ->setTransactionId(static::TRANSACTION_ID),
+        );
+
+        return $mock;
+    }
+
+    protected function createStripeIntentsMock(): StripeIntentsInterface
+    {
+        $mock = $this->createMock(StripeIntentsInterface::class);
+        $mock->method('get')->willReturn(
+            (new StripeIntentResponseTransfer())
+                ->setIsSuccessful(true)
                 ->setLatestChargeId(static::CHARGE_ID)
                 ->setCurrencyCode('EUR'),
         );
@@ -261,14 +274,16 @@ class PaymentFundsReverseTransferTest extends Unit
 
     protected function createPaymentFundsReverseTransfer(
         StripeTransfersInterface $stripeTransfers,
-        PaymentReaderInterface $paymentReader,
+        ?PaymentReaderInterface $paymentReader = null,
         ?StripeRepositoryInterface $repository = null,
         ?StripeEntityManagerInterface $entityManager = null,
         ?MerchantPayoutCalculatorPluginInterface $reverseAmountCalculator = null,
+        ?StripeIntentsInterface $stripeIntents = null,
     ): PaymentFundsReverseTransfer {
         return new PaymentFundsReverseTransfer(
             $stripeTransfers,
-            $paymentReader,
+            $stripeIntents ?? $this->createStripeIntentsMock(),
+            $paymentReader ?? $this->createPaymentReaderMock(),
             $repository ?? $this->createRepositoryMock(),
             $entityManager ?? $this->createMock(StripeEntityManagerInterface::class),
             $reverseAmountCalculator ?? new StripeMerchantPayoutReverseAmountCalculatorFallback(),

@@ -11,12 +11,14 @@ use Codeception\Test\Unit;
 use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripeMerchantTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Generated\Shared\Transfer\StripeTransmissionResponseTransfer;
 use Spryker\Zed\SalesPaymentMerchantExtension\Communication\Dependency\Plugin\MerchantPayoutCalculatorPluginInterface;
 use SprykerEco\Zed\Stripe\Business\Merchant\Calculator\StripeMerchantPayoutAmountCalculatorFallback;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentFundsTransfer;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReaderInterface;
+use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfersInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface;
@@ -62,21 +64,17 @@ class PaymentFundsTransferTest extends Unit
         );
     }
 
-    public function testTransferSkipsWhenLatestChargeIdIsMissing(): void
+    public function testTransferSkipsWhenStripeIntentHasNoChargeId(): void
     {
-        // Arrange — payment record exists but has no latest_charge_id (PaymentIntent not yet charged)
+        // Arrange — payment record exists but PaymentIntent has not been charged yet
         $stripeTransfersMock = $this->createMock(StripeTransfersInterface::class);
         $stripeTransfersMock->expects($this->never())->method('transfer');
 
-        $paymentReaderMock = $this->createMock(PaymentReaderInterface::class);
-        $paymentReaderMock->method('getPaymentByOrderReference')
-            ->willReturn(
-                (new StripePaymentTransfer())
-                    ->setOrderReference(static::ORDER_REFERENCE)
-                    ->setTransactionId(static::TRANSACTION_ID),
-            );
+        $stripeIntentsMock = $this->createMock(StripeIntentsInterface::class);
+        $stripeIntentsMock->method('get')
+            ->willReturn((new StripeIntentResponseTransfer())->setIsSuccessful(true));
 
-        $fundsTransfer = $this->createPaymentFundsTransfer($stripeTransfersMock, $paymentReaderMock);
+        $fundsTransfer = $this->createPaymentFundsTransfer($stripeTransfersMock, null, null, null, null, $stripeIntentsMock);
 
         // Act
         $fundsTransfer->transfer(
@@ -252,7 +250,18 @@ class PaymentFundsTransferTest extends Unit
         $mock->method('getPaymentByOrderReference')->willReturn(
             (new StripePaymentTransfer())
                 ->setOrderReference(static::ORDER_REFERENCE)
-                ->setTransactionId(static::TRANSACTION_ID)
+                ->setTransactionId(static::TRANSACTION_ID),
+        );
+
+        return $mock;
+    }
+
+    protected function createStripeIntentsMock(): StripeIntentsInterface
+    {
+        $mock = $this->createMock(StripeIntentsInterface::class);
+        $mock->method('get')->willReturn(
+            (new StripeIntentResponseTransfer())
+                ->setIsSuccessful(true)
                 ->setLatestChargeId(static::CHARGE_ID)
                 ->setCurrencyCode('EUR'),
         );
@@ -279,14 +288,16 @@ class PaymentFundsTransferTest extends Unit
 
     protected function createPaymentFundsTransfer(
         StripeTransfersInterface $stripeTransfers,
-        PaymentReaderInterface $paymentReader,
+        ?PaymentReaderInterface $paymentReader = null,
         ?StripeRepositoryInterface $repository = null,
         ?StripeEntityManagerInterface $entityManager = null,
         ?MerchantPayoutCalculatorPluginInterface $amountCalculator = null,
+        ?StripeIntentsInterface $stripeIntents = null,
     ): PaymentFundsTransfer {
         return new PaymentFundsTransfer(
             $stripeTransfers,
-            $paymentReader,
+            $stripeIntents ?? $this->createStripeIntentsMock(),
+            $paymentReader ?? $this->createPaymentReaderMock(),
             $repository ?? $this->createRepositoryMock(),
             $entityManager ?? $this->createMock(StripeEntityManagerInterface::class),
             $amountCalculator ?? new StripeMerchantPayoutAmountCalculatorFallback(),

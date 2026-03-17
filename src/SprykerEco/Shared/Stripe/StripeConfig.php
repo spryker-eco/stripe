@@ -13,6 +13,8 @@ class StripeConfig
 
     public const string PAYMENT_METHOD_NAME = 'stripe';
 
+    public const string ONBOARDING_TYPE = 'payment';
+
     // Business model values
     public const string BUSINESS_MODEL_DIRECT = 'direct';
 
