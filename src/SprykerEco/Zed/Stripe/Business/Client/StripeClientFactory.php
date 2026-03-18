@@ -26,6 +26,4 @@ class StripeClientFactory
             'stripe_version' => StripeConfig::STRIPE_API_VERSION,
         ]);
     }
-
-
 }

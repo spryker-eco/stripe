@@ -13,8 +13,8 @@ use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Generated\Shared\Transfer\StripeRefundRequestTransfer;
 use Generated\Shared\Transfer\StripeRefundResponseTransfer;
-use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentReaderInterface;
+use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefundsInterface;
 
 /**

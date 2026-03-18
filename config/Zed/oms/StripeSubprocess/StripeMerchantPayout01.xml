@@ -5,7 +5,7 @@
     xsi:schemaLocation="spryker:oms-01 http://static.spryker.com/oms-01.xsd">
 
     <!-- Stripe marketplace: transfers captured funds to each merchant's Stripe connected account.
-         Uses the direct Stripe API (no ACP app required).
+         Uses SalesPaymentMerchant orchestration with StripePayoutTransmissionPlugin for direct Stripe API calls.
          On success → closed; on failure → payout failed (retryable). -->
     <process name="StripeMerchantPayout">
 
@@ -16,7 +16,7 @@
 
         <transitions>
 
-            <transition condition="Stripe/IsTransferSuccessful" happy="true">
+            <transition condition="SalesPaymentMerchant/IsMerchantPaidOut" happy="true">
                 <source>merchant payout ready</source>
                 <target>closed</target>
                 <event>payout merchant</event>
@@ -37,7 +37,7 @@
         </transitions>
 
         <events>
-            <event name="payout merchant" onEnter="true" command="Stripe/Transfer"/>
+            <event name="payout merchant" onEnter="true" command="SalesPaymentMerchant/Payout"/>
             <event name="retry payout merchant" manual="true"/>
         </events>
 

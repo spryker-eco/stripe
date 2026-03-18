@@ -136,17 +136,6 @@
         <property name="stripeAccountId" type="string"/>
     </transfer>
 
-    <!-- Marketplace: persisted payout record per order+merchant -->
-    <transfer name="StripeMerchantPayout" strict="true">
-        <property name="idStripeMerchantPayout" type="int"/>
-        <property name="orderReference" type="string"/>
-        <property name="merchantReference" type="string"/>
-        <property name="transferId" type="string" description="Stripe transfer ID (tr_xxx); null when transfer failed"/>
-        <property name="amount" type="int" description="Amount in minor units; negative for reversals"/>
-        <property name="isSuccessful" type="bool"/>
-        <property name="isReversed" type="bool" description="true for reversal records"/>
-    </transfer>
-
     <!-- ========================================================================
          SPRYKER CORE EXTENSIONS
          ======================================================================== -->

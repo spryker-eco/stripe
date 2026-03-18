@@ -31,7 +31,6 @@ use SprykerEco\Zed\Stripe\StripeConfig;
 use Stripe\Charge;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
-use Stripe\PaymentIntent;
 use Stripe\Refund;
 use Stripe\Webhook;
 

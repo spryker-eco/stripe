@@ -7,7 +7,6 @@
 
 namespace SprykerEco\Zed\Stripe\Persistence;
 
-use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
 use Generated\Shared\Transfer\StripeMerchantTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Spryker\Zed\Kernel\Persistence\AbstractRepository;
@@ -60,47 +59,5 @@ class StripeRepository extends AbstractRepository implements StripeRepositoryInt
 
         return $this->getFactory()->createStripePaymentMapper()
             ->mapMerchantEntityToTransfer($merchantEntity, new StripeMerchantTransfer());
-    }
-
-    public function findSuccessfulMerchantPayoutByOrderReferenceAndMerchantReference(
-        string $orderReference,
-        string $merchantReference,
-    ): ?StripeMerchantPayoutTransfer {
-        $entity = $this->getFactory()
-            ->createStripeMerchantPayoutQuery()
-            ->filterByOrderReference($orderReference)
-            ->filterByMerchantReference($merchantReference)
-            ->filterByIsSuccessful(true)
-            ->filterByIsReversed(false)
-            ->orderByIdStripeMerchantPayout('DESC')
-            ->findOne();
-
-        if ($entity === null) {
-            return null;
-        }
-
-        return $this->getFactory()->createStripePaymentMapper()
-            ->mapMerchantPayoutEntityToTransfer($entity, new StripeMerchantPayoutTransfer());
-    }
-
-    public function findSuccessfulMerchantPayoutReversalByOrderReferenceAndMerchantReference(
-        string $orderReference,
-        string $merchantReference,
-    ): ?StripeMerchantPayoutTransfer {
-        $entity = $this->getFactory()
-            ->createStripeMerchantPayoutQuery()
-            ->filterByOrderReference($orderReference)
-            ->filterByMerchantReference($merchantReference)
-            ->filterByIsSuccessful(true)
-            ->filterByIsReversed(true)
-            ->orderByIdStripeMerchantPayout('DESC')
-            ->findOne();
-
-        if ($entity === null) {
-            return null;
-        }
-
-        return $this->getFactory()->createStripePaymentMapper()
-            ->mapMerchantPayoutEntityToTransfer($entity, new StripeMerchantPayoutTransfer());
     }
 }

@@ -7,7 +7,6 @@
 
 namespace SprykerEco\Zed\Stripe\Persistence;
 
-use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Spryker\Zed\Kernel\Persistence\AbstractEntityManager;
 
@@ -53,17 +52,5 @@ class StripeEntityManager extends AbstractEntityManager implements StripeEntityM
         $merchantEntity->setMerchantReference($merchantReference);
         $merchantEntity->setStripeAccountId($stripeAccountId);
         $merchantEntity->save();
-    }
-
-    public function saveMerchantPayout(StripeMerchantPayoutTransfer $stripeMerchantPayoutTransfer): StripeMerchantPayoutTransfer
-    {
-        $payoutEntity = $this->getFactory()->createStripePaymentMapper()
-            ->mapMerchantPayoutTransferToEntity($stripeMerchantPayoutTransfer);
-
-        $payoutEntity->save();
-
-        $stripeMerchantPayoutTransfer->setIdStripeMerchantPayout($payoutEntity->getIdStripeMerchantPayout());
-
-        return $stripeMerchantPayoutTransfer;
     }
 }

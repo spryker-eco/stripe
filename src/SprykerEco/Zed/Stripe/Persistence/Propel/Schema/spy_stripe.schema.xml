@@ -47,32 +47,4 @@
         <id-method-parameter value="spy_stripe_merchant_pk_seq"/>
     </table>
 
-    <table name="spy_stripe_merchant_payout" idMethod="native" allowPkInsert="true">
-        <column name="id_stripe_merchant_payout" required="true" type="INTEGER" autoIncrement="true" primaryKey="true"/>
-        <column name="order_reference" required="true" type="VARCHAR" size="255"/>
-        <column name="merchant_reference" required="true" type="VARCHAR" size="255"/>
-        <column name="transfer_id" required="false" type="VARCHAR" size="255"
-                comment="Stripe transfer ID (tr_xxx) — null when transfer failed"/>
-        <column name="amount" required="true" type="INTEGER"
-                comment="Amount in minor units (cents); negative for reversals"/>
-        <column name="is_successful" required="true" type="BOOLEAN" defaultValue="false"/>
-        <column name="is_reversed" required="true" type="BOOLEAN" defaultValue="false"
-                comment="true for reversal records, false for forward transfer records"/>
-
-        <index name="spy_stripe_merchant_payout-order_reference">
-            <index-column name="order_reference"/>
-        </index>
-        <index name="spy_stripe_merchant_payout-merchant_reference">
-            <index-column name="merchant_reference"/>
-        </index>
-        <index name="spy_stripe_merchant_payout-order_merchant">
-            <index-column name="order_reference"/>
-            <index-column name="merchant_reference"/>
-            <index-column name="is_reversed"/>
-        </index>
-
-        <behavior name="timestampable"/>
-        <id-method-parameter value="spy_stripe_merchant_payout_pk_seq"/>
-    </table>
-
 </database>

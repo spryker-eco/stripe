@@ -7,11 +7,9 @@
 
 namespace SprykerEco\Zed\Stripe\Persistence\Propel\Mapper;
 
-use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
 use Generated\Shared\Transfer\StripeMerchantTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Orm\Zed\Stripe\Persistence\SpyStripeMerchant;
-use Orm\Zed\Stripe\Persistence\SpyStripeMerchantPayout;
 use Orm\Zed\Stripe\Persistence\SpyStripePayment;
 
 class StripePaymentMapper
@@ -36,20 +34,5 @@ class StripePaymentMapper
         StripeMerchantTransfer $transfer,
     ): StripeMerchantTransfer {
         return $transfer->fromArray($entity->toArray(), true);
-    }
-
-    public function mapMerchantPayoutEntityToTransfer(
-        SpyStripeMerchantPayout $entity,
-        StripeMerchantPayoutTransfer $transfer,
-    ): StripeMerchantPayoutTransfer {
-        return $transfer->fromArray($entity->toArray(), true);
-    }
-
-    public function mapMerchantPayoutTransferToEntity(StripeMerchantPayoutTransfer $transfer): SpyStripeMerchantPayout
-    {
-        $entity = new SpyStripeMerchantPayout();
-        $entity->fromArray($transfer->modifiedToArray());
-
-        return $entity;
     }
 }

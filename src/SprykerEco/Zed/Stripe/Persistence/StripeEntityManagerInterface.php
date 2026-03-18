@@ -7,7 +7,6 @@
 
 namespace SprykerEco\Zed\Stripe\Persistence;
 
-use Generated\Shared\Transfer\StripeMerchantPayoutTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 
 interface StripeEntityManagerInterface
@@ -17,10 +16,4 @@ interface StripeEntityManagerInterface
     public function updateTransactionId(string $orderReference, string $transactionId): void;
 
     public function saveMerchantStripeAccountId(string $merchantReference, string $stripeAccountId): void;
-
-    /**
-     * Persists a forward transfer or reversal record for a given order+merchant.
-     * Returns the transfer with idStripeMerchantPayout populated.
-     */
-    public function saveMerchantPayout(StripeMerchantPayoutTransfer $stripeMerchantPayoutTransfer): StripeMerchantPayoutTransfer;
 }

@@ -8,6 +8,7 @@
 namespace SprykerEco\Zed\Stripe\Business;
 
 use Generated\Shared\Transfer\OrderTransfer;
+use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
@@ -122,19 +123,6 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Transfers funds to the merchant's Stripe connected account (marketplace only).
-     * - Reads the payment's latest charge ID and the merchant's Stripe account ID.
-     * - Calculates the payout amount per item using the configured MerchantPayoutCalculatorPlugin.
-     * - Called from StripeTransferCommandPlugin via OMS command.
-     *
-     * @api
-     *
-     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
-     */
-    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void;
-
-    /**
-     * Specification:
      * - Looks up the merchant's Stripe connected account ID by merchant reference.
      * - Generates a single-use Stripe Express Dashboard login URL for the merchant.
      * - Returns null if the merchant has no connected Stripe account or if the API call fails.
@@ -145,33 +133,19 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Reverses a previously made Stripe Connect transfer to the merchant (marketplace only).
-     * - Reads the persisted transferId from spy_stripe_merchant_payout to pass to createReversal().
-     * - Calculates the reversal amount per item using the configured MerchantPayoutReverseCalculatorPlugin.
-     * - Persists the reversal result to spy_stripe_merchant_payout (is_reversed=true).
-     * - Called from StripeReverseTransferCommandPlugin via OMS command.
+     * - Executes payment transmission for prepared PaymentTransmissionItemTransfers via Stripe API.
+     * - Groups items by merchant reference, creates Stripe transfers or reversals.
+     * - Items with positive amounts result in forward transfers.
+     * - Items with negative amounts and a transferId result in transfer reversals.
+     * - Returns PaymentTransmissionResponseCollectionTransfer for SalesPaymentMerchant persistence.
+     * - Used by StripePayoutTransmissionPlugin as the MerchantPayoutTransmissionPluginInterface implementation.
      *
      * @api
      *
-     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     * @param list<\Generated\Shared\Transfer\PaymentTransmissionItemTransfer> $paymentTransmissionItemTransfers
      */
-    public function reverseFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void;
-
-    /**
-     * Specification:
-     * - Returns true when a successful forward transfer record exists for the given order+merchant.
-     * - Used by the IsStripeTransferSuccessful OMS condition plugin.
-     *
-     * @api
-     */
-    public function isTransferSuccessful(string $orderReference, string $merchantReference): bool;
-
-    /**
-     * Specification:
-     * - Returns true when a successful reversal record exists for the given order+merchant.
-     * - Used by the IsStripeReverseTransferSuccessful OMS condition plugin.
-     *
-     * @api
-     */
-    public function isReverseTransferSuccessful(string $orderReference, string $merchantReference): bool;
+    public function executePayoutTransmission(
+        array $paymentTransmissionItemTransfers,
+        OrderTransfer $orderTransfer,
+    ): PaymentTransmissionResponseCollectionTransfer;
 }

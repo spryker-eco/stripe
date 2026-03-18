@@ -5,7 +5,7 @@
     xsi:schemaLocation="spryker:oms-01 http://static.spryker.com/oms-01.xsd">
 
     <!-- Stripe marketplace: reverses a previously made Stripe Connect transfer to a merchant.
-         Uses the direct Stripe API via createReversal().
+         Uses SalesPaymentMerchant orchestration with StripePayoutTransmissionPlugin for direct Stripe API calls.
          On success → cancelled; on failure → reverse payout failed (retryable). -->
     <process name="StripeMerchantPayoutReverse">
 
@@ -16,7 +16,7 @@
 
         <transitions>
 
-            <transition condition="Stripe/IsReverseTransferSuccessful" happy="true">
+            <transition condition="SalesPaymentMerchant/IsMerchantPayoutReversed" happy="true">
                 <source>merchant payout reverse ready</source>
                 <target>cancelled</target>
                 <event>reverse payout merchant</event>
@@ -37,7 +37,7 @@
         </transitions>
 
         <events>
-            <event name="reverse payout merchant" onEnter="true" command="Stripe/ReverseTransfer"/>
+            <event name="reverse payout merchant" onEnter="true" command="SalesPaymentMerchant/ReversePayout"/>
             <event name="retry reverse payout merchant" manual="true"/>
         </events>
 

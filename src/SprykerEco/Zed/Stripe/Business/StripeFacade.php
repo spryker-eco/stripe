@@ -8,6 +8,7 @@
 namespace SprykerEco\Zed\Stripe\Business;
 
 use Generated\Shared\Transfer\OrderTransfer;
+use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
@@ -149,21 +150,6 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      */
-    /**
-     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
-     */
-    public function transferFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void
-    {
-        $this->getFactory()
-            ->createPaymentFundsTransfer()
-            ->transfer($orderTransfer, $merchantReference, $orderItems);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     */
     public function generateDashboardUrl(string $merchantReference): ?string
     {
         return $this->getFactory()
@@ -175,36 +161,15 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      * {@inheritDoc}
      *
      * @api
-     */
-    /**
-     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
-     */
-    public function reverseFunds(OrderTransfer $orderTransfer, string $merchantReference, array $orderItems): void
-    {
-        $this->getFactory()
-            ->createPaymentFundsReverseTransfer()
-            ->reverseTransfer($orderTransfer, $merchantReference, $orderItems);
-    }
-
-    /**
-     * {@inheritDoc}
      *
-     * @api
+     * @param list<\Generated\Shared\Transfer\PaymentTransmissionItemTransfer> $paymentTransmissionItemTransfers
      */
-    public function isTransferSuccessful(string $orderReference, string $merchantReference): bool
-    {
-        return $this->getRepository()
-            ->findSuccessfulMerchantPayoutByOrderReferenceAndMerchantReference($orderReference, $merchantReference) !== null;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     */
-    public function isReverseTransferSuccessful(string $orderReference, string $merchantReference): bool
-    {
-        return $this->getRepository()
-            ->findSuccessfulMerchantPayoutReversalByOrderReferenceAndMerchantReference($orderReference, $merchantReference) !== null;
+    public function executePayoutTransmission(
+        array $paymentTransmissionItemTransfers,
+        OrderTransfer $orderTransfer,
+    ): PaymentTransmissionResponseCollectionTransfer {
+        return $this->getFactory()
+            ->createPayoutTransmissionExecutor()
+            ->executePayoutTransmission($paymentTransmissionItemTransfers, $orderTransfer);
     }
 }

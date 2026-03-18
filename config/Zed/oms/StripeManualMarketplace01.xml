@@ -158,7 +158,7 @@
 
             <!-- After refund: if a payout transfer was previously made, reverse it.
                  If no payout was made (e.g. refunded before payout), go directly to cancelled. -->
-            <transition condition="Stripe/IsTransferSuccessful">
+            <transition condition="SalesPaymentMerchant/IsMerchantPaidOut">
                 <source>refunded</source>
                 <target>merchant payout reverse ready</target>
                 <event>reverse payout</event>

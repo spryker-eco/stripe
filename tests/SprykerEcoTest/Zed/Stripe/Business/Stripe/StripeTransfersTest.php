@@ -11,6 +11,7 @@ use Codeception\Stub;
 use Codeception\Test\Unit;
 use Generated\Shared\Transfer\CurrencyTransfer;
 use Generated\Shared\Transfer\StripeTransmissionRequestTransfer;
+use LogicException;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use SprykerEco\Zed\Stripe\Business\Message\MessageBuilder;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfers;
@@ -85,7 +86,7 @@ class StripeTransfersTest extends Unit
 
         $transferServiceMock = Stub::make(TransferService::class, [
             'create' => static function (): void {
-                throw new \LogicException('create() should not be called for negative amounts');
+                throw new LogicException('create() should not be called for negative amounts');
             },
             'createReversal' => function (string $transferId, array $data) use (&$reversalCalled): TransferReversal {
                 $reversalCalled = true;
@@ -114,7 +115,7 @@ class StripeTransfersTest extends Unit
         // Arrange
         $transferServiceMock = Stub::make(TransferService::class, [
             'create' => static function (): never {
-                throw new \LogicException('Should not be reached');
+                throw new LogicException('Should not be reached');
             },
         ]);
 

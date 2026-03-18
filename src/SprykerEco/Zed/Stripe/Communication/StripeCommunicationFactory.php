@@ -11,7 +11,6 @@ use Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory;
 use Spryker\Zed\MerchantUser\Business\MerchantUserFacadeInterface;
 use Spryker\Zed\Refund\Business\RefundFacadeInterface;
 use Spryker\Zed\Sales\Business\SalesFacadeInterface;
-use Spryker\Zed\SalesPayment\Business\SalesPaymentFacadeInterface;
 use SprykerEco\Zed\Stripe\StripeDependencyProvider;
 
 /**
@@ -22,11 +21,6 @@ use SprykerEco\Zed\Stripe\StripeDependencyProvider;
  */
 class StripeCommunicationFactory extends AbstractCommunicationFactory
 {
-    public function getSalesPaymentFacade(): SalesPaymentFacadeInterface
-    {
-        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES_PAYMENT);
-    }
-
     public function getRefundFacade(): RefundFacadeInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::FACADE_REFUND);

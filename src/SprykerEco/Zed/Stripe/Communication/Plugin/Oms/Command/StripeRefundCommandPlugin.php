@@ -24,7 +24,7 @@ class StripeRefundCommandPlugin extends AbstractPlugin implements CommandByOrder
     /**
      * {@inheritDoc}
      * - Initiates a Stripe Refund for the given order items.
-     * - Refund amount is calculated via SalesPaymentFacade: sum of item refundable amounts + shipping on the last refund.
+     * - Refund amount is calculated via RefundFacade: sum of item refundable amounts + shipping on the last refund.
      * - Status transition is driven by the `charge.refund.updated` webhook.
      *
      * @api

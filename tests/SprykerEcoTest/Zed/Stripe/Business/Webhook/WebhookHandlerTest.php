@@ -45,10 +45,6 @@ class WebhookHandlerTest extends Unit
 
     protected const TRANSACTION_ID = 'pi_test_abc123';
 
-    // -------------------------------------------------------------------------
-    // payment_intent.amount_capturable_updated → PaymentAuthorizedTransfer
-    // -------------------------------------------------------------------------
-
     public function testAmountCapturableUpdatedSavesAuthorizedStatus(): void
     {
         // Arrange

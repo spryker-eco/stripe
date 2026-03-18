@@ -18,7 +18,6 @@ use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use Stripe\Account;
 use Stripe\Event;
 
-
 /**
  * [MerchantOnboardingHandler::handleAccountUpdated()]
  * ↓ maps Stripe fields (payouts_enabled, details_submitted) → MerchantApp status constant
@@ -28,7 +27,7 @@ use Stripe\Event;
  *
  * Status mapping: (Stripe fields → `MerchantAppOnboardingStatus` constants):
  *
- * | Stripe `account` fields   | MerchantApp status |
+ * | Stripe `account` fields | MerchantApp status |
  * |---------------------------|--------------------|
  * | `details_submitted=false` | `INCOMPLETE` |
  * | `details_submitted=true`, `payouts_enabled=false` | `PENDING` / `RESTRICTED` |

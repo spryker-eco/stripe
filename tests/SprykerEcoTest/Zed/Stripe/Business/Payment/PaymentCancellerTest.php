@@ -9,6 +9,8 @@ namespace SprykerEcoTest\Zed\Stripe\Business\Payment;
 
 use Codeception\Test\Unit;
 use Generated\Shared\Transfer\OrderTransfer;
+use Generated\Shared\Transfer\PaymentCanceledTransfer;
+use Generated\Shared\Transfer\PaymentCancellationFailedTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
@@ -75,7 +77,7 @@ class PaymentCancellerTest extends Unit
         $paymentAppFacadeMock = $this->createMock(PaymentAppFacadeInterface::class);
         $paymentAppFacadeMock->expects($this->once())
             ->method('savePaymentAppPaymentStatus')
-            ->with($this->isInstanceOf(\Generated\Shared\Transfer\PaymentCancellationFailedTransfer::class));
+            ->with($this->isInstanceOf(PaymentCancellationFailedTransfer::class));
 
         $salesPaymentDetailFacadeMock = $this->createMock(SalesPaymentDetailFacadeInterface::class);
         $salesPaymentDetailFacadeMock->expects($this->never())->method('handlePaymentUpdated');
@@ -104,7 +106,7 @@ class PaymentCancellerTest extends Unit
         $paymentAppFacadeMock = $this->createMock(PaymentAppFacadeInterface::class);
         $paymentAppFacadeMock->expects($this->once())
             ->method('savePaymentAppPaymentStatus')
-            ->with($this->isInstanceOf(\Generated\Shared\Transfer\PaymentCanceledTransfer::class));
+            ->with($this->isInstanceOf(PaymentCanceledTransfer::class));
 
         $canceller = $this->createCanceller($stripeIntentsMock, $this->createPaymentReaderMock(), $paymentAppFacadeMock);
 

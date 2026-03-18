@@ -12,6 +12,7 @@ use Codeception\Test\Unit;
 use Generated\Shared\Transfer\StripeRefundRequestTransfer;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
+use Stripe\Exception\ApiConnectionException;
 use Stripe\Refund;
 use Stripe\Service\RefundService;
 use Stripe\StripeClient;
@@ -160,7 +161,7 @@ class StripeRefundsTest extends Unit
         // Arrange
         $refundServiceMock = Stub::make(RefundService::class, [
             'create' => static function (): void {
-                throw new \Stripe\Exception\ApiConnectionException('Connection error');
+                throw new ApiConnectionException('Connection error');
             },
         ]);
 
