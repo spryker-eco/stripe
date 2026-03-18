@@ -182,7 +182,7 @@ class StripeEventDetailsExtractor implements StripeEventDetailsExtractorInterfac
         }
 
         /** @var array<string, mixed> $cardData */
-        $cardData = $paymentMethod->__isset('card') ? (array)$paymentMethod->card->toArray() : [];
+        $cardData = $paymentMethod->card !== null ? (array)$paymentMethod->card->toArray() : [];
         if (!$cardData) {
             // Non-card payment method — return type only
             return ['type' => $paymentMethod->type];

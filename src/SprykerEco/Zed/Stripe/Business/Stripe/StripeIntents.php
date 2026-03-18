@@ -133,6 +133,27 @@ class StripeIntents implements StripeIntentsInterface
 
             // Already succeeded (e.g. Bank Account Payment — auto-captured)
             if ($paymentIntent->status === 'succeeded') {
+                // Guard against partial-capture race: if a prior capture already settled the PI
+                // for less than the current item's requested amount, this item was never captured.
+                // Returning success here would let it proceed to payout, causing a transfer failure.
+                $requestedAmount = $stripeIntentCaptureRequestTransfer->getAmount();
+
+                if ($requestedAmount !== null && $paymentIntent->amount_received < $requestedAmount) {
+                    $this->getLogger()->error('Payment Intent already succeeded with partial capture — requested amount not captured.', [
+                        StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $transactionId,
+                        'amount_received' => $paymentIntent->amount_received,
+                        'requested_amount' => $requestedAmount,
+                    ]);
+
+                    return $stripeIntentCaptureResponseTransfer
+                        ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED)
+                        ->setMessage(sprintf(
+                            'Partial capture: PaymentIntent already settled for %d, requested %d was not captured.',
+                            $paymentIntent->amount_received,
+                            $requestedAmount,
+                        ));
+                }
+
                 $stripeIntentCaptureResponseTransfer->setIsSuccessful(true);
                 $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURED);
 
