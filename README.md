@@ -70,6 +70,8 @@ $commandCollection->add(new StripeRefundCommandPlugin(), 'Stripe/Refund');
 $commandCollection->add(new StripeCancelCommandPlugin(), 'Stripe/Cancel');
 ```
 
+> **Note:** `StripeCaptureCommandPlugin` always captures the full authorized amount regardless of which items are in the OMS batch. Stripe allows only one capture per PaymentIntent — any remaining uncaptured amount is automatically released after the first capture. Items canceled after capture are handled via refunds.
+
 Also add payment conditions:
 
 ```php
@@ -85,6 +87,26 @@ $conditionCollection->add(new IsPaymentAppPaymentStatusCaptureRequestedCondition
 $conditionCollection->add(new IsPaymentAppPaymentStatusRefundedConditionPlugin(), 'Payment/IsRefunded');
 $conditionCollection->add(new IsPaymentAppPaymentStatusRefundFailedConditionPlugin(), 'Payment/IsRefundFailed');
 ```
+
+---
+
+#### Register the Stripe payout transmission plugin (marketplace only)
+
+**File:** `src/Pyz/Zed/SalesPaymentMerchant/SalesPaymentMerchantDependencyProvider.php`
+
+Register `StripePayoutTransmissionPlugin` so the `SalesPaymentMerchant` module routes merchant payouts and payout reversals through direct Stripe Connect API calls instead of the default PSP App HTTP endpoint:
+
+```php
+use SprykerEco\Zed\Stripe\Communication\Plugin\SalesPaymentMerchant\StripePayoutTransmissionPlugin;
+
+// In getMerchantPayoutTransmissionPlugins():
+return [
+    new StripePayoutTransmissionPlugin(),
+];
+```
+
+The OMS subprocesses `StripeMerchantPayout01.xml` and `StripeMerchantPayoutReverse01.xml` use the generic `SalesPaymentMerchant/Payout` and `SalesPaymentMerchant/ReversePayout` commands.
+`StripePayoutTransmissionPlugin` intercepts those commands and executes Stripe Connect transfers (forward payouts) or transfer reversals (payout reversals) directly via the Stripe API.
 
 ---
 
@@ -274,7 +296,6 @@ Check Back Office:
 ### Step 14: Run Code Generation and DB migration
 
 ```bash
-
 # Apply DB schema changes (spy_stripe_payment, spy_stripe_merchant)
 vendor/bin/console propel:install
 
@@ -301,6 +322,9 @@ Select at minimum these event types:
 
 Copy the **Signing secret** from the webhook configuration and set it as `STRIPE_WEBHOOK_SECRET` in your config.
 
+> **Debugging:** Each processed webhook event stores the raw Stripe object details (PaymentIntent, Charge, or Refund) as JSON in `spy_payment_app_payment_status_history.context`.
+> This makes it easy to trace exactly what Stripe reported at the time of each status change.
+
 ---
 
 ### Step 16: Register your domain in the Stripe Dashboard
@@ -314,8 +338,9 @@ Go to [Settings > Payments > Payment method domains](https://dashboard.stripe.co
 
 1. Place a test order and confirm the payment step renders Stripe Elements.
 2. Complete payment and confirm the order transitions to the authorized state.
-3. Capture the order from the Back Office and verify `Stripe/Capture` OMS command triggers successfully.
+3. Capture the order from the Back Office and verify `Stripe/Capture` OMS command triggers successfully (full authorized amount is captured).
 4. Send a test webhook event from the Stripe Dashboard and confirm the order status updates.
+5. (Marketplace only) Trigger a payout and verify the Stripe Connect transfer appears in the Stripe Dashboard under the merchant's connected account.
 
 ---
 
@@ -347,7 +372,6 @@ Configure Stripe module:
 $config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_test_***';
 $config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_test_***';
 $config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';
-$config[StripeConstants::STRIPE_BUSINESS_MODEL] = 'direct'; // or marketplace
 ```
 
 >Note: For testing Google Pay and Apple Pay you need to register your external domain in Stripe [Payment method domains](https://dashboard.stripe.com/test/settings/payment_method_domains?enabled=true).
