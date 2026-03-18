@@ -105,15 +105,17 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
+        $details = (string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent));
+
         $this->paymentAppFacade->savePaymentAppPaymentStatus(
-            (new PaymentAuthorizedTransfer())->setOrderReference($orderReference),
+            (new PaymentAuthorizedTransfer())->setOrderReference($orderReference)->setContext($details),
         );
 
         $this->salesPaymentDetailFacade->handlePaymentCreated(
             (new PaymentCreatedTransfer())
                 ->setEntityReference($orderReference)
                 ->setPaymentReference($paymentIntent->id)
-                ->setDetails((string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent))),
+                ->setDetails($details),
         );
 
         return $response->setIsSuccessful(true);
@@ -135,10 +137,12 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
+        $details = (string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent));
+
         // Partial capture when Stripe captured less than the authorized amount
         $statusTransfer = $paymentIntent->amount_received < $paymentIntent->amount
-            ? (new PaymentPartiallyCapturedTransfer())->setOrderReference($orderReference)
-            : (new PaymentCapturedTransfer())->setOrderReference($orderReference);
+            ? (new PaymentPartiallyCapturedTransfer())->setOrderReference($orderReference)->setContext($details)
+            : (new PaymentCapturedTransfer())->setOrderReference($orderReference)->setContext($details);
 
         $this->paymentAppFacade->savePaymentAppPaymentStatus($statusTransfer);
 
@@ -146,7 +150,7 @@ class WebhookHandler implements WebhookHandlerInterface
             (new PaymentUpdatedTransfer())
                 ->setEntityReference($orderReference)
                 ->setPaymentReference($paymentIntent->id)
-                ->setDetails((string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent))),
+                ->setDetails($details),
         );
 
         return $response->setIsSuccessful(true);
@@ -173,15 +177,17 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
+        $details = (string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent));
+
         $this->paymentAppFacade->savePaymentAppPaymentStatus(
-            (new PaymentCaptureFailedTransfer())->setOrderReference($orderReference),
+            (new PaymentCaptureFailedTransfer())->setOrderReference($orderReference)->setContext($details),
         );
 
         $this->salesPaymentDetailFacade->handlePaymentUpdated(
             (new PaymentUpdatedTransfer())
                 ->setEntityReference($orderReference)
                 ->setPaymentReference($paymentIntent->id)
-                ->setDetails((string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent))),
+                ->setDetails($details),
         );
 
         return $response->setIsSuccessful(true);
@@ -203,15 +209,17 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
+        $details = (string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent));
+
         $this->paymentAppFacade->savePaymentAppPaymentStatus(
-            (new PaymentCanceledTransfer())->setOrderReference($orderReference),
+            (new PaymentCanceledTransfer())->setOrderReference($orderReference)->setContext($details),
         );
 
         $this->salesPaymentDetailFacade->handlePaymentUpdated(
             (new PaymentUpdatedTransfer())
                 ->setEntityReference($orderReference)
                 ->setPaymentReference($paymentIntent->id)
-                ->setDetails((string)json_encode($this->eventDetailsExtractor->extractPaymentIntentDetails($paymentIntent))),
+                ->setDetails($details),
         );
 
         return $response->setIsSuccessful(true);
@@ -244,15 +252,17 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
+        $details = (string)json_encode($this->eventDetailsExtractor->extractChargeDetails($charge));
+
         $this->paymentAppFacade->savePaymentAppPaymentStatus(
-            (new PaymentCaptureFailedTransfer())->setOrderReference($stripePaymentTransfer->getOrderReference()),
+            (new PaymentCaptureFailedTransfer())->setOrderReference($stripePaymentTransfer->getOrderReference())->setContext($details),
         );
 
         $this->salesPaymentDetailFacade->handlePaymentUpdated(
             (new PaymentUpdatedTransfer())
                 ->setEntityReference($stripePaymentTransfer->getOrderReference())
                 ->setPaymentReference($paymentIntentId)
-                ->setDetails((string)json_encode($this->eventDetailsExtractor->extractChargeDetails($charge))),
+                ->setDetails($details),
         );
 
         return $response->setIsSuccessful(true);
@@ -279,18 +289,11 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
-        if ($paymentIntentId !== null) {
-            $this->salesPaymentDetailFacade->handlePaymentUpdated(
-                (new PaymentUpdatedTransfer())
-                    ->setEntityReference($orderReference)
-                    ->setPaymentReference($paymentIntentId)
-                    ->setDetails((string)json_encode($this->eventDetailsExtractor->extractRefundDetails($refund))),
-            );
-        }
-
         if ($refund->status === Refund::STATUS_FAILED) {
+            $refundDetails = (string)json_encode($this->eventDetailsExtractor->extractRefundDetails($refund));
+
             $this->paymentAppFacade->savePaymentAppPaymentStatus(
-                (new PaymentRefundFailedTransfer())->setOrderReference($orderReference),
+                (new PaymentRefundFailedTransfer())->setOrderReference($orderReference)->setContext($refundDetails),
             );
         }
 
@@ -315,10 +318,12 @@ class WebhookHandler implements WebhookHandlerInterface
             return $response->setIsSuccessful(true);
         }
 
+        $details = (string)json_encode($this->eventDetailsExtractor->extractChargeDetails($charge));
+
         // Full refund when the total amount refunded equals the original charge amount
         $statusTransfer = $charge->amount_refunded >= $charge->amount
-            ? (new PaymentRefundedTransfer())->setOrderReference($orderReference)
-            : (new PaymentPartiallyRefundedTransfer())->setOrderReference($orderReference);
+            ? (new PaymentRefundedTransfer())->setOrderReference($orderReference)->setContext($details)
+            : (new PaymentPartiallyRefundedTransfer())->setOrderReference($orderReference)->setContext($details);
 
         $this->paymentAppFacade->savePaymentAppPaymentStatus($statusTransfer);
 
