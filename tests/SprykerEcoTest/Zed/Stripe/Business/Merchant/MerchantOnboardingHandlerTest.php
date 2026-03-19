@@ -91,6 +91,7 @@ class MerchantOnboardingHandlerTest extends Unit
         );
 
         // Assert
+        $this->assertInstanceOf(MerchantAppOnboardingStatusChangedTransfer::class, $capturedTransfer);
         $this->assertSame(static::MERCHANT_REFERENCE, $capturedTransfer->getMerchantReference());
         $this->assertSame(SharedStripeConfig::PAYMENT_PROVIDER_NAME, $capturedTransfer->getAppIdentifier());
         $this->assertSame(SharedStripeConfig::ONBOARDING_TYPE, $capturedTransfer->getType());
