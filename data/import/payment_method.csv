@@ -1,2 +1,2 @@
 payment_method_key,payment_method_name,payment_provider_key,payment_provider_name,is_active
-stripe,Multiple Methods,stripe,Stripe,1
+stripe,Multiple Methods,Stripe,Stripe,1

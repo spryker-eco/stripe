@@ -7,6 +7,7 @@
 
 namespace SprykerEco\Zed\Stripe;
 
+use Spryker\Shared\Application\ApplicationConstants;
 use Spryker\Zed\Kernel\AbstractBundleConfig;
 use SprykerEco\Shared\Stripe\StripeConstants;
 use Stripe\Event;
@@ -46,6 +47,14 @@ class StripeConfig extends AbstractBundleConfig
     public const string ONBOARDING_STATE_ATTR_BUTTON_TEXT = 'buttonText';
 
     public const string ONBOARDING_STATE_ATTR_BUTTON_INFO = 'buttonInfo';
+
+    /**
+     * @api
+     */
+    public function getYvesBaseUrl(): string
+    {
+        return rtrim($this->get(ApplicationConstants::BASE_URL_YVES, ''), '/');
+    }
 
     /**
      * @api

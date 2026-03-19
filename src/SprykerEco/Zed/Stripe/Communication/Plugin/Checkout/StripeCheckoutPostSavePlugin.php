@@ -34,6 +34,10 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
      */
     public function executeHook(QuoteTransfer $quoteTransfer, CheckoutResponseTransfer $checkoutResponseTransfer): void
     {
+        if ($quoteTransfer->getPaymentOrFail()->getPaymentProvider() !== StripeConfig::PAYMENT_PROVIDER_NAME) {
+            return;
+        }
+
         $saveOrderTransfer = $checkoutResponseTransfer->getSaveOrderOrFail();
         $orderReference = $saveOrderTransfer->getOrderReferenceOrFail();
 
@@ -58,7 +62,7 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
             $intentResponse->getTransactionIdOrFail(),
         );
 
-        $redirectUrl = StripeConfig::ROUTE_PATH_PAYMENT . '?orderReference=' . rawurlencode($orderReference);
+        $redirectUrl = $this->getConfig()->getYvesBaseUrl() . StripeConfig::ROUTE_PATH_PAYMENT . '?orderReference=' . rawurlencode($orderReference);
 
         $checkoutResponseTransfer
             ->setIsExternalRedirect(true)
