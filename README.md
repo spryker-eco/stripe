@@ -13,7 +13,7 @@ composer require spryker-eco/stripe
 
 ---
 
-### Step 2: Remove old ACP MessageBroker plugins (if exist)
+### Step 2: Remove old ACP MessageBroker plugins (if any)
 
 **File:** `src/Pyz/Zed/MessageBroker/MessageBrokerDependencyProvider.php`
 
@@ -43,11 +43,12 @@ $config[OmsConstants::PROCESS_LOCATION] = [
 ];
 
 $config[OmsConstants::ACTIVE_PROCESSES] = [
-    'StripeManual01', // Replace ForeignPaymentStateMachine01 and ForeignPaymentB2CStateMachine01 with Stripe process
+    // Replace ForeignPaymentStateMachine01 and ForeignPaymentB2CStateMachine01 with the Stripe process
+    'StripeManual01', // or StripeManualMarketplace01 for marketplace projects
 ];
 
 $config[SalesConstants::PAYMENT_METHOD_STATEMACHINE_MAPPING] = [
-    \SprykerEco\Shared\Stripe\StripeConfig::PAYMENT_PROVIDER_NAME => 'StripeManual01', // replace ForeignPaymentStateMachine01 mapping with Stripe process
+    \SprykerEco\Shared\Stripe\StripeConfig::PAYMENT_PROVIDER_NAME => 'StripeManual01', // or StripeManualMarketplace01 for marketplace projects
 ];
 ```
 
@@ -68,15 +69,18 @@ use SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command\StripeRefundCommandPl
 $commandCollection->add(new StripeCaptureCommandPlugin(), 'Stripe/Capture');
 $commandCollection->add(new StripeRefundCommandPlugin(), 'Stripe/Refund');
 $commandCollection->add(new StripeCancelCommandPlugin(), 'Stripe/Cancel');
+
+// ----- for Marketplace only
+$commandCollection->add(new MerchantPayoutCommandByOrderPlugin(), 'SalesPaymentMerchant/Payout');
+$commandCollection->add(new MerchantPayoutReverseCommandByOrderPlugin(), 'SalesPaymentMerchant/ReversePayout');
 ```
 
 > **Note:** `StripeCaptureCommandPlugin` always captures the full authorized amount regardless of which items are in the OMS batch. Stripe allows only one capture per PaymentIntent — any remaining uncaptured amount is automatically released after the first capture. Items canceled after capture are handled via refunds.
 
-Also add payment conditions:
+Also add payment conditions to `extendConditionPlugins()`:
 
 ```php
-
-// In extendConditionPlugins()
+// In extendConditionPlugins():
 $conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizationFailedConditionPlugin(), 'Payment/IsAuthorizationFailed');
 $conditionCollection->add(new IsPaymentAppPaymentStatusAuthorizedConditionPlugin(), 'Payment/IsAuthorized');
 $conditionCollection->add(new IsPaymentAppPaymentStatusCanceledConditionPlugin(), 'Payment/IsCanceled');
@@ -84,13 +88,19 @@ $conditionCollection->add(new IsPaymentAppPaymentStatusCancellationFailedConditi
 $conditionCollection->add(new IsPaymentAppPaymentStatusCapturedConditionPlugin(), 'Payment/IsCaptured');
 $conditionCollection->add(new IsPaymentAppPaymentStatusCaptureFailedConditionPlugin(), 'Payment/IsCaptureFailed');
 $conditionCollection->add(new IsPaymentAppPaymentStatusCaptureRequestedConditionPlugin(), 'Payment/IsCaptureRequested');
+$conditionCollection->add(new IsPaymentAppPaymentStatusOverpaidConditionPlugin(), 'Payment/IsOverpaid');
+$conditionCollection->add(new IsPaymentAppPaymentStatusUnderpaidConditionPlugin(), 'Payment/IsUnderpaid');
 $conditionCollection->add(new IsPaymentAppPaymentStatusRefundedConditionPlugin(), 'Payment/IsRefunded');
 $conditionCollection->add(new IsPaymentAppPaymentStatusRefundFailedConditionPlugin(), 'Payment/IsRefundFailed');
+
+// ------- for Marketplace only
+$conditionCollection->add(new IsMerchantPaidOutConditionPlugin(), 'SalesPaymentMerchant/IsMerchantPaidOut');
+$conditionCollection->add(new IsMerchantPayoutReversedConditionPlugin(), 'SalesPaymentMerchant/IsMerchantPayoutReversed');
 ```
 
 ---
 
-#### Register the Stripe payout transmission plugin (marketplace only)
+### Step 5: Register the Stripe payout transmission plugin (marketplace only)
 
 **File:** `src/Pyz/Zed/SalesPaymentMerchant/SalesPaymentMerchantDependencyProvider.php`
 
@@ -110,7 +120,7 @@ The OMS subprocesses `StripeMerchantPayout01.xml` and `StripeMerchantPayoutRever
 
 ---
 
-### Step 5: Register Stripe checkout post-save plugin
+### Step 6: Register Stripe checkout post-save plugin
 
 **File:** `src/Pyz/Zed/Checkout/CheckoutDependencyProvider.php`
 
@@ -123,7 +133,7 @@ new StripeCheckoutPostSavePlugin(),
 
 ---
 
-### Step 6: Register Stripe Yves checkout plugins
+### Step 7: Register Stripe Yves checkout plugins
 
 **File:** `src/Pyz/Yves/CheckoutPage/CheckoutPageDependencyProvider.php`
 
@@ -141,9 +151,9 @@ $paymentSubFormPluginCollection->add(new StripeSubFormPlugin());
 
 ---
 
-### Step 7: Register payment method filter plugin (optional)
+### Step 8: Register payment method filter plugin (optional)
 
-Only if you need to apply some filtering logic, for example, hide Stripe or other payment methods based on the Quote. In this case, you need to extend `StripePaymentMethodFilterPlugin`.
+Only required if you need custom filtering logic, for example, to hide Stripe or other payment methods based on the Quote. Extend `StripePaymentMethodFilterPlugin` with your filtering logic.
 
 **File:** `src/Pyz/Zed/Payment/PaymentDependencyProvider.php`
 
@@ -156,7 +166,7 @@ new StripePaymentMethodFilterPlugin(),
 
 ---
 
-### Step 8: Register the Stripe route provider
+### Step 9: Register Stripe routes
 
 **File:** `src/Pyz/Yves/Router/RouterDependencyProvider.php`
 
@@ -169,7 +179,24 @@ new StripeRouteProviderPlugin(),
 
 ---
 
-### Step 9: Register the marketplace installer plugin (marketplace only)
+### Step 10: Add Stripe payment form to the checkout payment template
+
+**File:** `src/Pyz/Yves/CheckoutPage/Theme/default/views/payment/payment.twig`
+
+Add the Stripe form entry to the `customForms` map:
+
+```twig
+{% define data = {
+    customForms: {
+        'Payone/credit_card': ['credit-card', 'payone'],
+        'Stripe/stripe': ['stripe'],
+    },
+} %}
+```
+
+---
+
+### Step 11: Register the marketplace installer plugin (marketplace only)
 
 **File:** `src/Pyz/Zed/Installer/InstallerDependencyProvider.php`
 
@@ -182,7 +209,7 @@ new StripeMarketplaceInstallerPlugin(),
 
 ---
 
-### Step 10: Allow the Stripe controllers in the Merchant Portal security config
+### Step 12: Allow Stripe controllers in the Merchant Portal security config (marketplace only)
 
 By default, Merchant Portal rejects all routes that do not match the portal pattern. The `/stripe/*` endpoint must be excluded from authentication.
 
@@ -205,24 +232,7 @@ class SecurityMerchantPortalGuiConfig extends SprykerSecurityMerchantPortalGuiCo
 
 ---
 
-### Step 11: Add Stripe payment form to the checkout payment template
-
-**File:** `src/Pyz/Yves/CheckoutPage/Theme/default/views/payment/payment.twig`
-
-Add the Stripe form entry to the `customForms` map:
-
-```twig
-{% define data = {
-    customForms: {
-        'Payone/credit_card': ['credit-card', 'payone'],
-        'Stripe/stripe': ['stripe'],
-    },
-} %}
-```
-
----
-
-### Step 12: Configure Stripe credentials
+### Step 13: Configure Stripe credentials
 
 **File:** `config/Shared/config_local.php`
 
@@ -236,29 +246,24 @@ $config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';     // from Strip
 
 ---
 
-### Step 13: Import payment methods
-
-#### Data Import
-
-##### Import Payment Methods
+### Step 14: Import payment methods
 
 The module provides pre-configured data import files for payment methods, store assignments, and translations.
 
-###### Option 1: Import Using Module's Configuration File
+#### Option 1: Import using the module's configuration file
 
->Recommended for development phase.
+> Recommended during the development phase.
 
 ```bash
 docker/sdk cli
 vendor/bin/console data:import --config=vendor/spryker-eco/stripe/data/import/stripe.yml
 ```
 
-###### Option 2: Copy File Content and Import Individually
+#### Option 2: Copy files and import individually
 
->Recommended when the integration is tested and tuned.
+> Recommended once the integration is tested and tuned.
 
-Copy file's content from `vendor/spryker-eco/stripe/data/import/*.csv` to the same files in you project `data/import/common/common/`.
-Then run:
+Copy the file contents from `vendor/spryker-eco/stripe/data/import/*.csv` to the matching files in your project under `data/import/common/common/`. Then run:
 
 ```bash
 docker/sdk cli
@@ -267,7 +272,7 @@ vendor/bin/console data:import payment-method-store
 vendor/bin/console data:import glossary
 ```
 
-##### Customize Payment Methods
+#### Customize payment methods
 
 Before importing, you can customize the payment method data:
 
@@ -283,29 +288,36 @@ Before importing, you can customize the payment method data:
 - Customize translations for payment method names
 - Add additional locales
 
-### Verify Import
+#### Verify import
 
-Check Back Office:
+Check the Back Office:
 1. Go to **Administration → Payment → Payment Methods**
 2. Verify payment methods appear with correct names and provider
-3. Verify methods are assigned to correct stores
+3. Verify methods are assigned to the correct stores
 4. Go to **Administration → Glossary** and verify translations
-5. Enable method for the store and validate Storefront Checkout payment step
+5. Enable the method for the store and validate the Storefront checkout payment step
 
+---
 
-### Step 14: Run Code Generation and DB migration
+### Step 15: Run code generation and database migration
 
 ```bash
-# Apply DB schema changes (spy_stripe_payment, spy_stripe_merchant)
+# Apply database schema changes (spy_stripe_payment, spy_stripe_merchant)
 vendor/bin/console propel:install
 
 # Generate new transfer objects
 vendor/bin/console transfer:generate
+
+# Run marketplace installer
+vendor/bin/console setup:init-db
+
+# Run marketplace ACL updater
+vendor/bin/console acl-entity:synchronize
 ```
 
 ---
 
-### Step 15: Register the Stripe webhook in the Stripe Dashboard
+### Step 16: Register the Stripe webhook in the Stripe Dashboard
 
 Point the webhook to your storefront notification endpoint:
 
@@ -322,25 +334,25 @@ Select at minimum these event types:
 
 Copy the **Signing secret** from the webhook configuration and set it as `STRIPE_WEBHOOK_SECRET` in your config.
 
-> **Debugging:** Each processed webhook event stores the raw Stripe object details (PaymentIntent, Charge, or Refund) as JSON in `spy_payment_app_payment_status_history.context`.
-> This makes it easy to trace exactly what Stripe reported at the time of each status change.
+> **Debugging:** Each processed webhook event stores the raw Stripe object details (PaymentIntent, Charge, or Refund) as JSON in `spy_payment_app_payment_status_history.context`. This makes it easy to trace exactly what Stripe reported at the time of each status change.
 
 ---
 
-### Step 16: Register your domain in the Stripe Dashboard
+### Step 17: Register your domain in the Stripe Dashboard
 
-For Google Pay and Apple Pay payment method required step is your site domains registration.
-Go to [Settings > Payments > Payment method domains](https://dashboard.stripe.com/settings/payment_method_domains) and add your domains.
+Google Pay and Apple Pay require your site domains to be registered in Stripe. Go to [Settings > Payments > Payment method domains](https://dashboard.stripe.com/settings/payment_method_domains) and add your domains.
 
 ---
 
-### Step 17: Verify the migration
+### Step 18: Verify the installation
 
 1. Place a test order and confirm the payment step renders Stripe Elements.
 2. Complete payment and confirm the order transitions to the authorized state.
-3. Capture the order from the Back Office and verify `Stripe/Capture` OMS command triggers successfully (full authorized amount is captured).
+3. Capture the order from the Back Office and verify the `Stripe/Capture` OMS command triggers successfully (full authorized amount is captured).
 4. Send a test webhook event from the Stripe Dashboard and confirm the order status updates.
-5. (Marketplace only) Trigger a payout and verify the Stripe Connect transfer appears in the Stripe Dashboard under the merchant's connected account.
+5. (Marketplace only) Log in to Merchant Portal with a merchant user and go to Payment Settings. The Stripe section should be visible.
+6. (Marketplace only) Complete merchant onboarding to Stripe (Stripe Connect must be enabled on the account).
+7. (Marketplace only) Trigger a payout and verify the Stripe Connect transfer appears in the Stripe Express Dashboard under the merchant's connected account (also visible under Transactions > Transfers in the main Stripe account).
 
 ---
 
@@ -354,16 +366,16 @@ cd project-root # only works together with Spryker project (uses autoloader from
 vendor/bin/phpstan analyze -c vendor/spryker-eco/stripe/phpstan.neon vendor/spryker-eco/stripe
 ```
 
-### For Webhooks in local development environments
+### Webhooks in local development environment
 
-1. Install [Stripe CLI](https://docs.stripe.com/stripe-cli)
+1. Install [Stripe CLI](https://docs.stripe.com/stripe-cli).
 2. Run:
 ```bash
 stripe listen --forward-to http://yves.eu.spryker.local/stripe/notification
 ```
-3. Copy signing secret from the output. Use it for `STRIPE_WEBHOOK_SECRET`.
+3. Copy the signing secret from the output and set it as `STRIPE_WEBHOOK_SECRET`.
 
-Configure Stripe module:
+Configure the Stripe module:
 
 ```php
 // config/Shared/config_local.php
@@ -374,19 +386,16 @@ $config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_test_***';
 $config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';
 ```
 
->Note: For testing Google Pay and Apple Pay you need to register your external domain in Stripe [Payment method domains](https://dashboard.stripe.com/test/settings/payment_method_domains?enabled=true).
-> You can use `ngrok` for this.
+> **Note:** For testing Google Pay and Apple Pay you need to register your external domain in Stripe [Payment method domains](https://dashboard.stripe.com/test/settings/payment_method_domains?enabled=true).
+> You can use `ngrok` for this:
 > 1. Download and install ngrok from https://ngrok.com/.
-> 2. Run `ngrok http --host-header=yves.eu.spryker.local 80` to expose your local environment to the internet (dynamic domain will be assigned).
+> 2. Run `ngrok http --host-header=yves.eu.spryker.local 80` to expose your local environment to the internet (a dynamic domain will be assigned).
 >
-> To use personal dev domain you need to register it in https://dashboard.ngrok.com/domains and then run
+> To use a personal dev domain, register it at https://dashboard.ngrok.com/domains and then run:
 > ```bash
 > ngrok http --domain=your-personal-domain.ngrok-free.dev --host-header=yves.eu.spryker.local 80
 > ```
-> 3. Open https://your-personal-domain.ngrok-free.dev in the browser and go to Stripe payment page.
-
----
-
+> 3. Open https://your-personal-domain.ngrok-free.dev in the browser and go to the Stripe payment page.
 
 ---
 
