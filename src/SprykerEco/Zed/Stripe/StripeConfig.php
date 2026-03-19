@@ -25,7 +25,6 @@ class StripeConfig extends AbstractBundleConfig
 
     public const string METADATA_MERCHANT_REFERENCE = 'merchantReference';
 
-    public const string METADATA_SKUS = 'SKUs';
 
     // Merchant onboarding state names (mirrors Stripe account requirements_due / capabilities status)
     public const string ONBOARDING_STATUS_COMPLETED = 'completed';
