@@ -9,12 +9,13 @@ namespace SprykerEco\Yves\Stripe\Plugin\Router;
 
 use Spryker\Yves\Router\Plugin\RouteProvider\AbstractRouteProviderPlugin;
 use Spryker\Yves\Router\Route\RouteCollection;
+use SprykerEco\Shared\Stripe\StripeConfig;
 
 class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
 {
-    protected const ROUTE_STRIPE_NOTIFICATION = 'stripe-notification';
+    protected const string ROUTE_STRIPE_NOTIFICATION = 'stripe-notification';
 
-    protected const ROUTE_STRIPE_PAYMENT = 'stripe-payment';
+    protected const string ROUTE_STRIPE_PAYMENT = 'stripe-payment';
 
     /**
      * Specification:
@@ -30,7 +31,7 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
 
     protected function addStripeNotificationRoute(RouteCollection $routeCollection): RouteCollection
     {
-        $route = $this->buildPostRoute('/stripe/notification', 'Stripe', 'Notification', 'notificationAction');
+        $route = $this->buildPostRoute(StripeConfig::ROUTE_PATH_NOTIFICATION, 'Stripe', 'Notification', 'notificationAction');
         $routeCollection->add(static::ROUTE_STRIPE_NOTIFICATION, $route);
 
         return $routeCollection;
@@ -38,7 +39,7 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
 
     protected function addStripePaymentRoute(RouteCollection $routeCollection): RouteCollection
     {
-        $route = $this->buildGetRoute('/stripe/payment', 'Stripe', 'Payment', 'paymentAction');
+        $route = $this->buildGetRoute(StripeConfig::ROUTE_PATH_PAYMENT, 'Stripe', 'Payment', 'paymentAction');
         $routeCollection->add(static::ROUTE_STRIPE_PAYMENT, $route);
 
         return $routeCollection;

@@ -13,12 +13,11 @@ class StripeConfig
 
     public const string PAYMENT_METHOD_NAME = 'stripe';
 
+    public const string ROUTE_PATH_PAYMENT = '/stripe/payment';
+
+    public const string ROUTE_PATH_NOTIFICATION = '/stripe/notification';
+
     public const string ONBOARDING_TYPE = 'payment';
-
-    // Business model values
-    public const string BUSINESS_MODEL_DIRECT = 'direct';
-
-    public const string BUSINESS_MODEL_MARKETPLACE = 'marketplace';
 
     // Payment lifecycle status constants — used by WebhookHandler to select the correct
     // PaymentApp typed transfer (e.g. PaymentAuthorizedTransfer, PaymentCapturedTransfer).

@@ -12,6 +12,7 @@ use Generated\Shared\Transfer\CheckoutResponseTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Spryker\Zed\CheckoutExtension\Dependency\Plugin\CheckoutPostSaveInterface;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
+use SprykerEco\Shared\Stripe\StripeConfig;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
@@ -57,8 +58,7 @@ class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPos
             $intentResponse->getTransactionIdOrFail(),
         );
 
-        // TODO: use constants and ref to \SprykerEco\Yves\Stripe\Plugin\Router\StripeRouteProviderPlugin
-        $redirectUrl = '/stripe/payment?orderReference=' . rawurlencode($orderReference);
+        $redirectUrl = StripeConfig::ROUTE_PATH_PAYMENT . '?orderReference=' . rawurlencode($orderReference);
 
         $checkoutResponseTransfer
             ->setIsExternalRedirect(true)

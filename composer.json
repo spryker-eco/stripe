@@ -17,13 +17,14 @@
         "spryker/refund": "^5.0.0",
         "spryker/sales": "^11.78.0",
         "spryker/sales-payment-detail": "^1.5.0",
-        "spryker/sales-payment-merchant-extension": "^1.1.0",
+        "spryker/sales-payment-merchant-extension": "^1.0.0",
         "spryker/step-engine": "^3.7.0",
         "spryker/symfony": "^3.19.0",
         "spryker/zed-request": "^3.26.0",
         "stripe/stripe-php": "^v13.0.0"
     },
     "suggest": {
+        "spryker/sales-payment-merchant-extension": "Update after release ^1.1.0",
         "spryker-shop/checkout-page": "When the project uses Yves and built-in module payment page.",
         "spryker-shop/checkout-widget": "When the project uses Yves and built-in module payment page.",
         "spryker/merchant-sales-merchant-commission": "Required for commission-aware merchant payouts.",
