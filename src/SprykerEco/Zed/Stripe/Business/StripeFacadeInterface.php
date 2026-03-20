@@ -11,6 +11,7 @@ use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\SaveOrderTransfer;
+use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
@@ -106,10 +107,11 @@ interface StripeFacadeInterface
      * - Creates a Stripe connected account if one does not exist yet.
      * - Saves the stripe_account_id to spy_stripe_merchant.
      * - Uses returnUrl and refreshUrl as the Stripe account link redirect targets.
+     * - Returns a response transfer with isSuccessful=false and a message when creation fails (e.g. Stripe configuration error).
      *
      * @api
      */
-    public function generateMerchantOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): string;
+    public function generateMerchantOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): StripeAccountLinksResponseTransfer;
 
     /**
      * Specification:

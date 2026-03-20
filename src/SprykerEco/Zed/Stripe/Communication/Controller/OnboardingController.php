@@ -10,6 +10,7 @@ namespace SprykerEco\Zed\Stripe\Communication\Controller;
 use Spryker\Zed\Kernel\Communication\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class OnboardingController extends AbstractController
 {
-    public function initializeAction(Request $request): RedirectResponse
+    public function initializeAction(Request $request): array|Response
     {
         $merchantUser = $this->getFactory()->getMerchantUserFacade()->getCurrentMerchantUser();
         $merchantReference = $merchantUser->getMerchantOrFail()->getMerchantReferenceOrFail();
@@ -27,12 +28,16 @@ class OnboardingController extends AbstractController
         $returnUrl = (string)$request->query->get('successUrl', '');
         $refreshUrl = (string)$request->query->get('refreshUrl', '');
 
-        $stripeConnectUrl = $this->getFacade()->generateMerchantOnboardingUrl(
+        $accountLinksResponse = $this->getFacade()->generateMerchantOnboardingUrl(
             $merchantReference,
             $returnUrl,
             $refreshUrl,
         );
 
-        return new RedirectResponse($stripeConnectUrl);
+        if (!$accountLinksResponse->getIsSuccessful()) {
+            return $this->viewResponse(['errorMessage' => $accountLinksResponse->getMessage()]);
+        }
+
+        return new RedirectResponse((string)$accountLinksResponse->getUrl());
     }
 }

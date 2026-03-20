@@ -1,12 +1,12 @@
 {% extends '@ZedUi/Layout/merchant-layout-main.twig' %}
 
 {% block headSubTitle %}
-    {{- 'Stripe Dashboard' | trans -}}
+    {{- 'Onboarding' | trans -}}
 {% endblock %}
 
 {% block content %}
-    <web-mp-dashboard cloak>
-        <h1 title>{{ 'Stripe Dashboard' | trans }}</h1>
+    <web-mp-onboarding cloak>
+        <h1 title>{{ 'Onboarding' | trans }}</h1>
 
         <div content>
             <web-spy-card>
@@ -17,5 +17,5 @@
                 </web-spy-button-link>
             </web-spy-card>
         </div>
-    </web-mp-dashboard>
+    </web-mp-onboarding>
 {% endblock %}

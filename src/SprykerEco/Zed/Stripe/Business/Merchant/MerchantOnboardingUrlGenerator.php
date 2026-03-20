@@ -8,6 +8,7 @@
 namespace SprykerEco\Zed\Stripe\Business\Merchant;
 
 use Generated\Shared\Transfer\StripeAccountLinksRequestTransfer;
+use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
 use Generated\Shared\Transfer\StripeAccountRequestTransfer;
 use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountLinksInterface;
@@ -32,19 +33,17 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
     /**
      * {@inheritDoc}
      */
-    public function generateOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): string
+    public function generateOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): StripeAccountLinksResponseTransfer
     {
         $stripeAccountId = $this->resolveStripeAccountId($merchantReference);
 
         if ($stripeAccountId === null) {
-            return '';
+            return (new StripeAccountLinksResponseTransfer())
+                ->setIsSuccessful(false)
+                ->setMessage('Failed to create or retrieve Stripe connected account.');
         }
 
-        return $this->createAccountLink(
-            $stripeAccountId,
-            $returnUrl,
-            $refreshUrl,
-        );
+        return $this->createAccountLink($stripeAccountId, $returnUrl, $refreshUrl);
     }
 
     /**
@@ -93,7 +92,7 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
     /**
      * Creates a Stripe account link and returns its URL.
      */
-    protected function createAccountLink(string $stripeAccountId, string $returnUrl, string $refreshUrl): string
+    protected function createAccountLink(string $stripeAccountId, string $returnUrl, string $refreshUrl): StripeAccountLinksResponseTransfer
     {
         $accountLinksResponse = $this->stripeAccountLinks->create(
             (new StripeAccountLinksRequestTransfer())->setAccountLinksConfig([
@@ -104,15 +103,6 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
             ]),
         );
 
-        if (!$accountLinksResponse->getIsSuccessful()) {
-            $this->getLogger()->error(
-                'Failed to create Stripe account link',
-                ['stripeAccountId' => $stripeAccountId, 'message' => $accountLinksResponse->getMessage()],
-            );
-
-            return '';
-        }
-
-        return (string)$accountLinksResponse->getUrl();
+        return $accountLinksResponse;
     }
 }
