@@ -6,6 +6,7 @@
     "require": {
         "php": ">=8.3",
         "spryker/acl-merchant-portal-extension": "^1.0.0",
+        "spryker/application": "^3.46.0",
         "spryker/checkout-extension": "^1.5.0",
         "spryker/installer-extension": "^1.0.0",
         "spryker/kernel": "^3.81.0",
@@ -24,7 +25,6 @@
         "stripe/stripe-php": "^v13.0.0"
     },
     "suggest": {
-        "spryker/sales-payment-merchant-extension": "Update after release ^1.1.0",
         "spryker-shop/checkout-page": "When the project uses Yves and built-in module payment page.",
         "spryker-shop/checkout-widget": "When the project uses Yves and built-in module payment page.",
         "spryker/merchant-sales-merchant-commission": "Required for commission-aware merchant payouts.",

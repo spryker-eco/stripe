@@ -47,7 +47,6 @@ jobs:
 
             - name: Codeception Build
               run: |
-                composer require codeception/module-asserts --dev
                 vendor/bin/codecept build
 
             - name: Run CodeStyle checks
