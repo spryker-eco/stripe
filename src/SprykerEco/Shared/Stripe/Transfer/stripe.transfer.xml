@@ -89,7 +89,7 @@
 
     <!-- Marketplace: Stripe Connect account operations -->
     <transfer name="StripeAccountRequest" strict="true">
-        <property name="accountConfig" type="array"/>
+        <property name="accountConfig" type="array" singular="accountConfig"/>
     </transfer>
 
     <transfer name="StripeAccountResponse" strict="true">
@@ -99,7 +99,7 @@
     </transfer>
 
     <transfer name="StripeAccountLinksRequest" strict="true">
-        <property name="accountLinksConfig" type="array"/>
+        <property name="accountLinksConfig" type="array" singular="accountLinksConfig"/>
     </transfer>
 
     <transfer name="StripeAccountLinksResponse" strict="true">
