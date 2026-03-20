@@ -239,9 +239,10 @@ class SecurityMerchantPortalGuiConfig extends SprykerSecurityMerchantPortalGuiCo
 ```php
 use SprykerEco\Shared\Stripe\StripeConstants;
 
-$config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_live_***';       // from Stripe Dashboard → API keys
-$config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_live_***';  // from Stripe Dashboard → API keys
-$config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';     // from Stripe Dashboard → Webhooks
+$config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_live_***';              // from Stripe Dashboard → API keys
+$config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_live_***';         // from Stripe Dashboard → API keys
+$config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';            // from Stripe Dashboard → Webhooks → standard endpoint
+$config[StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT] = 'whsec_***';    // from Stripe Dashboard → Webhooks → Connect endpoint (marketplace only)
 ```
 
 ---
@@ -319,20 +320,54 @@ vendor/bin/console acl-entity:synchronize
 
 ### Step 16: Register the Stripe webhook in the Stripe Dashboard
 
-Point the webhook to your storefront notification endpoint:
+Both endpoints point to the same URL but are registered separately in the Stripe Dashboard — Stripe issues a different signing secret for each.
+
+#### Standard endpoint
+
+Go to **Stripe Dashboard → Developers → Webhooks → Add endpoint** and set:
 
 ```
 https://your-domain.com/stripe/notification
 ```
 
-Select at minimum these event types:
-- `payment_intent.succeeded`
-- `payment_intent.payment_failed`
-- `payment_intent.canceled`
-- `charge.refunded`
-- `account.updated` (marketplace only)
+Select these event types:
 
-Copy the **Signing secret** from the webhook configuration and set it as `STRIPE_WEBHOOK_SECRET` in your config.
+| Event | Triggered OMS status |
+|---|---|
+| `payment_intent.amount_capturable_updated` | Authorized |
+| `payment_intent.succeeded` | Captured / Partially captured |
+| `payment_intent.payment_failed` | Capture failed |
+| `payment_intent.canceled` | Canceled |
+| `charge.failed` | Capture failed (post-capture) |
+| `charge.refunded` | Refunded / Partially refunded |
+| `charge.refund.updated` | Refund failed |
+
+Copy the **Signing secret** and set it as `STRIPE_WEBHOOK_SECRET` in your config.
+
+#### Connect endpoint (marketplace only)
+
+Go to **Stripe Dashboard → Developers → Webhooks → Add endpoint** and set the same URL:
+
+```
+https://your-domain.com/stripe/notification
+```
+
+Enable **Listen to events on connected accounts** and select these event types:
+
+| Event | Purpose |
+|---|---|
+| `account.updated` | Updates merchant onboarding status in Merchant Portal |
+| `account.application.authorized` | Merchant granted access to the platform (accepted silently) |
+| `capability.updated` | Stripe capability change on a connected account (accepted silently) |
+| `person.created` | Person added to a connected account (accepted silently) |
+| `person.updated` | Person details updated on a connected account (accepted silently) |
+| `account.external_account.created` | Bank account added to a connected account (accepted silently) |
+
+> "Accepted silently" means the handler returns HTTP 200 without writing any status — the events are acknowledged so Stripe does not retry them.
+
+Copy the **Signing secret** and set it as `STRIPE_WEBHOOK_SECRET_CONNECT` in your config.
+
+> The handler tries the standard secret first. If verification fails, it automatically falls back to the Connect secret. This lets both standard and Connect events share a single URL.
 
 > **Debugging:** Each processed webhook event stores the raw Stripe object details (PaymentIntent, Charge, or Refund) as JSON in `spy_payment_app_payment_status_history.context`. This makes it easy to trace exactly what Stripe reported at the time of each status change.
 
@@ -369,11 +404,11 @@ vendor/bin/phpstan analyze -c vendor/spryker-eco/stripe/phpstan.neon vendor/spry
 ### Webhooks in local development environment
 
 1. Install [Stripe CLI](https://docs.stripe.com/stripe-cli).
-2. Run:
+2. Forward standard account events:
 ```bash
 stripe listen --forward-to http://yves.eu.spryker.local/stripe/notification
 ```
-3. Copy the signing secret from the output and set it as `STRIPE_WEBHOOK_SECRET`.
+3. Copy the signing secret from the output and set it as `STRIPE_WEBHOOK_SECRET` and `STRIPE_WEBHOOK_SECRET_CONNECT`.
 
 Configure the Stripe module:
 
@@ -383,7 +418,8 @@ Configure the Stripe module:
 // Get these from https://dashboard.stripe.com/apikeys and Dashboard > Webhooks
 $config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_test_***';
 $config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_test_***';
-$config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';
+$config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';         // from: stripe listen --forward-to
+$config[StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT] = 'whsec_***'; // from: stripe listen --forward-connect-to (marketplace only)
 ```
 
 > **Note:** For testing Google Pay and Apple Pay you need to register your external domain in Stripe [Payment method domains](https://dashboard.stripe.com/test/settings/payment_method_domains?enabled=true).
