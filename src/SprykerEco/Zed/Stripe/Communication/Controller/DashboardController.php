@@ -28,18 +28,18 @@ class DashboardController extends AbstractController
      *
      * Route: GET /stripe/dashboard
      */
-    public function indexAction(Request $request): Response
+    public function indexAction(Request $request): array|Response
     {
         $merchantReference = (string)$request->query->get('merchantReference', '');
 
         if ($merchantReference === '' || $merchantReference === static::MERCHANT_REFERENCE_PLACEHOLDER) {
-            return new Response('Missing or unresolved merchant reference.', Response::HTTP_BAD_REQUEST);
+            return $this->viewResponse(['errorMessage' => 'Missing or unresolved merchant reference.']);
         }
 
         $dashboardUrl = $this->getFacade()->generateDashboardUrl($merchantReference);
 
         if ($dashboardUrl === null) {
-            return new Response('Unable to generate Stripe Dashboard link. Please ensure the merchant has completed onboarding.', Response::HTTP_NOT_FOUND);
+            return $this->viewResponse(['errorMessage' => 'Unable to generate Stripe Dashboard link. Please ensure the merchant has completed onboarding.']);
         }
 
         return new RedirectResponse($dashboardUrl);
