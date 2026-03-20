@@ -5,17 +5,17 @@
 {% endblock %}
 
 {% block content %}
-    <web-mp-onboarding cloak>
+    <web-mp-dashboard cloak>
         <h1 title>{{ 'Onboarding' | trans }}</h1>
 
         <div content>
-            <web-spy-card>
-                <p>{{ errorMessage | trans }}</p>
+            <web-spy-card spy-title="{{ 'Error' | trans }}">
+                <p>Stripe API error: {{ errorMessage }}</p>
                 <br>
                 <web-spy-button-link url="/merchant-app-merchant-portal-gui/payment-settings" size="lg">
                     {{- 'Back' | trans -}}
                 </web-spy-button-link>
             </web-spy-card>
         </div>
-    </web-mp-onboarding>
+    </web-mp-dashboard>
 {% endblock %}
