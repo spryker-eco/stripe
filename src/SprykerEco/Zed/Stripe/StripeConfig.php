@@ -81,6 +81,14 @@ class StripeConfig extends AbstractBundleConfig
     }
 
     /**
+     * @api
+     */
+    public function getWebhookConnectSecret(): string
+    {
+        return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT, '');
+    }
+
+    /**
      * Returns the merchant onboarding states that Stripe can place a connected account in,
      * along with the UI texts shown in the Merchant Portal for each state.
      * Override to customise labels without changing business logic.

@@ -55,10 +55,14 @@ class WebhookHandler implements WebhookHandlerInterface
 
         try {
             $rawPayload = $webhookPayloadTransfer->getRawPayloadOrFail();
-            $webhookSecret = $this->config->getWebhookSecret();
             $signatureHeader = $webhookPayloadTransfer->getSignatureHeaderOrFail();
 
-            $event = $this->constructEvent($rawPayload, $signatureHeader, $webhookSecret);
+            $event = $this->constructEvent(
+                $rawPayload,
+                $signatureHeader,
+                $this->config->getWebhookSecret(),
+                $this->config->getWebhookConnectSecret(),
+            );
         } catch (Exception $exception) {
             $this->getLogger()->error($exception->getMessage());
             $response->setMessage($exception->getMessage());
@@ -369,24 +373,33 @@ class WebhookHandler implements WebhookHandlerInterface
 
     /**
      * Construct and verify a Stripe Event from the raw payload.
-     * When no webhook secret is configured (e.g. local development), skip signature
-     * verification and parse the payload directly — never skip in production.
+     *
+     * Standard and Connect webhook endpoints share the same URL but use different signing secrets.
+     * The handler tries the standard secret first; if verification fails, it tries the Connect
+     * secret. This covers both account-level and Connect events arriving at the same endpoint.
      *
      * @throws \Exception
      */
-    protected function constructEvent(string $rawPayload, string $signatureHeader, string $webhookSecret): Event
-    {
-        if ($webhookSecret === '') {
-            $this->getLogger()->warning('Stripe webhook secret is not configured — skipping signature verification. Do NOT use this in production.');
-
-            /** @var \Stripe\Event $event */
-            $event = Event::constructFrom((array)json_decode($rawPayload, true));
-
-            return $event;
+    protected function constructEvent(
+        string $rawPayload,
+        string $signatureHeader,
+        string $webhookSecret,
+        string $connectSecret,
+    ): Event {
+        // Try the standard secret first; on failure, fall through to the Connect secret.
+        if ($webhookSecret !== '') {
+            try {
+                return Webhook::constructEvent($rawPayload, $signatureHeader, $webhookSecret);
+            } catch (SignatureVerificationException) {
+                if ($connectSecret === '') {
+                    throw new Exception('Webhook signature verification failed: standard secret mismatch and no Connect secret configured.');
+                }
+            }
         }
 
+        // Standard secret was absent or failed — try the Connect secret.
         try {
-            return Webhook::constructEvent($rawPayload, $signatureHeader, $webhookSecret);
+            return Webhook::constructEvent($rawPayload, $signatureHeader, $connectSecret);
         } catch (SignatureVerificationException $exception) {
             throw new Exception(sprintf('Webhook signature verification failed: %s', $exception->getMessage()), 0, $exception);
         }

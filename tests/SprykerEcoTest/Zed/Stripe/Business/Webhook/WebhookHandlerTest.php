@@ -41,9 +41,13 @@ use Stripe\Event;
  */
 class WebhookHandlerTest extends Unit
 {
-    protected const ORDER_REFERENCE = 'DE--001';
+    protected const string ORDER_REFERENCE = 'DE--001';
 
-    protected const TRANSACTION_ID = 'pi_test_abc123';
+    protected const string TRANSACTION_ID = 'pi_test_abc123';
+
+    protected const string TEST_WEBHOOK_SECRET = 'test_webhook_secret_standard';
+
+    protected const string TEST_CONNECT_SECRET = 'test_webhook_secret_connect';
 
     public function testAmountCapturableUpdatedSavesAuthorizedStatus(): void
     {
@@ -63,7 +67,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -85,7 +91,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -107,7 +115,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -140,7 +150,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -169,7 +181,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -213,7 +227,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -254,7 +270,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -283,7 +301,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -322,7 +342,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -357,7 +379,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -394,7 +418,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -424,7 +450,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -461,7 +489,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -483,7 +513,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -510,7 +542,9 @@ class WebhookHandlerTest extends Unit
 
         // Act
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_WEBHOOK_SECRET)),
         );
 
         // Assert
@@ -521,13 +555,14 @@ class WebhookHandlerTest extends Unit
     // Signature verification
     // -------------------------------------------------------------------------
 
-    public function testInvalidSignatureReturnsUnsuccessfulResponse(): void
+    public function testInvalidSignatureWithNoFallbackReturnsUnsuccessfulResponse(): void
     {
-        // Arrange — real webhook secret configured, so signature check is active
-        $configMock = $this->createStripeConfigMock('whsec_test_secret');
-        $handler = $this->createWebhookHandler(config: $configMock);
+        // Arrange — standard secret configured, no connect secret
+        $handler = $this->createWebhookHandler(
+            config: $this->createStripeConfigMock(static::TEST_WEBHOOK_SECRET, ''),
+        );
 
-        // Act — random payload with wrong signature
+        // Act — wrong signature, no connect secret to fall back to
         $response = $handler->processWebhook(
             (new StripeWebhookPayloadTransfer())
                 ->setRawPayload('{"object":"event","type":"test"}')
@@ -539,34 +574,96 @@ class WebhookHandlerTest extends Unit
         $this->assertNotNull($response->getMessage());
     }
 
-    public function testEmptyWebhookSecretSkipsSignatureVerification(): void
+    public function testBothSecretsFailReturnUnsuccessfulResponse(): void
     {
-        // Arrange — no webhook secret configured (local dev mode)
+        // Arrange — both secrets configured, both fail
+        $handler = $this->createWebhookHandler(
+            config: $this->createStripeConfigMock(static::TEST_WEBHOOK_SECRET, static::TEST_CONNECT_SECRET),
+        );
+
+        // Act — invalid signature for both secrets
+        $response = $handler->processWebhook(
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload('{"object":"event","type":"test"}')
+                ->setSignatureHeader('t=123,v1=invalidsig'),
+        );
+
+        // Assert
+        $this->assertFalse($response->getIsSuccessful());
+        $this->assertNotNull($response->getMessage());
+    }
+
+    public function testConnectEventVerifiedWithConnectSecretWhenStandardSecretFails(): void
+    {
+        // Arrange — standard secret does NOT match; connect secret DOES match
         $paymentAppFacadeMock = $this->createMock(PaymentAppFacadeInterface::class);
         $paymentAppFacadeMock->expects($this->once())->method('savePaymentAppPaymentStatus');
 
         $handler = $this->createWebhookHandler(
             paymentAppFacade: $paymentAppFacadeMock,
-            config: $this->createStripeConfigMock(''),
+            config: $this->createStripeConfigMock(static::TEST_WEBHOOK_SECRET, static::TEST_CONNECT_SECRET),
         );
 
+        // Connect event: signed with the connect secret, not the standard one
         $payload = $this->buildPaymentIntentPayload(
             Event::PAYMENT_INTENT_CANCELED,
             ['metadata' => ['orderReference' => static::ORDER_REFERENCE]],
         );
 
-        // Act — signature header is irrelevant when secret is empty
+        // Act — signature built with connect secret
         $response = $handler->processWebhook(
-            (new StripeWebhookPayloadTransfer())->setRawPayload($payload)->setSignatureHeader(''),
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_CONNECT_SECRET)),
         );
 
         // Assert
         $this->assertTrue($response->getIsSuccessful());
     }
 
+    public function testConnectAccountUpdatedEventIsAcceptedSuccessfully(): void
+    {
+        // Arrange — Connect account.updated event signed with the connect secret
+        $merchantOnboardingHandlerMock = $this->createMock(MerchantOnboardingHandlerInterface::class);
+        $merchantOnboardingHandlerMock
+            ->expects($this->once())
+            ->method('handleAccountUpdated');
+
+        $handler = $this->createWebhookHandler(
+            config: $this->createStripeConfigMock(static::TEST_WEBHOOK_SECRET, static::TEST_CONNECT_SECRET),
+            merchantOnboardingHandler: $merchantOnboardingHandlerMock,
+        );
+
+        $payload = (string)json_encode([
+            'object' => 'event',
+            'type' => Event::ACCOUNT_UPDATED,
+            'account' => 'acct_test_merchant123',
+            'data' => ['object' => ['id' => 'acct_test_merchant123', 'object' => 'account']],
+        ]);
+
+        // Act
+        $handler->processWebhook(
+            (new StripeWebhookPayloadTransfer())
+                ->setRawPayload($payload)
+                ->setSignatureHeader($this->buildSignatureHeader($payload, static::TEST_CONNECT_SECRET)),
+        );
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Builds a Stripe-compatible webhook signature header for a given payload and secret.
+     * Format: t=<unix_timestamp>,v1=<hmac-sha256-hex>
+     */
+    protected function buildSignatureHeader(string $payload, string $secret): string
+    {
+        $timestamp = time();
+        $signature = hash_hmac('sha256', sprintf('%d.%s', $timestamp, $payload), $secret);
+
+        return sprintf('t=%d,v1=%s', $timestamp, $signature);
+    }
 
     /**
      * Builds a minimal Stripe PaymentIntent event payload JSON.
@@ -672,10 +769,11 @@ class WebhookHandlerTest extends Unit
         ]);
     }
 
-    protected function createStripeConfigMock(string $webhookSecret): StripeConfig
+    protected function createStripeConfigMock(string $webhookSecret, string $connectSecret = ''): StripeConfig
     {
         $configMock = $this->createMock(StripeConfig::class);
         $configMock->method('getWebhookSecret')->willReturn($webhookSecret);
+        $configMock->method('getWebhookConnectSecret')->willReturn($connectSecret);
 
         return $configMock;
     }
@@ -684,9 +782,10 @@ class WebhookHandlerTest extends Unit
         ?PaymentAppFacadeInterface $paymentAppFacade = null,
         ?PaymentReaderInterface $paymentReader = null,
         ?StripeConfig $config = null,
+        ?MerchantOnboardingHandlerInterface $merchantOnboardingHandler = null,
     ): WebhookHandler {
         if ($config === null) {
-            $config = $this->createStripeConfigMock('');
+            $config = $this->createStripeConfigMock(static::TEST_WEBHOOK_SECRET);
         }
 
         if ($paymentReader === null) {
@@ -697,7 +796,10 @@ class WebhookHandlerTest extends Unit
             $paymentAppFacade = $this->createMock(PaymentAppFacadeInterface::class);
         }
 
-        $merchantOnboardingHandlerMock = $this->createMock(MerchantOnboardingHandlerInterface::class);
+        if ($merchantOnboardingHandler === null) {
+            $merchantOnboardingHandler = $this->createMock(MerchantOnboardingHandlerInterface::class);
+        }
+
         $salesPaymentDetailFacadeMock = $this->createMock(SalesPaymentDetailFacadeInterface::class);
         $eventDetailsExtractorMock = $this->createMock(StripeEventDetailsExtractorInterface::class);
         $eventDetailsExtractorMock->method('extractPaymentIntentDetails')->willReturn([]);
@@ -708,7 +810,7 @@ class WebhookHandlerTest extends Unit
             $config,
             $paymentAppFacade,
             $paymentReader,
-            $merchantOnboardingHandlerMock,
+            $merchantOnboardingHandler,
             $salesPaymentDetailFacadeMock,
             $eventDetailsExtractorMock,
         );

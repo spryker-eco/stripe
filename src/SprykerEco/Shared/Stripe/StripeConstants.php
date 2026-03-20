@@ -18,4 +18,6 @@ interface StripeConstants
     public const string STRIPE_PUBLISHABLE_KEY = 'STRIPE:STRIPE_PUBLISHABLE_KEY';
 
     public const string STRIPE_WEBHOOK_SECRET = 'STRIPE:STRIPE_WEBHOOK_SECRET';
+
+    public const string STRIPE_WEBHOOK_SECRET_CONNECT = 'STRIPE:STRIPE_WEBHOOK_SECRET_CONNECT';
 }
