@@ -20,6 +20,8 @@ class StripeRouteProviderPlugin extends AbstractRouteProviderPlugin
     /**
      * Specification:
      * - Adds routes for webhook notification and Stripe payment page.
+     *
+     * @api
      */
     public function addRoutes(RouteCollection $routeCollection): RouteCollection
     {

@@ -37,7 +37,7 @@ class NotificationController extends AbstractController
             return new Response('OK', Response::HTTP_OK);
         } catch (Exception $exception) {
             return new Response(
-                'Webhook processing failed: ' . $exception->getMessage(),
+                sprintf('Webhook processing failed: %s', $exception->getMessage()),
                 Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

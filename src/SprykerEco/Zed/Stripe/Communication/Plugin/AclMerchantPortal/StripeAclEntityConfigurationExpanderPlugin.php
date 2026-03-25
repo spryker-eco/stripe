@@ -21,24 +21,18 @@ class StripeAclEntityConfigurationExpanderPlugin extends AbstractPlugin implemen
 {
     /**
      * @uses {@link \Spryker\Shared\AclEntity\AclEntityConstants::OPERATION_MASK_READ}
-     *
-     * @var int
      */
-    protected const OPERATION_MASK_READ = 0b1;
+    protected const int OPERATION_MASK_READ = 0b1;
 
     /**
      * @uses {@link \Spryker\Shared\AclEntity\AclEntityConstants::OPERATION_MASK_CREATE}
-     *
-     * @var int
      */
-    protected const OPERATION_MASK_CREATE = 0b10;
+    protected const int OPERATION_MASK_CREATE = 0b10;
 
     /**
      * @uses {@link \Spryker\Shared\AclEntity\AclEntityConstants::OPERATION_MASK_UPDATE}
-     *
-     * @var int
      */
-    protected const OPERATION_MASK_UPDATE = 0b100;
+    protected const int OPERATION_MASK_UPDATE = 0b100;
 
     /**
      * {@inheritDoc}

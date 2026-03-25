@@ -10,6 +10,7 @@ namespace SprykerEco\Zed\Stripe\Communication\Plugin\Oms\Command;
 use Generated\Shared\Transfer\ItemTransfer;
 use Generated\Shared\Transfer\OrderTransfer;
 use Orm\Zed\Sales\Persistence\SpySalesOrder;
+use Orm\Zed\Sales\Persistence\SpySalesOrderItem;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 use Spryker\Zed\Oms\Business\Util\ReadOnlyArrayObject;
 use Spryker\Zed\Oms\Dependency\Plugin\Command\CommandByOrderInterface;
@@ -40,7 +41,7 @@ class StripeRefundCommandPlugin extends AbstractPlugin implements CommandByOrder
         $orderTransfer = (new OrderTransfer())->setOrderReference($orderEntity->getOrderReference());
 
         $itemTransfers = array_map(
-            static fn ($orderItem): ItemTransfer => (new ItemTransfer())
+            static fn (SpySalesOrderItem $orderItem): ItemTransfer => (new ItemTransfer())
                 ->setSku($orderItem->getSku()),
             $orderItems,
         );

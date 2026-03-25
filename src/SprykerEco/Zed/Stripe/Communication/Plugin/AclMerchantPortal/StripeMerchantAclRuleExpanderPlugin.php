@@ -20,17 +20,13 @@ class StripeMerchantAclRuleExpanderPlugin extends AbstractPlugin implements Merc
 {
     /**
      * @uses {@link \Spryker\Shared\Acl\AclConstants::VALIDATOR_WILDCARD}
-     *
-     * @var string
      */
-    protected const RULE_VALIDATOR_WILDCARD = '*';
+    protected const string RULE_VALIDATOR_WILDCARD = '*';
 
     /**
      * @uses {@link \Spryker\Shared\Acl\AclConstants::ALLOW}
-     *
-     * @var string
      */
-    protected const RULE_TYPE_ALLOW = 'allow';
+    protected const string RULE_TYPE_ALLOW = 'allow';
 
     /**
      * {@inheritDoc}

@@ -12,6 +12,7 @@ use Generated\Shared\Transfer\MerchantOnboardingStateTransfer;
 use Generated\Shared\Transfer\OnboardingTransfer;
 use Generated\Shared\Transfer\ReadyForMerchantAppOnboardingTransfer;
 use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
+use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
 class MerchantOnboardingRegistrar implements MerchantOnboardingRegistrarInterface
@@ -31,18 +32,15 @@ class MerchantOnboardingRegistrar implements MerchantOnboardingRegistrarInterfac
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function register(): void
     {
         // 'redirect' strategy: Merchant Portal redirects the browser to our controller; session cookie gives us the logged-in merchant
         $onboardingTransfer = (new OnboardingTransfer())
-            ->setStrategy('redirect')
+            ->setStrategy(SharedStripeConfig::ONBOARDING_STRATEGY_REDIRECT)
             ->setUrl(static::ONBOARDING_INITIALIZE_URL_PATH);
 
         $readyTransfer = (new ReadyForMerchantAppOnboardingTransfer())
-            ->setType('payment')
+            ->setType(SharedStripeConfig::ONBOARDING_TYPE)
             ->setAppName(StripeConfig::APP_NAME)
             ->setAppIdentifier(strtolower(StripeConfig::APP_NAME))
             ->setOnboarding($onboardingTransfer);

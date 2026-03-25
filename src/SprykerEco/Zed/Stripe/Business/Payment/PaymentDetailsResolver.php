@@ -24,7 +24,7 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
      *
      * @var list<string>
      */
-    protected const REUSABLE_STATUSES = ['requires_payment_method', 'requires_action', 'processing'];
+    protected const array REUSABLE_STATUSES = ['requires_payment_method', 'requires_action', 'processing'];
 
     /**
      * PaymentIntent statuses that indicate the payment is already complete.
@@ -32,7 +32,7 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
      *
      * @var list<string>
      */
-    protected const COMPLETED_STATUSES = ['requires_capture', 'succeeded'];
+    protected const array COMPLETED_STATUSES = ['requires_capture', 'succeeded'];
 
     public function __construct(
         protected StripeIntentsInterface $stripeIntents,

@@ -54,6 +54,6 @@ class StripeSubForm extends AbstractSubFormType implements SubFormInterface, Sub
 
     protected function getTemplatePath(): string
     {
-        return SharedStripeConfig::PAYMENT_PROVIDER_NAME . DIRECTORY_SEPARATOR . 'stripe';
+        return SharedStripeConfig::PAYMENT_PROVIDER_NAME . DIRECTORY_SEPARATOR . PaymentTransfer::STRIPE;
     }
 }

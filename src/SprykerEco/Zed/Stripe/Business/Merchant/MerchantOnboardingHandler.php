@@ -44,9 +44,6 @@ class MerchantOnboardingHandler implements MerchantOnboardingHandlerInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function handleAccountUpdated(
         StripeWebhookProcessResponseTransfer $response,
         Event $event,
@@ -104,38 +101,31 @@ class MerchantOnboardingHandler implements MerchantOnboardingHandlerInterface
             return MerchantAppOnboardingStatusInterface::REJECTED;
         }
 
-        if ($account->charges_enabled && $account->payouts_enabled) {
-            /** @var array<string> $pendingVerification */
-            $pendingVerification = $requirementsObject ? (array)($requirementsObject['pending_verification'] ?? []) : [];
-            if (count($pendingVerification) > 0) {
-                return MerchantAppOnboardingStatusInterface::PENDING;
-            }
-
-            $transferCapability = $account['capabilities'] ? ($account['capabilities']['transfers'] ?? null) : null;
-
-            if (!$disabledReason && count($currentlyDue) === 0) {
-                if ($transferCapability !== 'active') {
-                    return MerchantAppOnboardingStatusInterface::PENDING;
-                }
-
-                if (count($pastDue) > 0) {
-                    return MerchantAppOnboardingStatusInterface::RESTRICTED;
-                }
-
-                if (count($eventuallyDue) === 0) {
-                    return MerchantAppOnboardingStatusInterface::COMPLETED;
-                }
-
-                return MerchantAppOnboardingStatusInterface::ENABLED;
-            }
-
+        if (!$account->charges_enabled || !$account->payouts_enabled || $disabledReason || count($currentlyDue) > 0) {
             return MerchantAppOnboardingStatusInterface::RESTRICTED;
         }
 
-        if (!$account->charges_enabled) {
+        /** @var array<string> $pendingVerification */
+        $pendingVerification = $requirementsObject ? (array)($requirementsObject['pending_verification'] ?? []) : [];
+
+        if (count($pendingVerification) > 0) {
+            return MerchantAppOnboardingStatusInterface::PENDING;
+        }
+
+        $transferCapability = $account['capabilities'] ? ($account['capabilities']['transfers'] ?? null) : null;
+
+        if ($transferCapability !== 'active') {
+            return MerchantAppOnboardingStatusInterface::PENDING;
+        }
+
+        if (count($pastDue) > 0) {
             return MerchantAppOnboardingStatusInterface::RESTRICTED;
         }
 
-        return MerchantAppOnboardingStatusInterface::RESTRICTED;
+        if (count($eventuallyDue) === 0) {
+            return MerchantAppOnboardingStatusInterface::COMPLETED;
+        }
+
+        return MerchantAppOnboardingStatusInterface::ENABLED;
     }
 }
