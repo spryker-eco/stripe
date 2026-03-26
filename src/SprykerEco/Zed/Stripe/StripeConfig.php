@@ -89,14 +89,6 @@ class StripeConfig extends AbstractBundleConfig
     }
 
     /**
-     * @api
-     */
-    public function getPaymentMethodUsBankAccount(): string
-    {
-        return (string)$this->get(StripeConstants::STRIPE_PAYMENT_METHOD_US_BANK_ACCOUNT, '');
-    }
-
-    /**
      * Returns the merchant onboarding states that Stripe can place a connected account in,
      * along with the UI texts shown in the Merchant Portal for each state.
      * Override to customise labels without changing business logic.

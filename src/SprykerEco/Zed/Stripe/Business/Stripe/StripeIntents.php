@@ -43,6 +43,8 @@ class StripeIntents implements StripeIntentsInterface
 
     protected const string STATUS_REQUIRES_ACTION = 'requires_action';
 
+    protected const string PAYMENT_METHOD_TYPE_US_BANK_ACCOUNT = 'us_bank_account';
+
     public function __construct(
         protected StripeClientFactory $stripeClientFactory,
         protected StripeCustomersInterface $stripeCustomers,
@@ -201,7 +203,7 @@ class StripeIntents implements StripeIntentsInterface
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
-            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
+            $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, ['expand' => ['payment_method']]);
 
             if ($paymentIntent->status === static::STATUS_CANCELED) {
                 $stripeIntentResponseTransfer->setIsSuccessful(true)
@@ -294,8 +296,20 @@ class StripeIntents implements StripeIntentsInterface
             return true;
         }
 
+        // ACH (us_bank_account) PaymentIntents in processing state can still be canceled
         return $paymentIntent->status === static::STATUS_PROCESSING
-            && ($paymentIntent->__isset('payment_method') && $paymentIntent->payment_method === $this->config->getPaymentMethodUsBankAccount());
+            && $this->isUsBankAccountPaymentMethod($paymentIntent);
+    }
+
+    protected function isUsBankAccountPaymentMethod(PaymentIntent $paymentIntent): bool
+    {
+        if (!$paymentIntent->__isset('payment_method')) {
+            return false;
+        }
+
+        $paymentMethod = $paymentIntent->payment_method;
+
+        return is_object($paymentMethod) && $paymentMethod->type === static::PAYMENT_METHOD_TYPE_US_BANK_ACCOUNT;
     }
 
     /**
