@@ -15,7 +15,7 @@ jobs:
         env:
             APPLICATION_ENV: devtest
             APPLICATION_STORE: DE
-            PROJECT: adyen
+            PROJECT: stripe
 
         steps:
             - uses: actions/checkout@v2
@@ -51,3 +51,9 @@ jobs:
 
             - name: Run CodeStyle checks
               run: composer cs-check
+
+            - name: PHPStan setup
+              run: composer stan-setup
+
+            - name: Run PHPStan
+              run: composer stan

@@ -27,7 +27,21 @@ class StripeIntents implements StripeIntentsInterface
 {
     use LoggerTrait;
 
-    protected const PAYMENT_METHOD_US_BANK_ACCOUNT = 'pm_1Omdm7JjAXLVbfUvp5FRopNT';
+    protected const string STATUS_SUCCEEDED = 'succeeded';
+
+    protected const string STATUS_REQUIRES_CAPTURE = 'requires_capture';
+
+    protected const string STATUS_CANCELED = 'canceled';
+
+    protected const string STATUS_PROCESSING = 'processing';
+
+    protected const string STATUS_CAPTURED = 'captured';
+
+    protected const string STATUS_REQUIRES_PAYMENT_METHOD = 'requires_payment_method';
+
+    protected const string STATUS_REQUIRES_CONFIRMATION = 'requires_confirmation';
+
+    protected const string STATUS_REQUIRES_ACTION = 'requires_action';
 
     public function __construct(
         protected StripeClientFactory $stripeClientFactory,
@@ -36,14 +50,11 @@ class StripeIntents implements StripeIntentsInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function create(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
     {
         $quoteTransfer = $stripeIntentRequestTransfer->getQuoteOrFail();
-        $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
-        $stripeIntentResponseTransfer->setIsSuccessful(false);
+        $stripeIntentResponseTransfer = (new StripeIntentResponseTransfer())
+            ->setIsSuccessful(false);
 
         try {
             $stripeClient = $this->stripeClientFactory->create();
@@ -51,7 +62,7 @@ class StripeIntents implements StripeIntentsInterface
             $stripeCustomerRequestTransfer = (new StripeCustomerRequestTransfer())->setQuote($quoteTransfer);
             $stripeCustomerResponseTransfer = $this->stripeCustomers->searchOrCreate($stripeCustomerRequestTransfer);
 
-            $paymentIntentParams = $this->createPaymentIntentParams($quoteTransfer, $stripeCustomerResponseTransfer);
+            $paymentIntentParams = $this->createPaymentIntentParams($quoteTransfer, $stripeCustomerResponseTransfer, $stripeIntentRequestTransfer);
             $paymentIntentParams = $this->addMetadata($quoteTransfer, $paymentIntentParams);
 
             $paymentIntent = $stripeClient->paymentIntents->create($paymentIntentParams);
@@ -61,14 +72,15 @@ class StripeIntents implements StripeIntentsInterface
                     ->setMessage('Payment Intent creation failed: ID is missing in the response.');
             }
 
-            if (!$paymentIntent->__isset('client_secret') || $paymentIntent->client_secret === null) {
+            if (!$paymentIntent->__isset('client_secret')) {
                 return $stripeIntentResponseTransfer
                     ->setMessage('Payment Intent creation failed: ClientSecret is missing in the response.');
             }
 
-            $stripeIntentResponseTransfer->setIsSuccessful(true);
-            $stripeIntentResponseTransfer->setTransactionId($paymentIntent->id);
-            $stripeIntentResponseTransfer->setClientSecret($paymentIntent->client_secret);
+            $stripeIntentResponseTransfer
+                ->setIsSuccessful(true)
+                ->setTransactionId($paymentIntent->id)
+                ->setClientSecret($paymentIntent->client_secret);
         } catch (ApiErrorException $apiErrorException) {
             $this->getLogger()->error($apiErrorException, [
                 QuoteTransfer::ORDER_REFERENCE => $quoteTransfer->getOrderReference(),
@@ -81,13 +93,10 @@ class StripeIntents implements StripeIntentsInterface
         return $stripeIntentResponseTransfer;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function get(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
     {
-        $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
-        $stripeIntentResponseTransfer->setIsSuccessful(false);
+        $stripeIntentResponseTransfer = (new StripeIntentResponseTransfer())
+            ->setIsSuccessful(false);
 
         $transactionId = $stripeIntentRequestTransfer->getTransactionIdOrFail();
 
@@ -95,8 +104,8 @@ class StripeIntents implements StripeIntentsInterface
             $stripeClient = $this->stripeClientFactory->create();
             $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
 
-            $stripeIntentResponseTransfer->setIsSuccessful(true);
             $stripeIntentResponseTransfer
+                ->setIsSuccessful(true)
                 ->setClientSecret($paymentIntent->client_secret)
                 ->setGrandTotal($paymentIntent->amount)
                 ->setCurrencyCode($paymentIntent->currency)
@@ -117,13 +126,10 @@ class StripeIntents implements StripeIntentsInterface
         return $stripeIntentResponseTransfer;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function capture(StripeIntentCaptureRequestTransfer $stripeIntentCaptureRequestTransfer): StripeIntentCaptureResponseTransfer
     {
-        $stripeIntentCaptureResponseTransfer = new StripeIntentCaptureResponseTransfer();
-        $stripeIntentCaptureResponseTransfer->setIsSuccessful(false);
+        $stripeIntentCaptureResponseTransfer = (new StripeIntentCaptureResponseTransfer())
+            ->setIsSuccessful(false);
 
         $transactionId = $stripeIntentCaptureRequestTransfer->getTransactionIdOrFail();
 
@@ -132,40 +138,16 @@ class StripeIntents implements StripeIntentsInterface
             $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
 
             // Already succeeded (e.g. Bank Account Payment — auto-captured)
-            if ($paymentIntent->status === 'succeeded') {
-                // Guard against partial-capture race: if a prior capture already settled the PI
-                // for less than the current item's requested amount, this item was never captured.
-                // Returning success here would let it proceed to payout, causing a transfer failure.
-                $requestedAmount = $stripeIntentCaptureRequestTransfer->getAmount();
-
-                if ($requestedAmount !== null && $paymentIntent->amount_received < $requestedAmount) {
-                    $this->getLogger()->error('Payment Intent already succeeded with partial capture — requested amount not captured.', [
-                        StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $transactionId,
-                        'amount_received' => $paymentIntent->amount_received,
-                        'requested_amount' => $requestedAmount,
-                    ]);
-
-                    return $stripeIntentCaptureResponseTransfer
-                        ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED)
-                        ->setMessage(sprintf(
-                            'Partial capture: PaymentIntent already settled for %d, requested %d was not captured.',
-                            $paymentIntent->amount_received,
-                            $requestedAmount,
-                        ));
-                }
-
-                $stripeIntentCaptureResponseTransfer->setIsSuccessful(true);
-                $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURED);
-
-                $this->getLogger()->info('Payment Intent already succeeded, capture is not applicable.', [
-                    StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $transactionId,
-                ]);
-
-                return $stripeIntentCaptureResponseTransfer;
+            if ($paymentIntent->status === static::STATUS_SUCCEEDED) {
+                return $this->handleAlreadySucceededCapture(
+                    $stripeIntentCaptureResponseTransfer,
+                    $stripeIntentCaptureRequestTransfer,
+                    $paymentIntent->amount_received,
+                );
             }
 
             // Only capture when in requires_capture state
-            if ($paymentIntent->status !== 'requires_capture') {
+            if ($paymentIntent->status !== static::STATUS_REQUIRES_CAPTURE) {
                 $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
 
                 $this->getLogger()->info(
@@ -182,7 +164,7 @@ class StripeIntents implements StripeIntentsInterface
 
             $capturePaymentIntent = $stripeClient->paymentIntents->capture($transactionId, $captureParams);
 
-            if (!$capturePaymentIntent->__isset('status') || $capturePaymentIntent->status !== 'succeeded') {
+            if (!$capturePaymentIntent->__isset('status') || $capturePaymentIntent->status !== static::STATUS_SUCCEEDED) {
                 $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
 
                 $this->getLogger()->warning('Payment Intent capture failed.', [
@@ -212,8 +194,8 @@ class StripeIntents implements StripeIntentsInterface
      */
     public function cancel(StripeIntentRequestTransfer $stripeIntentRequestTransfer): StripeIntentResponseTransfer
     {
-        $stripeIntentResponseTransfer = new StripeIntentResponseTransfer();
-        $stripeIntentResponseTransfer->setIsSuccessful(false);
+        $stripeIntentResponseTransfer = (new StripeIntentResponseTransfer())
+            ->setIsSuccessful(false);
 
         $transactionId = $stripeIntentRequestTransfer->getTransactionIdOrFail();
 
@@ -221,9 +203,9 @@ class StripeIntents implements StripeIntentsInterface
             $stripeClient = $this->stripeClientFactory->create();
             $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
 
-            if ($paymentIntent->status === 'canceled') {
-                $stripeIntentResponseTransfer->setIsSuccessful(true);
-                $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
+            if ($paymentIntent->status === static::STATUS_CANCELED) {
+                $stripeIntentResponseTransfer->setIsSuccessful(true)
+                    ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
 
                 $this->getLogger()->info('Payment Intent already canceled.', [
                     StripeIntentRequestTransfer::TRANSACTION_ID => $transactionId,
@@ -245,7 +227,7 @@ class StripeIntents implements StripeIntentsInterface
 
             $cancelPaymentIntent = $stripeClient->paymentIntents->cancel($transactionId);
 
-            if (!$cancelPaymentIntent->__isset('status') || $cancelPaymentIntent->status !== 'canceled') {
+            if (!$cancelPaymentIntent->__isset('status') || $cancelPaymentIntent->status !== static::STATUS_CANCELED) {
                 $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);
 
                 $this->getLogger()->warning('Payment Intent cancellation failed.', [
@@ -255,32 +237,65 @@ class StripeIntents implements StripeIntentsInterface
                 return $stripeIntentResponseTransfer;
             }
 
-            $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
-            $stripeIntentResponseTransfer->setIsSuccessful(true);
+            $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED)
+                ->setIsSuccessful(true);
         } catch (ApiErrorException $apiErrorException) {
             $this->getLogger()->error($apiErrorException, [
                 StripeIntentRequestTransfer::TRANSACTION_ID => $transactionId,
             ]);
 
-            $stripeIntentResponseTransfer->setMessage($apiErrorException->getMessage());
-            $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);
+            $stripeIntentResponseTransfer->setMessage($apiErrorException->getMessage())
+                ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);
         }
 
         return $stripeIntentResponseTransfer;
     }
 
+    protected function handleAlreadySucceededCapture(
+        StripeIntentCaptureResponseTransfer $stripeIntentCaptureResponseTransfer,
+        StripeIntentCaptureRequestTransfer $stripeIntentCaptureRequestTransfer,
+        int $amountReceived,
+    ): StripeIntentCaptureResponseTransfer {
+        // Guard against partial-capture race: if a prior capture already settled the PI
+        // for less than the current item's requested amount, this item was never captured.
+        // Returning success here would let it proceed to payout, causing a transfer failure.
+        $requestedAmount = $stripeIntentCaptureRequestTransfer->getAmount();
+
+        if ($requestedAmount !== null && $amountReceived < $requestedAmount) {
+            $this->getLogger()->error('Payment Intent already succeeded with partial capture — requested amount not captured.', [
+                StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $stripeIntentCaptureRequestTransfer->getTransactionId(),
+                'amount_received' => $amountReceived,
+                'requested_amount' => $requestedAmount,
+            ]);
+
+            return $stripeIntentCaptureResponseTransfer
+                ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED)
+                ->setMessage(sprintf(
+                    'Partial capture: PaymentIntent already settled for %d, requested %d was not captured.',
+                    $amountReceived,
+                    $requestedAmount,
+                ));
+        }
+
+        $this->getLogger()->info('Payment Intent already succeeded, capture is not applicable.');
+
+        return $stripeIntentCaptureResponseTransfer
+            ->setIsSuccessful(true)
+            ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURED);
+    }
+
     protected function canPaymentIntentBeCanceled(PaymentIntent $paymentIntent): bool
     {
-        if (in_array($paymentIntent->status, ['succeeded', 'captured'])) {
+        if (in_array($paymentIntent->status, [static::STATUS_SUCCEEDED, static::STATUS_CAPTURED], true)) {
             return false;
         }
 
-        if (in_array($paymentIntent->status, ['requires_payment_method', 'requires_capture', 'requires_confirmation', 'requires_action'])) {
+        if (in_array($paymentIntent->status, [static::STATUS_REQUIRES_PAYMENT_METHOD, static::STATUS_REQUIRES_CAPTURE, static::STATUS_REQUIRES_CONFIRMATION, static::STATUS_REQUIRES_ACTION], true)) {
             return true;
         }
 
-        return $paymentIntent->status === 'processing'
-            && ($paymentIntent->__isset('payment_method') && $paymentIntent->payment_method === static::PAYMENT_METHOD_US_BANK_ACCOUNT);
+        return $paymentIntent->status === static::STATUS_PROCESSING
+            && ($paymentIntent->__isset('payment_method') && $paymentIntent->payment_method === $this->config->getPaymentMethodUsBankAccount());
     }
 
     /**
@@ -312,10 +327,11 @@ class StripeIntents implements StripeIntentsInterface
      */
     protected function createPaymentIntentParams(
         QuoteTransfer $quoteTransfer,
-        StripeCustomerResponseTransfer $stripeCustomerResponseTransfer
+        StripeCustomerResponseTransfer $stripeCustomerResponseTransfer,
+        StripeIntentRequestTransfer $stripeIntentRequestTransfer
     ): array {
         $description = $quoteTransfer->getOrderReference()
-            ? 'Order Reference: ' . $quoteTransfer->getOrderReference()
+            ? sprintf('Order Reference: %s', $quoteTransfer->getOrderReference())
             : 'Pre-Order Payment';
 
         $config = [
@@ -397,6 +413,10 @@ class StripeIntents implements StripeIntentsInterface
                 'bank_transfer' => $bankTransferConfig,
             ];
         } catch (UnsupportedCountryException) {
+            $this->getLogger()->error('Unsupported country for bank transfer payment method.', [
+                StripeIntentCaptureRequestTransfer::TRANSACTION_ID => $stripeIntentRequestTransfer->getTransactionId(),
+                'country_code' => $countryCode,
+            ]);
         }
 
         return $config;

@@ -239,10 +239,11 @@ class SecurityMerchantPortalGuiConfig extends SprykerSecurityMerchantPortalGuiCo
 ```php
 use SprykerEco\Shared\Stripe\StripeConstants;
 
-$config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_live_***';              // from Stripe Dashboard → API keys
-$config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_live_***';         // from Stripe Dashboard → API keys
-$config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';            // from Stripe Dashboard → Webhooks → standard endpoint
-$config[StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT] = 'whsec_***';    // from Stripe Dashboard → Webhooks → Connect endpoint (marketplace only)
+$config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_live_***';                // from Stripe Dashboard → API keys
+$config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_live_***';           // from Stripe Dashboard → API keys
+$config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';              // from Stripe Dashboard → Webhooks → standard endpoint
+$config[StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT] = 'whsec_***';      // from Stripe Dashboard → Webhooks → Connect endpoint (marketplace only)
+$config[StripeConstants::STRIPE_PAYMENT_METHOD_US_BANK_ACCOUNT] = 'pm_***'; // from Stripe Dashboard → Payment methods → ACH → Set up test bank account and copy the generated payment method ID (starts with `pm_`)
 ```
 
 ---
