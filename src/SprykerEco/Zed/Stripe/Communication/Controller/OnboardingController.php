@@ -20,6 +20,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class OnboardingController extends AbstractController
 {
+    /**
+     * @return Response|array<string, string>
+     */
     public function initializeAction(Request $request): array|Response
     {
         $merchantUser = $this->getFactory()->getMerchantUserFacade()->getCurrentMerchantUser();

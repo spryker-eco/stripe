@@ -27,6 +27,8 @@ class DashboardController extends AbstractController
      * The `merchantReference` query parameter must be the real merchant reference (not the placeholder).
      *
      * Route: GET /stripe/dashboard
+     *
+     * @return Response|array<string, string>
      */
     public function indexAction(Request $request): array|Response
     {
