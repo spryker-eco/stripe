@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class NotificationController extends AbstractController
 {
+    protected const string HEADER_NAME_STRIPE_SIGNATURE = 'Stripe-Signature';
+
     public function notificationAction(Request $request): Response
     {
         $webhookPayloadTransfer = $this->createWebhookPayload($request);
@@ -47,6 +49,6 @@ class NotificationController extends AbstractController
     {
         return (new StripeWebhookPayloadTransfer())
             ->setRawPayload($request->getContent())
-            ->setSignatureHeader((string)$request->headers->get('Stripe-Signature', ''));
+            ->setSignatureHeader((string)$request->headers->get(static::HEADER_NAME_STRIPE_SIGNATURE, ''));
     }
 }

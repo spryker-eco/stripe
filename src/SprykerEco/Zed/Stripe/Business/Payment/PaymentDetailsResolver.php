@@ -13,38 +13,22 @@ use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use Generated\Shared\Transfer\TotalsTransfer;
+use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
 class PaymentDetailsResolver implements PaymentDetailsResolverInterface
 {
-    /**
-     * PaymentIntent statuses where the live client_secret from Stripe API can be used to collect payment.
-     *
-     * @var list<string>
-     */
-    protected const array REUSABLE_STATUSES = ['requires_payment_method', 'requires_action', 'processing'];
-
-    /**
-     * PaymentIntent statuses that indicate the payment is already complete.
-     * The customer should be redirected to the success page.
-     *
-     * @var list<string>
-     */
-    protected const array COMPLETED_STATUSES = ['requires_capture', 'succeeded'];
-
     public function __construct(
         protected StripeIntentsInterface $stripeIntents,
         protected PaymentReaderInterface $paymentReader,
         protected StripeEntityManagerInterface $entityManager,
         protected StripeConfig $config,
+        protected SharedStripeConfig $sharedConfig,
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function resolve(string $orderReference): StripeIntentResponseTransfer
     {
         $payment = $this->paymentReader->getPaymentByOrderReference($orderReference);
@@ -73,7 +57,7 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         $status = $liveResponse->getStatus();
 
         // Payment already captured or pending capture — redirect customer to success page
-        if (in_array($status, static::COMPLETED_STATUSES, true)) {
+        if (in_array($status, $this->sharedConfig->getSuccessfulPaymentStatuses(), true)) {
             return (new StripeIntentResponseTransfer())
                 ->setIsSuccessful(false)
                 ->setStatus($status);
@@ -85,7 +69,7 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         }
 
         // PI is still open — reuse the existing client_secret
-        if (in_array($status, static::REUSABLE_STATUSES, true)) {
+        if (in_array($status, $this->sharedConfig->getReusablePaymentStatuses(), true)) {
             return (new StripeIntentResponseTransfer())
                 ->setIsSuccessful(true)
                 ->setTransactionId($transactionId)

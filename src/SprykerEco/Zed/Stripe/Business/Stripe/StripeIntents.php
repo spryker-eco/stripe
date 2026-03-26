@@ -27,28 +27,13 @@ class StripeIntents implements StripeIntentsInterface
 {
     use LoggerTrait;
 
-    protected const string STATUS_SUCCEEDED = 'succeeded';
-
-    protected const string STATUS_REQUIRES_CAPTURE = 'requires_capture';
-
-    protected const string STATUS_CANCELED = 'canceled';
-
-    protected const string STATUS_PROCESSING = 'processing';
-
-    protected const string STATUS_CAPTURED = 'captured';
-
-    protected const string STATUS_REQUIRES_PAYMENT_METHOD = 'requires_payment_method';
-
-    protected const string STATUS_REQUIRES_CONFIRMATION = 'requires_confirmation';
-
-    protected const string STATUS_REQUIRES_ACTION = 'requires_action';
-
     protected const string PAYMENT_METHOD_TYPE_US_BANK_ACCOUNT = 'us_bank_account';
 
     public function __construct(
         protected StripeClientFactory $stripeClientFactory,
         protected StripeCustomersInterface $stripeCustomers,
         protected StripeConfig $config,
+        protected SharedStripeConfig $sharedConfig,
     ) {
     }
 
@@ -140,7 +125,7 @@ class StripeIntents implements StripeIntentsInterface
             $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId);
 
             // Already succeeded (e.g. Bank Account Payment — auto-captured)
-            if ($paymentIntent->status === static::STATUS_SUCCEEDED) {
+            if ($paymentIntent->status === SharedStripeConfig::PAYMENT_STATUS_SUCCEEDED) {
                 return $this->handleAlreadySucceededCapture(
                     $stripeIntentCaptureResponseTransfer,
                     $stripeIntentCaptureRequestTransfer,
@@ -149,7 +134,7 @@ class StripeIntents implements StripeIntentsInterface
             }
 
             // Only capture when in requires_capture state
-            if ($paymentIntent->status !== static::STATUS_REQUIRES_CAPTURE) {
+            if ($paymentIntent->status !== SharedStripeConfig::PAYMENT_STATUS_REQUIRES_CAPTURE) {
                 $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
 
                 $this->getLogger()->info(
@@ -166,7 +151,7 @@ class StripeIntents implements StripeIntentsInterface
 
             $capturePaymentIntent = $stripeClient->paymentIntents->capture($transactionId, $captureParams);
 
-            if (!$capturePaymentIntent->__isset('status') || $capturePaymentIntent->status !== static::STATUS_SUCCEEDED) {
+            if (!$capturePaymentIntent->__isset('status') || $capturePaymentIntent->status !== SharedStripeConfig::PAYMENT_STATUS_SUCCEEDED) {
                 $stripeIntentCaptureResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CAPTURE_FAILED);
 
                 $this->getLogger()->warning('Payment Intent capture failed.', [
@@ -205,7 +190,7 @@ class StripeIntents implements StripeIntentsInterface
             $stripeClient = $this->stripeClientFactory->create();
             $paymentIntent = $stripeClient->paymentIntents->retrieve($transactionId, ['expand' => ['payment_method']]);
 
-            if ($paymentIntent->status === static::STATUS_CANCELED) {
+            if ($paymentIntent->status === SharedStripeConfig::PAYMENT_STATUS_CANCELED) {
                 $stripeIntentResponseTransfer->setIsSuccessful(true)
                     ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
 
@@ -229,7 +214,7 @@ class StripeIntents implements StripeIntentsInterface
 
             $cancelPaymentIntent = $stripeClient->paymentIntents->cancel($transactionId);
 
-            if (!$cancelPaymentIntent->__isset('status') || $cancelPaymentIntent->status !== static::STATUS_CANCELED) {
+            if (!$cancelPaymentIntent->__isset('status') || $cancelPaymentIntent->status !== SharedStripeConfig::PAYMENT_STATUS_CANCELED) {
                 $stripeIntentResponseTransfer->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELLATION_FAILED);
 
                 $this->getLogger()->warning('Payment Intent cancellation failed.', [
@@ -288,16 +273,16 @@ class StripeIntents implements StripeIntentsInterface
 
     protected function canPaymentIntentBeCanceled(PaymentIntent $paymentIntent): bool
     {
-        if (in_array($paymentIntent->status, [static::STATUS_SUCCEEDED, static::STATUS_CAPTURED], true)) {
+        if (in_array($paymentIntent->status, $this->sharedConfig->getPaymentIntentNonCancellableStatuses(), true)) {
             return false;
         }
 
-        if (in_array($paymentIntent->status, [static::STATUS_REQUIRES_PAYMENT_METHOD, static::STATUS_REQUIRES_CAPTURE, static::STATUS_REQUIRES_CONFIRMATION, static::STATUS_REQUIRES_ACTION], true)) {
+        if (in_array($paymentIntent->status, $this->sharedConfig->getPaymentIntentCancellableStatuses(), true)) {
             return true;
         }
 
         // ACH (us_bank_account) PaymentIntents in processing state can still be canceled
-        return $paymentIntent->status === static::STATUS_PROCESSING
+        return $paymentIntent->status === SharedStripeConfig::PAYMENT_STATUS_PROCESSING
             && $this->isUsBankAccountPaymentMethod($paymentIntent);
     }
 

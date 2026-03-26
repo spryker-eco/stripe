@@ -13,7 +13,7 @@ class StripeConfig extends AbstractBundleConfig
 {
     /**
      * Zed gateway URL for processing Stripe webhooks via ZedRequest.
-     * Routes to GatewayController::processWebhookAction().
+     * Routes to {@link \SprykerEco\Zed\Stripe\Communication\Controller\GatewayController::processWebhookAction()}.
      */
     public const string ZED_PROCESS_WEBHOOK_URL = '/stripe/gateway/process-webhook';
 }
