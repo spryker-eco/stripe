@@ -18,9 +18,6 @@ class DashboardUrlGenerator implements DashboardUrlGeneratorInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function generateDashboardUrl(string $merchantReference): ?string
     {
         $stripeMerchantTransfer = $this->repository->findMerchantByReference($merchantReference);

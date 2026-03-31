@@ -27,9 +27,6 @@ class StripeTransfers implements StripeTransfersInterface
     {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function transfer(StripeTransmissionRequestTransfer $stripeTransmissionRequestTransfer): StripeTransmissionResponseTransfer
     {
         $stripeTransmissionResponseTransfer = new StripeTransmissionResponseTransfer();

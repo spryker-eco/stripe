@@ -30,9 +30,6 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function generateOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): StripeAccountLinksResponseTransfer
     {
         $stripeAccountId = $this->resolveStripeAccountId($merchantReference);
@@ -46,9 +43,6 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
         return $this->createAccountLink($stripeAccountId, $returnUrl, $refreshUrl);
     }
 
-    /**
-     * Returns the existing Stripe account ID for the merchant, creating one if necessary.
-     */
     protected function resolveStripeAccountId(string $merchantReference): ?string
     {
         $merchantTransfer = $this->repository->findMerchantByReference($merchantReference);
@@ -60,9 +54,6 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
         return $this->createStripeAccount($merchantReference);
     }
 
-    /**
-     * Creates a new Stripe Express connected account and persists the account ID.
-     */
     protected function createStripeAccount(string $merchantReference): ?string
     {
         $accountResponse = $this->stripeAccounts->create(
@@ -89,12 +80,9 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
         return $stripeAccountId;
     }
 
-    /**
-     * Creates a Stripe account link and returns its URL.
-     */
     protected function createAccountLink(string $stripeAccountId, string $returnUrl, string $refreshUrl): StripeAccountLinksResponseTransfer
     {
-        $accountLinksResponse = $this->stripeAccountLinks->create(
+        return $this->stripeAccountLinks->create(
             (new StripeAccountLinksRequestTransfer())->setAccountLinksConfig([
                 'account' => $stripeAccountId,
                 'return_url' => $returnUrl,
@@ -102,7 +90,5 @@ class MerchantOnboardingUrlGenerator implements MerchantOnboardingUrlGeneratorIn
                 'type' => 'account_onboarding',
             ]),
         );
-
-        return $accountLinksResponse;
     }
 }

@@ -29,9 +29,6 @@ class PaymentCanceller implements PaymentCancellerInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function cancelPayment(OrderTransfer $orderTransfer): void
     {
         $orderReference = $orderTransfer->getOrderReferenceOrFail();

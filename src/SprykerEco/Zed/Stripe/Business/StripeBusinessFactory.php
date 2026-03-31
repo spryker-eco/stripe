@@ -30,6 +30,9 @@ use SprykerEco\Zed\Stripe\Business\Payment\PaymentRefunder;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentSaver;
 use SprykerEco\Zed\Stripe\Business\Payment\PayoutTransmissionExecutor;
 use SprykerEco\Zed\Stripe\Business\Payment\PayoutTransmissionExecutorInterface;
+use SprykerEco\Zed\Stripe\Business\Stripe\BankTransferConfigResolver;
+use SprykerEco\Zed\Stripe\Business\Stripe\PaymentIntentCancellationGuard;
+use SprykerEco\Zed\Stripe\Business\Stripe\PaymentIntentParamsBuilder;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccountLinks;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeAccounts;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeCustomers;
@@ -163,7 +166,27 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         return new StripeIntents(
             $this->createStripeClientFactory(),
             $this->createStripeCustomers(),
+            $this->createPaymentIntentParamsBuilder(),
+            $this->createPaymentIntentCancellationGuard(),
+        );
+    }
+
+    public function createPaymentIntentParamsBuilder(): PaymentIntentParamsBuilder
+    {
+        return new PaymentIntentParamsBuilder(
             $this->getConfig(),
+            $this->createBankTransferConfigResolver(),
+        );
+    }
+
+    public function createBankTransferConfigResolver(): BankTransferConfigResolver
+    {
+        return new BankTransferConfigResolver();
+    }
+
+    public function createPaymentIntentCancellationGuard(): PaymentIntentCancellationGuard
+    {
+        return new PaymentIntentCancellationGuard(
             $this->getSharedConfig(),
         );
     }

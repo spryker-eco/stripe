@@ -25,9 +25,6 @@ class StripeRefunds implements StripeRefundsInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function create(StripeRefundRequestTransfer $stripeRefundRequestTransfer): StripeRefundResponseTransfer
     {
         $stripeRefundResponseTransfer = new StripeRefundResponseTransfer();

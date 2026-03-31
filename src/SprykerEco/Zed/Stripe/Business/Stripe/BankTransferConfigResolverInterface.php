@@ -7,7 +7,10 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Stripe;
 
-interface StripeLoginLinksInterface
+interface BankTransferConfigResolverInterface
 {
-    public function create(string $stripeAccountId): ?string;
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfigForCountry(string $countryCode): array;
 }

@@ -19,9 +19,6 @@ class StripeLoginLinks implements StripeLoginLinksInterface
     {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function create(string $stripeAccountId): ?string
     {
         try {

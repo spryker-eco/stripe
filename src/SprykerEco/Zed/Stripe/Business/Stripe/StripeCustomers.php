@@ -22,9 +22,6 @@ class StripeCustomers implements StripeCustomersInterface
     {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function searchOrCreate(StripeCustomerRequestTransfer $stripeCustomerRequestTransfer): StripeCustomerResponseTransfer
     {
         $stripeCustomerResponseTransfer = new StripeCustomerResponseTransfer();

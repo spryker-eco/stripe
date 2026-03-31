@@ -7,7 +7,9 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Stripe;
 
-interface StripeLoginLinksInterface
+use Stripe\PaymentIntent;
+
+interface PaymentIntentCancellationGuardInterface
 {
-    public function create(string $stripeAccountId): ?string;
+    public function canBeCanceled(PaymentIntent $paymentIntent): bool;
 }

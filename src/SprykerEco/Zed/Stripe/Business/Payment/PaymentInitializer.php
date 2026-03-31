@@ -21,9 +21,6 @@ class PaymentInitializer implements PaymentInitializerInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer
     {
         $stripeIntentRequestTransfer = (new StripeIntentRequestTransfer())

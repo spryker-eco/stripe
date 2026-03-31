@@ -23,7 +23,7 @@ class StripeEventDetailsExtractor implements StripeEventDetailsExtractorInterfac
     }
 
     /**
-     * {@inheritDoc}
+     * @return array<string, mixed>
      */
     public function extractPaymentIntentDetails(PaymentIntent $paymentIntent): array
     {
@@ -76,7 +76,7 @@ class StripeEventDetailsExtractor implements StripeEventDetailsExtractorInterfac
     }
 
     /**
-     * {@inheritDoc}
+     * @return array<string, mixed>
      */
     public function extractChargeDetails(Charge $charge): array
     {
@@ -143,7 +143,7 @@ class StripeEventDetailsExtractor implements StripeEventDetailsExtractorInterfac
     }
 
     /**
-     * {@inheritDoc}
+     * @return array<string, mixed>
      */
     public function extractRefundDetails(Refund $refund): array
     {

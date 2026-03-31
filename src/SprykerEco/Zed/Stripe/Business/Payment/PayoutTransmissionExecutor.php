@@ -35,7 +35,7 @@ class PayoutTransmissionExecutor implements PayoutTransmissionExecutorInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @param list<\Generated\Shared\Transfer\PaymentTransmissionItemTransfer> $paymentTransmissionItemTransfers
      */
     public function executePayoutTransmission(
         array $paymentTransmissionItemTransfers,

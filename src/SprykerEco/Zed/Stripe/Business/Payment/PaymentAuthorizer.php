@@ -22,9 +22,6 @@ class PaymentAuthorizer implements PaymentAuthorizerInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function authorizePayment(OrderTransfer $orderTransfer): void
     {
         $stripePaymentTransfer = $this->paymentReader->getPaymentByOrderReference(

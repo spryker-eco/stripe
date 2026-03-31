@@ -24,7 +24,7 @@ class PaymentRefunder implements PaymentRefunderInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
      */
     public function refundPayment(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void
     {

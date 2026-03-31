@@ -16,17 +16,11 @@ class PaymentReader implements PaymentReaderInterface
     {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getPaymentByOrderReference(string $orderReference): ?StripePaymentTransfer
     {
         return $this->repository->findPaymentByOrderReference($orderReference);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getPaymentByTransactionId(string $transactionId): ?StripePaymentTransfer
     {
         return $this->repository->findPaymentByTransactionId($transactionId);

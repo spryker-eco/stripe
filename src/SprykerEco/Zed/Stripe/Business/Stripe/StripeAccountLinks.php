@@ -21,9 +21,6 @@ class StripeAccountLinks implements StripeAccountLinksInterface
     {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function create(StripeAccountLinksRequestTransfer $stripeAccountLinksRequestTransfer): StripeAccountLinksResponseTransfer
     {
         $stripeAccountLinksResponseTransfer = new StripeAccountLinksResponseTransfer();
