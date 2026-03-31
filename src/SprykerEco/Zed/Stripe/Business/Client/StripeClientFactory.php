@@ -23,7 +23,7 @@ class StripeClientFactory
     {
         return new StripeClient([
             'api_key' => $this->config->getSecretKey(),
-            'stripe_version' => $this->config->getStripeApiVersion(),
+            'stripe_version' => '2023-10-16',
         ]);
     }
 }

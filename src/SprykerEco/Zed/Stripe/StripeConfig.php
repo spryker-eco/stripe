@@ -29,8 +29,6 @@ class StripeConfig extends AbstractBundleConfig
      */
     public const string METADATA_MERCHANT_REFERENCE = 'merchantReference';
 
-    protected const string STRIPE_API_VERSION = '2023-10-16';
-
     protected const string ONBOARDING_STATUS_COMPLETED = 'completed';
 
     protected const string ONBOARDING_STATUS_ENABLED = 'enabled';
@@ -161,16 +159,5 @@ class StripeConfig extends AbstractBundleConfig
             Event::CHARGE_REFUND_UPDATED, // → refunded / refund_failed
             Event::ACCOUNT_UPDATED, // marketplace: merchant onboarding status
         ];
-    }
-
-    /**
-     * Specification:
-     * - Returns Stripe API version pinned for this package.
-     *
-     * @api
-     */
-    public function getStripeApiVersion(): string
-    {
-        return static::STRIPE_API_VERSION;
     }
 }
