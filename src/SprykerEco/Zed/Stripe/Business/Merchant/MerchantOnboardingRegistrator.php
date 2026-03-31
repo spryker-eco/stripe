@@ -15,7 +15,7 @@ use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
 use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
-class MerchantOnboardingRegistrar implements MerchantOnboardingRegistrarInterface
+class MerchantOnboardingRegistrator implements MerchantOnboardingRegistratorInterface
 {
     // Placeholder replaced by PaymentSettingsController::prepareAdditionalLinks() at render time
     protected const string MERCHANT_REFERENCE_PLACEHOLDER = '_merchantReference_';

@@ -26,9 +26,6 @@ class PaymentCapturer implements PaymentCapturerInterface
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function capturePayment(OrderTransfer $orderTransfer, int $captureAmount = 0): void
     {
         $orderReference = $orderTransfer->getOrderReferenceOrFail();

@@ -11,10 +11,6 @@ use Spryker\Zed\InstallerExtension\Dependency\Plugin\InstallerPluginInterface;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 
 /**
- * Registers Stripe as a merchant onboarding provider in the MerchantApp module.
- * Install by adding to InstallerDependencyProvider::getInstallerPlugins().
- * Requires STRIPE:STRIPE_MERCHANT_ONBOARDING_INITIALIZE_URL to be configured.
- *
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
  * @method \SprykerEco\Zed\Stripe\Communication\StripeCommunicationFactory getFactory()
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
@@ -23,8 +19,8 @@ class StripeMarketplaceInstallerPlugin extends AbstractPlugin implements Install
 {
     /**
      * {@inheritDoc}
-     * - Calls MerchantAppFacade::handleReadyForMerchantAppOnboarding() to register Stripe onboarding.
-     * - Strategy is 'redirect'; URL is read from StripeConfig::getMerchantOnboardingInitializeUrl().
+     * - Calls {@link \Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface::handleReadyForMerchantAppOnboarding()} to register Stripe onboarding.
+     * - Registers Stripe as a merchant onboarding provider in the MerchantApp module.
      *
      * @api
      */

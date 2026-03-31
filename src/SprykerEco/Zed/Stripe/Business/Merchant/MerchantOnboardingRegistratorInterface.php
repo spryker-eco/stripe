@@ -7,7 +7,7 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Merchant;
 
-interface MerchantOnboardingRegistrarInterface
+interface MerchantOnboardingRegistratorInterface
 {
     public function register(): void;
 }

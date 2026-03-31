@@ -12,7 +12,7 @@ use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripePaymentTransfer;
 use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 
-class PaymentSaver
+class PaymentSaver implements PaymentSaverInterface
 {
     public function __construct(
         protected StripeEntityManagerInterface $entityManager,

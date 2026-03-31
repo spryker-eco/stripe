@@ -30,15 +30,6 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Creates a Stripe PaymentIntent for the given quote.
-     * - Returns the client secret and transaction ID needed by Stripe Elements JS.
-     *
-     * @api
-     */
-    public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer;
-
-    /**
-     * Specification:
      * - Reads transactionId from spy_stripe_payment by orderReference.
      * - Fetches clientSecret live from Stripe API using the transactionId.
      * - Adds publishableKey from config.
@@ -47,15 +38,6 @@ interface StripeFacadeInterface
      * @api
      */
     public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer;
-
-    /**
-     * Specification:
-     * - Persists a `spy_stripe_payment` record linking the order to the Stripe PaymentIntent.
-     * - Called from StripeCheckoutPostSavePlugin after PaymentIntent creation.
-     *
-     * @api
-     */
-    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId): void;
 
     /**
      * Specification:

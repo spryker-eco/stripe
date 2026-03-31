@@ -21,9 +21,6 @@ class StripeConfig
 
     public const string ONBOARDING_STRATEGY_REDIRECT = 'redirect';
 
-    // Payment lifecycle status constants — used by WebhookHandler to select the correct
-    // PaymentApp typed transfer (e.g. PaymentAuthorizedTransfer, PaymentCapturedTransfer).
-    // OMS condition plugins are NOT defined here; they are owned by the PaymentApp module.
     public const string PAYMENT_STATUS_NEW = 'new';
 
     public const string PAYMENT_STATUS_AUTHORIZED = 'authorized';

@@ -25,6 +25,8 @@ class StripeCaptureCommandPlugin extends AbstractPlugin implements CommandByOrde
      * - Captures the full authorized amount of the Stripe PaymentIntent for the order.
      * - Always captures 100% of the authorized amount regardless of which items are in the current OMS batch.
      * - Status transition to captured is driven by the `payment_intent.succeeded` webhook.
+     * - Captures the full authorized amount.
+     * - Partial per-item capture is not used because Stripe only allows one capture per PaymentIntent.
      *
      * Note: Stripe supports partial captures on a PaymentIntent with capture_method: 'manual', but with limitations:
      * - You can capture less than the authorized amount (partial capture).
@@ -42,9 +44,6 @@ class StripeCaptureCommandPlugin extends AbstractPlugin implements CommandByOrde
     public function run(array $orderItems, SpySalesOrder $orderEntity, ReadOnlyArrayObject $data): array
     {
         $orderTransfer = (new OrderTransfer())->setOrderReference($orderEntity->getOrderReference());
-
-        // Capture the full authorized amount (null = no amount_to_capture → Stripe captures 100%).
-        // Partial per-item capture is not used because Stripe only allows one capture per PaymentIntent.
         $this->getFacade()->capturePayment($orderTransfer, 0);
 
         return $orderItems;

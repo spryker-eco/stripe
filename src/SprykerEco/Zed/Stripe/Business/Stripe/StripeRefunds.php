@@ -9,6 +9,7 @@ namespace SprykerEco\Zed\Stripe\Business\Stripe;
 
 use Generated\Shared\Transfer\StripeRefundRequestTransfer;
 use Generated\Shared\Transfer\StripeRefundResponseTransfer;
+use Spryker\Service\UtilEncoding\UtilEncodingService;
 use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use Stripe\Exception\ApiErrorException;
@@ -18,8 +19,10 @@ class StripeRefunds implements StripeRefundsInterface
 {
     use LoggerTrait;
 
-    public function __construct(protected StripeClientFactory $stripeClientFactory)
-    {
+    public function __construct(
+        protected StripeClientFactory $stripeClientFactory,
+        protected UtilEncodingService $utilEncodingService,
+    ) {
     }
 
     /**
@@ -63,7 +66,7 @@ class StripeRefunds implements StripeRefundsInterface
             'payment_intent' => $stripeRefundRequestTransfer->getTransactionIdOrFail(),
             'amount' => abs($stripeRefundRequestTransfer->getAmountOrFail()),
             'metadata' => [
-                'order_item_skus' => json_encode($stripeRefundRequestTransfer->getOrderItemSkus()),
+                'order_item_skus' => $this->utilEncodingService->encodeJson($stripeRefundRequestTransfer->getOrderItemSkus()),
             ],
             'reason' => Refund::REASON_REQUESTED_BY_CUSTOMER,
         ];

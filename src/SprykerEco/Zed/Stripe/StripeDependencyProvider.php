@@ -27,12 +27,15 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
 
     public const string FACADE_SALES = 'FACADE_SALES';
 
+    public const string SERVICE_UTIL_ENCODING = 'SERVICE_UTIL_ENCODING';
+
     public function provideBusinessLayerDependencies(Container $container): Container
     {
         $container = parent::provideBusinessLayerDependencies($container);
         $container = $this->addPaymentAppFacade($container);
         $container = $this->addMerchantAppFacade($container);
         $container = $this->addSalesPaymentDetailFacade($container);
+        $container = $this->addUtilEncodingService($container);
 
         return $container;
     }
@@ -96,6 +99,15 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container->set(static::FACADE_SALES, function (Container $container) {
             return $container->getLocator()->sales()->facade();
+        });
+
+        return $container;
+    }
+
+    protected function addUtilEncodingService(Container $container): Container
+    {
+        $container->set(static::SERVICE_UTIL_ENCODING, function (Container $container) {
+            return $container->getLocator()->utilEncoding()->service();
         });
 
         return $container;

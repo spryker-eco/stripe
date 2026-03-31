@@ -7,65 +7,33 @@
 
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Checkout;
 
-use Generated\Shared\Transfer\CheckoutErrorTransfer;
 use Generated\Shared\Transfer\CheckoutResponseTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Spryker\Zed\CheckoutExtension\Dependency\Plugin\CheckoutPostSaveInterface;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
-use SprykerEco\Shared\Stripe\StripeConfig;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
  * @method \SprykerEco\Zed\Stripe\Communication\StripeCommunicationFactory getFactory()
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
+ * @method \SprykerEco\Zed\Stripe\Business\StripeBusinessFactory getBusinessFactory()
  */
 class StripeCheckoutPostSavePlugin extends AbstractPlugin implements CheckoutPostSaveInterface
 {
     /**
      * {@inheritDoc}
-     * - Reads orderReference and idSalesOrder from checkoutResponseTransfer->saveOrder.
-     * - Sets orderReference on quoteTransfer so the PaymentIntent description/metadata is correct.
-     * - Creates a Stripe PaymentIntent via StripeFacade::initializePayment() with the final grand total.
-     * - Calls StripeFacade::savePayment() with the returned transactionId.
-     * - On success: sets isExternalRedirect=true and redirectUrl to the Yves Stripe payment page.
-     * - On failure: adds a checkout error and sets isSuccess=false.
+     * - Reads orderReference and idSalesOrder from `CheckoutResponseTransfer.saveOrder`.
+     * - Sets `QuoteTransfer.orderReference` so the PaymentIntent description/metadata is correct.
+     * - Creates a Stripe PaymentIntent with the final grand total.
+     * - On success sets `CheckoutResponseTransfer.isExternalRedirect` to true and `CheckoutResponseTransfer.redirectUrl` to the Yves Stripe payment page.
+     * - On failure adds a checkout error and sets `CheckoutResponseTransfer.isSuccess` to false.
      *
      * @api
      */
     public function executeHook(QuoteTransfer $quoteTransfer, CheckoutResponseTransfer $checkoutResponseTransfer): void
     {
-        if ($quoteTransfer->getPaymentOrFail()->getPaymentProvider() !== StripeConfig::PAYMENT_PROVIDER_NAME) {
-            return;
-        }
-
-        $saveOrderTransfer = $checkoutResponseTransfer->getSaveOrderOrFail();
-        $orderReference = $saveOrderTransfer->getOrderReferenceOrFail();
-
-        $quoteTransfer->setOrderReference($orderReference);
-
-        $intentResponse = $this->getFacade()->initializePayment($quoteTransfer);
-
-        if (!$intentResponse->getIsSuccessful()) {
-            $checkoutResponseTransfer
-                ->setIsSuccess(false)
-                ->addError(
-                    (new CheckoutErrorTransfer())
-                        ->setMessage('Stripe payment initialization failed. Please try again.'),
-                );
-
-            return;
-        }
-
-        $this->getFacade()->savePayment(
-            $quoteTransfer,
-            $saveOrderTransfer,
-            $intentResponse->getTransactionIdOrFail(),
-        );
-
-        $redirectUrl = $this->getConfig()->getYvesBaseUrl() . StripeConfig::ROUTE_PATH_PAYMENT . '?orderReference=' . rawurlencode($orderReference);
-
-        $checkoutResponseTransfer
-            ->setIsExternalRedirect(true)
-            ->setRedirectUrl($redirectUrl);
+        $this->getBusinessFactory()
+            ->createCheckoutPostSaveExecutor()
+            ->executeCheckoutPostSaveHook($quoteTransfer, $checkoutResponseTransfer);
     }
 }

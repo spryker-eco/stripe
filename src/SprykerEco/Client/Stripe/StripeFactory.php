@@ -22,7 +22,7 @@ class StripeFactory extends AbstractFactory
         return new StripeStub($this->getZedRequestClient());
     }
 
-    protected function getZedRequestClient(): ZedRequestClientInterface
+    public function getZedRequestClient(): ZedRequestClientInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::CLIENT_ZED_REQUEST);
     }

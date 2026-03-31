@@ -14,39 +14,48 @@ use Stripe\Event;
 
 class StripeConfig extends AbstractBundleConfig
 {
+    /**
+     * @api
+     */
     public const string APP_NAME = 'Stripe';
 
     /**
-     * Stripe API version pinned for this package.
+     * Specification:
+     * - Stripe API version pinned for this package.
+     *
+     * @api
      */
     public const string STRIPE_API_VERSION = '2023-10-16';
 
-    // Metadata keys written to Stripe PaymentIntent metadata
+    /**
+     * @api
+     */
     public const string METADATA_ORDER_REFERENCE = 'orderReference';
 
+    /**
+     * @api
+     */
     public const string METADATA_MERCHANT_REFERENCE = 'merchantReference';
 
-    // Merchant onboarding state names (mirrors Stripe account requirements_due / capabilities status)
-    public const string ONBOARDING_STATUS_COMPLETED = 'completed';
+    protected const string ONBOARDING_STATUS_COMPLETED = 'completed';
 
-    public const string ONBOARDING_STATUS_ENABLED = 'enabled';
+    protected const string ONBOARDING_STATUS_ENABLED = 'enabled';
 
-    public const string ONBOARDING_STATUS_RESTRICTED = 'restricted';
+    protected const string ONBOARDING_STATUS_RESTRICTED = 'restricted';
 
-    public const string ONBOARDING_STATUS_RESTRICTED_SOON = 'restricted soon';
+    protected const string ONBOARDING_STATUS_RESTRICTED_SOON = 'restricted soon';
 
-    public const string ONBOARDING_STATUS_PENDING = 'pending';
+    protected const string ONBOARDING_STATUS_PENDING = 'pending';
 
-    public const string ONBOARDING_STATUS_REJECTED = 'rejected';
+    protected const string ONBOARDING_STATUS_REJECTED = 'rejected';
 
-    // Keys for the attributes array inside each MerchantOnboardingState
-    public const string ONBOARDING_STATE_ATTR_STATUS_TEXT = 'statusText';
+    protected const string ONBOARDING_STATE_ATTR_STATUS_TEXT = 'statusText';
 
-    public const string ONBOARDING_STATE_ATTR_DISPLAY_TEXT = 'displayText';
+    protected const string ONBOARDING_STATE_ATTR_DISPLAY_TEXT = 'displayText';
 
-    public const string ONBOARDING_STATE_ATTR_BUTTON_TEXT = 'buttonText';
+    protected const string ONBOARDING_STATE_ATTR_BUTTON_TEXT = 'buttonText';
 
-    public const string ONBOARDING_STATE_ATTR_BUTTON_INFO = 'buttonInfo';
+    protected const string ONBOARDING_STATE_ATTR_BUTTON_INFO = 'buttonInfo';
 
     /**
      * @api
@@ -89,9 +98,8 @@ class StripeConfig extends AbstractBundleConfig
     }
 
     /**
-     * Returns the merchant onboarding states that Stripe can place a connected account in,
-     * along with the UI texts shown in the Merchant Portal for each state.
-     * Override to customise labels without changing business logic.
+     * Specification:
+     * - Returns the merchant onboarding states that Stripe can place a connected account in, along with the UI texts shown in the Merchant Portal for each state.
      *
      * @api
      *
@@ -140,8 +148,9 @@ class StripeConfig extends AbstractBundleConfig
     }
 
     /**
-     * Returns the Stripe webhook event types this package handles.
-     * Register these in the Stripe Dashboard for your webhook endpoint.
+     * Specification:
+     * - Returns the Stripe webhook event types this package handles.
+     * - Register these in the Stripe Dashboard for your webhook endpoint.
      *
      * @api
      *

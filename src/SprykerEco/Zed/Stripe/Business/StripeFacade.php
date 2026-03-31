@@ -9,8 +9,6 @@ namespace SprykerEco\Zed\Stripe\Business;
 
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
-use Generated\Shared\Transfer\QuoteTransfer;
-use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
@@ -41,35 +39,11 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      *
      * @api
      */
-    public function initializePayment(QuoteTransfer $quoteTransfer): StripeIntentResponseTransfer
-    {
-        return $this->getFactory()
-            ->createPaymentInitializer()
-            ->initializePayment($quoteTransfer);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     */
     public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer
     {
         return $this->getFactory()
             ->createPaymentDetailsResolver()
             ->resolve($orderReference);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @api
-     */
-    public function savePayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer, string $transactionId): void
-    {
-        $this->getFactory()
-            ->createPaymentSaver()
-            ->savePayment($quoteTransfer, $saveOrderTransfer, $transactionId);
     }
 
     /**
@@ -142,7 +116,7 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
     public function registerMerchantOnboarding(): void
     {
         $this->getFactory()
-            ->createMerchantOnboardingRegistrar()
+            ->createMerchantOnboardingRegistrator()
             ->register();
     }
 

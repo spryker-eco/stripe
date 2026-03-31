@@ -12,5 +12,9 @@ use Generated\Shared\Transfer\SaveOrderTransfer;
 
 interface PaymentSaverInterface
 {
-    public function saveOrderPayment(QuoteTransfer $quoteTransfer, SaveOrderTransfer $saveOrderTransfer): void;
+    public function savePayment(
+        QuoteTransfer $quoteTransfer,
+        SaveOrderTransfer $saveOrderTransfer,
+        string $transactionId,
+    ): void;
 }

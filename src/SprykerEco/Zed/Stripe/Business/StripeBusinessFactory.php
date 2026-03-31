@@ -7,14 +7,17 @@
 
 namespace SprykerEco\Zed\Stripe\Business;
 
+use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
 use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
 use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
 use Spryker\Zed\SalesPaymentDetail\Business\SalesPaymentDetailFacadeInterface;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use SprykerEco\Zed\Stripe\Business\Dashboard\DashboardUrlGenerator;
+use SprykerEco\Zed\Stripe\Business\Executor\CheckoutPostSaveExecutor;
+use SprykerEco\Zed\Stripe\Business\Executor\CheckoutPostSaveExecutorInterface;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingHandler;
-use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingRegistrar;
+use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingRegistrator;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingUrlGenerator;
 use SprykerEco\Zed\Stripe\Business\Oms\Command\OmsCommandHandler;
 use SprykerEco\Zed\Stripe\Business\Payment\PaymentAuthorizer;
@@ -112,7 +115,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createPaymentAuthorizer(): PaymentAuthorizer
+    public function createPaymentAuthorizer(): PaymentAuthorizer
     {
         return new PaymentAuthorizer(
             $this->createStripeIntents(),
@@ -120,7 +123,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createPaymentCapturer(): PaymentCapturer
+    public function createPaymentCapturer(): PaymentCapturer
     {
         return new PaymentCapturer(
             $this->createStripeIntents(),
@@ -129,7 +132,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createPaymentCanceller(): PaymentCanceller
+    public function createPaymentCanceller(): PaymentCanceller
     {
         return new PaymentCanceller(
             $this->createStripeIntents(),
@@ -139,7 +142,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createPaymentRefunder(): PaymentRefunder
+    public function createPaymentRefunder(): PaymentRefunder
     {
         return new PaymentRefunder(
             $this->createStripeRefunds(),
@@ -147,7 +150,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createMerchantOnboardingHandler(): MerchantOnboardingHandler
+    public function createMerchantOnboardingHandler(): MerchantOnboardingHandler
     {
         return new MerchantOnboardingHandler(
             $this->getMerchantAppFacade(),
@@ -155,7 +158,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createStripeIntents(): StripeIntents
+    public function createStripeIntents(): StripeIntents
     {
         return new StripeIntents(
             $this->createStripeClientFactory(),
@@ -165,42 +168,43 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createStripeRefunds(): StripeRefunds
+    public function createStripeRefunds(): StripeRefunds
     {
         return new StripeRefunds(
             $this->createStripeClientFactory(),
+            $this->getUtilEncodingService(),
         );
     }
 
-    protected function createStripeCustomers(): StripeCustomers
+    public function createStripeCustomers(): StripeCustomers
     {
         return new StripeCustomers(
             $this->createStripeClientFactory(),
         );
     }
 
-    protected function createStripeAccounts(): StripeAccounts
+    public function createStripeAccounts(): StripeAccounts
     {
         return new StripeAccounts(
             $this->createStripeClientFactory(),
         );
     }
 
-    protected function createStripeAccountLinks(): StripeAccountLinks
+    public function createStripeAccountLinks(): StripeAccountLinks
     {
         return new StripeAccountLinks(
             $this->createStripeClientFactory(),
         );
     }
 
-    protected function createStripeEventDetailsExtractor(): StripeEventDetailsExtractor
+    public function createStripeEventDetailsExtractor(): StripeEventDetailsExtractor
     {
         return new StripeEventDetailsExtractor(
             $this->createStripeClientFactory(),
         );
     }
 
-    protected function createStripeClientFactory(): StripeClientFactory
+    public function createStripeClientFactory(): StripeClientFactory
     {
         return new StripeClientFactory(
             $this->getConfig(),
@@ -212,9 +216,9 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         return $this->getProvidedDependency(StripeDependencyProvider::FACADE_PAYMENT_APP);
     }
 
-    public function createMerchantOnboardingRegistrar(): MerchantOnboardingRegistrar
+    public function createMerchantOnboardingRegistrator(): MerchantOnboardingRegistrator
     {
-        return new MerchantOnboardingRegistrar(
+        return new MerchantOnboardingRegistrator(
             $this->getMerchantAppFacade(),
             $this->getConfig(),
         );
@@ -230,7 +234,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createStripeTransfers(): StripeTransfers
+    public function createStripeTransfers(): StripeTransfers
     {
         return new StripeTransfers(
             $this->createStripeClientFactory(),
@@ -245,10 +249,19 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    protected function createStripeLoginLinks(): StripeLoginLinks
+    public function createStripeLoginLinks(): StripeLoginLinks
     {
         return new StripeLoginLinks(
             $this->createStripeClientFactory(),
+        );
+    }
+
+    public function createCheckoutPostSaveExecutor(): CheckoutPostSaveExecutorInterface
+    {
+        return new CheckoutPostSaveExecutor(
+            $this->createPaymentInitializer(),
+            $this->createPaymentSaver(),
+            $this->getConfig(),
         );
     }
 
@@ -260,5 +273,10 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     public function getSalesPaymentDetailFacade(): SalesPaymentDetailFacadeInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES_PAYMENT_DETAIL);
+    }
+
+    public function getUtilEncodingService(): UtilEncodingServiceInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::SERVICE_UTIL_ENCODING);
     }
 }
