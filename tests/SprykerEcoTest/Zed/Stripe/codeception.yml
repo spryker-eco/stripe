@@ -20,3 +20,4 @@ suites:
         modules:
             enabled:
                 - \SprykerTest\Shared\Testify\Helper\Environment
+                - \SprykerTest\Zed\Testify\Helper\Business\BusinessHelper
