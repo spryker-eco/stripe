@@ -104,7 +104,7 @@ $conditionCollection->add(new IsMerchantPayoutReversedConditionPlugin(), 'SalesP
 
 **File:** `src/Pyz/Zed/SalesPaymentMerchant/SalesPaymentMerchantDependencyProvider.php`
 
-Register `StripePayoutTransmissionPlugin` so the `SalesPaymentMerchant` module routes merchant payouts and payout reversals through direct Stripe Connect API calls instead of the default PSP App HTTP endpoint:
+Register `StripePayoutTransmissionPlugin` so the `SalesPaymentMerchant` module routes merchant payouts and payout reversals through direct Stripe Connect API calls:
 
 ```php
 use SprykerEco\Zed\Stripe\Communication\Plugin\SalesPaymentMerchant\StripePayoutTransmissionPlugin;
