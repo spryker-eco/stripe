@@ -14,7 +14,6 @@ use SprykerEco\Yves\Stripe\Form\StripeSubForm;
 
 /**
  * @method \SprykerEco\Yves\Stripe\StripeConfig getConfig()
- * @method \SprykerEco\Shared\Stripe\StripeConfig getSharedConfig()
  */
 class StripeFactory extends AbstractFactory
 {

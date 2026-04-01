@@ -25,7 +25,6 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         protected PaymentReaderInterface $paymentReader,
         protected StripeEntityManagerInterface $entityManager,
         protected StripeConfig $config,
-        protected SharedStripeConfig $sharedConfig,
     ) {
     }
 
@@ -57,7 +56,7 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         $status = $liveResponse->getStatus();
 
         // Payment already captured or pending capture — redirect customer to success page
-        if (in_array($status, $this->sharedConfig->getSuccessfulPaymentStatuses(), true)) {
+        if (in_array($status, SharedStripeConfig::SUCCESSFUL_PAYMENT_STATUSES, true)) {
             return (new StripeIntentResponseTransfer())
                 ->setIsSuccessful(false)
                 ->setStatus($status);
@@ -69,7 +68,7 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         }
 
         // PI is still open — reuse the existing client_secret
-        if (in_array($status, $this->sharedConfig->getReusablePaymentStatuses(), true)) {
+        if (in_array($status, SharedStripeConfig::REUSABLE_PAYMENT_STATUSES, true)) {
             return (new StripeIntentResponseTransfer())
                 ->setIsSuccessful(true)
                 ->setTransactionId($transactionId)

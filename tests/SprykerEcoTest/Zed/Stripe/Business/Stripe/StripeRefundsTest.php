@@ -12,6 +12,7 @@ use Codeception\Test\Unit;
 use Generated\Shared\Transfer\StripeRefundRequestTransfer;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
+use SprykerEcoTest\Zed\Stripe\StripeBusinessTester;
 use Stripe\Exception\ApiConnectionException;
 use Stripe\Refund;
 use Stripe\Service\RefundService;
@@ -30,6 +31,8 @@ class StripeRefundsTest extends Unit
     protected const TRANSACTION_ID = 'pi_test_123';
 
     protected const REFUND_ID = 're_test_abc';
+
+    protected StripeBusinessTester $tester;
 
     /**
      * @dataProvider refundStatusMappingProvider
@@ -201,6 +204,6 @@ class StripeRefundsTest extends Unit
         $factoryMock = $this->createMock(StripeClientFactory::class);
         $factoryMock->method('create')->willReturn($stripeClient);
 
-        return new StripeRefunds($factoryMock);
+        return new StripeRefunds($factoryMock, $this->tester->getFactory()->getUtilEncodingService());
     }
 }

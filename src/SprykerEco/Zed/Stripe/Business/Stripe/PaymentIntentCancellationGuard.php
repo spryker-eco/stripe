@@ -14,17 +14,13 @@ class PaymentIntentCancellationGuard implements PaymentIntentCancellationGuardIn
 {
     protected const string PAYMENT_METHOD_TYPE_US_BANK_ACCOUNT = 'us_bank_account';
 
-    public function __construct(protected StripeConfig $stripeConfig)
-    {
-    }
-
     public function canBeCanceled(PaymentIntent $paymentIntent): bool
     {
-        if (in_array($paymentIntent->status, $this->stripeConfig->getPaymentIntentNonCancellableStatuses(), true)) {
+        if (in_array($paymentIntent->status, StripeConfig::PAYMENT_INTENT_NON_CANCELLABLE_PAYMENT_STATUSES, true)) {
             return false;
         }
 
-        if (in_array($paymentIntent->status, $this->stripeConfig->getPaymentIntentCancellableStatuses(), true)) {
+        if (in_array($paymentIntent->status, StripeConfig::PAYMENT_INTENT_CANCELLABLE_PAYMENT_STATUSES, true)) {
             return true;
         }
 

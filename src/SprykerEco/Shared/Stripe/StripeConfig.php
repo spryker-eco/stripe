@@ -57,68 +57,56 @@ class StripeConfig
 
     /**
      * Specification:
-     * - Returns a list of payment statuses that are considered successful.
+     *  - List of payment statuses that are considered successful.
      *
      * @api
      *
-     * @return list<string>
+     * @var list<string>
      */
-    public function getSuccessfulPaymentStatuses(): array
-    {
-        return [
-            static::PAYMENT_STATUS_SUCCEEDED,
-            static::PAYMENT_STATUS_REQUIRES_CAPTURE,
-        ];
-    }
+    public const array SUCCESSFUL_PAYMENT_STATUSES = [
+        self::PAYMENT_STATUS_SUCCEEDED,
+        self::PAYMENT_STATUS_REQUIRES_CAPTURE,
+    ];
 
     /**
      * Specification:
-     * - Returns a list of payment statuses for which cancellation is not allowed.
+     *  - List of payment statuses for which cancellation is not allowed.
      *
      * @api
      *
-     * @return list<string>
+     * @var list<string>
      */
-    public function getPaymentIntentNonCancellableStatuses(): array
-    {
-        return [
-            static::PAYMENT_STATUS_SUCCEEDED,
-            static::PAYMENT_STATUS_CAPTURED,
-        ];
-    }
+    public const array PAYMENT_INTENT_NON_CANCELLABLE_PAYMENT_STATUSES = [
+        self::PAYMENT_STATUS_SUCCEEDED,
+        self::PAYMENT_STATUS_CAPTURED,
+    ];
 
     /**
      * Specification:
-     * - Returns a list of payment statuses for which cancellation is allowed.
+     *  - List of payment statuses for which cancellation is allowed.
      *
      * @api
      *
-     * @return list<string>
+     * @var list<string>
      */
-    public function getPaymentIntentCancellableStatuses(): array
-    {
-        return [
-            static::PAYMENT_STATUS_REQUIRES_PAYMENT_METHOD,
-            static::PAYMENT_STATUS_REQUIRES_CAPTURE,
-            static::PAYMENT_STATUS_REQUIRES_CONFIRMATION,
-            static::PAYMENT_STATUS_REQUIRES_ACTION,
-        ];
-    }
+    public const array PAYMENT_INTENT_CANCELLABLE_PAYMENT_STATUSES = [
+        self::PAYMENT_STATUS_REQUIRES_PAYMENT_METHOD,
+        self::PAYMENT_STATUS_REQUIRES_CAPTURE,
+        self::PAYMENT_STATUS_REQUIRES_CONFIRMATION,
+        self::PAYMENT_STATUS_REQUIRES_ACTION,
+    ];
 
     /**
      * Specification:
-     * - Returns a list of payment statuses for which the client_secret can be reused to collect payment.
+     *  - List of payment statuses for which the client_secret can be reused to collect payment.
      *
      * @api
      *
-     * @return list<string>
+     * @var list<string>
      */
-    public function getReusablePaymentStatuses(): array
-    {
-        return [
-            static::PAYMENT_STATUS_REQUIRES_PAYMENT_METHOD,
-            static::PAYMENT_STATUS_REQUIRES_ACTION,
-            static::PAYMENT_STATUS_PROCESSING,
-        ];
-    }
+    public const array REUSABLE_PAYMENT_STATUSES = [
+        self::PAYMENT_STATUS_REQUIRES_PAYMENT_METHOD,
+        self::PAYMENT_STATUS_REQUIRES_ACTION,
+        self::PAYMENT_STATUS_PROCESSING,
+    ];
 }

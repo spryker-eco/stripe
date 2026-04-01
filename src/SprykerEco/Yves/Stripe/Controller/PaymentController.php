@@ -8,6 +8,7 @@
 namespace SprykerEco\Yves\Stripe\Controller;
 
 use Spryker\Yves\Kernel\Controller\AbstractController;
+use SprykerEco\Shared\Stripe\StripeConfig;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -58,7 +59,7 @@ class PaymentController extends AbstractController
 
         if (!$paymentDetails->getIsSuccessful()) {
             // Payment already captured/succeeded — send customer to the success page
-            if (in_array($paymentDetails->getStatus(), $this->getFactory()->getSharedConfig()->getSuccessfulPaymentStatuses(), true)) {
+            if (in_array($paymentDetails->getStatus(), StripeConfig::SUCCESSFUL_PAYMENT_STATUSES, true)) {
                 return $this->redirectResponseInternal(static::ROUTE_NAME_PAYMENT_ORDER_SUCCESS);
             }
 

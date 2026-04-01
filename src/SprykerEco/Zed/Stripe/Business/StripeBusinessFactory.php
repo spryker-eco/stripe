@@ -48,7 +48,6 @@ use SprykerEco\Zed\Stripe\StripeDependencyProvider;
  * @method \SprykerEco\Zed\Stripe\StripeConfig getConfig()
  * @method \SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface getRepository()
  * @method \SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface getEntityManager()
- * @method \SprykerEco\Shared\Stripe\StripeConfig getSharedConfig()
  */
 class StripeBusinessFactory extends AbstractBusinessFactory
 {
@@ -114,7 +113,6 @@ class StripeBusinessFactory extends AbstractBusinessFactory
             $this->createPaymentReader(),
             $this->getEntityManager(),
             $this->getConfig(),
-            $this->getSharedConfig(),
         );
     }
 
@@ -186,9 +184,7 @@ class StripeBusinessFactory extends AbstractBusinessFactory
 
     public function createPaymentIntentCancellationGuard(): PaymentIntentCancellationGuard
     {
-        return new PaymentIntentCancellationGuard(
-            $this->getSharedConfig(),
-        );
+        return new PaymentIntentCancellationGuard();
     }
 
     public function createStripeRefunds(): StripeRefunds
