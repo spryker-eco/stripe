@@ -9,8 +9,6 @@ namespace SprykerEco\Zed\Stripe\Business;
 
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
-use Generated\Shared\Transfer\QuoteTransfer;
-use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
@@ -22,7 +20,7 @@ interface StripeFacadeInterface
      * Specification:
      * - Verifies Stripe webhook signature.
      * - Parses the event and writes the corresponding status to `spy_payment_app_payment_status` via PaymentAppFacade.
-     * - For `account.updated` (marketplace): delegates to MerchantOnboardingHandler.
+     * - For `account.updated` event (marketplace) delegates to MerchantOnboardingHandler.
      *
      * @api
      */
@@ -30,9 +28,9 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Reads transactionId from spy_stripe_payment by orderReference.
-     * - Fetches clientSecret live from Stripe API using the transactionId.
-     * - Adds publishableKey from config.
+     * - Reads `transactionId` from `spy_stripe_payment` by `orderReference`.
+     * - Fetches `clientSecret` live from Stripe API using the `transactionId`.
+     * - Adds `publishableKey` from the module configuration.
      * - Used by the Yves Stripe payment page to mount Stripe Elements.
      *
      * @api
@@ -41,9 +39,9 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Verifies the Stripe PaymentIntent is in an authorized (requires_capture) state.
+     * - Verifies the Stripe PaymentIntent is in an authorized (`requires_capture`) state.
      * - Called from StripeAuthorizeCommandPlugin (OMS command).
-     * - Does NOT write payment status — status is set via payment_intent.amount_capturable_updated webhook.
+     * - Does NOT write payment status - status is set via `payment_intent.amount_capturable_updated` webhook.
      *
      * @api
      */
@@ -54,7 +52,7 @@ interface StripeFacadeInterface
      * - Captures a previously authorized Stripe PaymentIntent.
      * - When `$captureAmount` is non-zero, performs a partial capture for that amount.
      * - Called from StripeCaptureCommandPlugin.
-     * - Does NOT write payment status — status is set via webhook.
+     * - Does NOT write payment status - status is set via webhook.
      *
      * @api
      */
@@ -64,7 +62,7 @@ interface StripeFacadeInterface
      * Specification:
      * - Cancels (voids) a Stripe PaymentIntent.
      * - Called from StripeCancelCommandPlugin.
-     * - Does NOT write payment status — status is set via webhook.
+     * - Does NOT write payment status - status is set via webhook.
      *
      * @api
      */
@@ -73,9 +71,9 @@ interface StripeFacadeInterface
     /**
      * Specification:
      * - Creates a Stripe Refund for the given order items.
-     * - Uses `$refundAmount` when provided; otherwise sums `refundableAmount` across `$orderItems`.
+     * - Uses `$refundAmount` when provided, otherwise sums `refundableAmount` across `$orderItems`.
      * - Called from StripeRefundCommandPlugin.
-     * - Does NOT write payment status — status is set via webhook.
+     * - Does NOT write payment status - status is set via webhook.
      *
      * @api
      *
@@ -87,8 +85,8 @@ interface StripeFacadeInterface
      * Specification:
      * - Generates a Stripe Connect onboarding URL for the given merchant (marketplace only).
      * - Creates a Stripe connected account if one does not exist yet.
-     * - Saves the stripe_account_id to spy_stripe_merchant.
-     * - Uses returnUrl and refreshUrl as the Stripe account link redirect targets.
+     * - Saves the `stripe_account_id` to `spy_stripe_merchant`.
+     * - Uses `returnUrl` and `refreshUrl` as the Stripe account link redirect targets.
      * - Returns a response transfer with isSuccessful=false and a message when creation fails (e.g. Stripe configuration error).
      *
      * @api
@@ -97,9 +95,9 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Registers Stripe as ready to support merchant onboarding via MerchantAppFacade.
-     * - Stores onboarding strategy ('redirect') and initialize URL in MerchantApp module.
-     * - Called from StripeMarketplaceInstallerPlugin during setup:init-db.
+     * - Registers Stripe as ready to support merchant onboarding via {@link \Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface::createMerchantAppOnboarding()}.
+     * - Stores onboarding strategy and initialize URL in MerchantApp module.
+     * - Called from StripeMarketplaceInstallerPlugin during `setup:init-db`.
      *
      * @api
      */
@@ -107,7 +105,7 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Looks up the merchant's Stripe connected account ID by merchant reference.
+     * - Looks up the merchant's Stripe connected account ID by `merchantReference`.
      * - Generates a single-use Stripe Express Dashboard login URL for the merchant.
      * - Returns null if the merchant has no connected Stripe account or if the API call fails.
      *
@@ -117,11 +115,11 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
-     * - Executes payment transmission for prepared PaymentTransmissionItemTransfers via Stripe API.
-     * - Groups items by merchant reference, creates Stripe transfers or reversals.
+     * - Executes payment transmission for prepared `PaymentTransmissionItemTransfer` objects via Stripe API.
+     * - Groups items by `merchantReference`, creates Stripe transfers or reversals.
      * - Items with positive amounts result in forward transfers.
      * - Items with negative amounts and a transferId result in transfer reversals.
-     * - Returns PaymentTransmissionResponseCollectionTransfer for SalesPaymentMerchant persistence.
+     * - Returns `PaymentTransmissionResponseCollectionTransfer` for `spy_sales_payment_merchant_payout` and `spy_sales_payment_merchant_payout_reversal` persistence.
      * - Used by StripePayoutTransmissionPlugin as the MerchantPayoutTransmissionPluginInterface implementation.
      *
      * @api
