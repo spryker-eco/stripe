@@ -36,6 +36,11 @@ class PaymentController extends AbstractController
     protected const string ROUTE_STRIPE_PAYMENT = 'stripe-payment';
 
     /**
+     * @uses \SprykerShop\Yves\PaymentPage\Plugin\Router\PaymentPageRouteProviderPlugin::ROUTE_NAME_PAYMENT_ORDER_CANCEL
+     */
+    protected const string ROUTE_NAME_PAYMENT_ORDER_CANCEL = 'payment-cancel';
+
+    /**
      * @uses \SprykerShop\Yves\CustomerPage\Plugin\Router\CustomerPageRouteProviderPlugin::ROUTE_NAME_CUSTOMER_ORDER_DETAILS
      */
     protected const string ROUTE_NAME_CUSTOMER_ORDER_DETAILS = 'customer/order/details';
@@ -63,13 +68,19 @@ class PaymentController extends AbstractController
                 return $this->redirectResponseInternal(static::ROUTE_NAME_PAYMENT_ORDER_SUCCESS);
             }
 
+            // Payment canceled (by customer, OMS) or unrecoverable state
             return $this->redirectResponseInternal(static::ROUTE_NAME_HOME);
         }
+
+        $this->getFactory()->getCartClient()->clearQuote();
 
         $checkoutSuccessUrl = $this->getRouter()->generate(static::ROUTE_NAME_CHECKOUT_SUCCESS, [], UrlGeneratorInterface::ABSOLUTE_PATH);
         $paymentPageUrl = $this->getRouter()->generate(static::ROUTE_STRIPE_PAYMENT, [
             static::PARAM_ORDER_REFERENCE => $orderReference,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
+        $cancelUrl = $this->getRouter()->generate(static::ROUTE_NAME_PAYMENT_ORDER_CANCEL, [
+            static::PARAM_ORDER_REFERENCE => $orderReference,
+        ], UrlGeneratorInterface::ABSOLUTE_PATH);
 
         $idSalesOrder = $paymentDetails->getIdSalesOrder();
         $orderDetailsUrl = $idSalesOrder !== null
@@ -86,6 +97,7 @@ class PaymentController extends AbstractController
                 'checkoutSuccessUrl' => $checkoutSuccessUrl,
                 'paymentPageUrl' => $paymentPageUrl,
                 'orderDetailsUrl' => $orderDetailsUrl,
+                'cancelUrl' => $cancelUrl, // order payment cancellation requires that OMS state "payment pending" has flag "cancellable"
             ],
         );
     }

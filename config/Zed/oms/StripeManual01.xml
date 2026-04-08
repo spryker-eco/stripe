@@ -9,9 +9,15 @@
     <process name="StripeManual01" main="true">
 
         <states>
-            <state name="new" display="oms.state.new"/>
-            <state name="payment pending" reserved="true" display="oms.state.payment-pending"/>
-            <state name="authorized" reserved="true" display="oms.state.authorized"/>
+            <state name="new" display="oms.state.new">
+                <flag>cancellable</flag>
+            </state>
+            <state name="payment pending" reserved="true" display="oms.state.payment-pending">
+                <flag>cancellable</flag>
+            </state>
+            <state name="authorized" reserved="true" display="oms.state.authorized">
+                <flag>cancellable</flag>
+            </state>
             <state name="authorization failed" display="oms.state.authorization-failed"/>
             <state name="capture pending" reserved="true" display="oms.state.capture-pending"/>
             <state name="captured" reserved="true" display="oms.state.captured"/>
@@ -85,6 +91,20 @@
                 <event>close</event>
             </transition>
 
+            <!-- Cancel from payment pending (customer aborts before authorization completes) -->
+            <transition>
+                <source>payment pending</source>
+                <target>cancelled</target>
+                <event>cancel</event>
+            </transition>
+
+            <!-- Stripe expires PIs after 7 days — close the order at 6 days to stay ahead -->
+            <transition>
+                <source>payment pending</source>
+                <target>cancelled</target>
+                <event>expire payment</event>
+            </transition>
+
             <!-- Cancel from authorized (before capture).
                  Stripe/Cancel is synchronous; Payment/IsCanceled or IsCancellationFailed
                  determines the final state based on the API result stored in PaymentApp. -->
@@ -140,7 +160,8 @@
         </transitions>
 
         <events>
-            <event name="wait for payment" onEnter="true" timeout="15m"/>
+            <event name="wait for payment" onEnter="true"/>
+            <event name="expire payment" timeout="6 day" command="Stripe/Cancel"/>
             <event name="capture" manual="true" command="Stripe/Capture"/>
             <event name="cancel" manual="true" command="Stripe/Cancel"/>
             <event name="ship" manual="true"/>

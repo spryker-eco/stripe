@@ -8,6 +8,7 @@
     checkoutSuccessUrl: checkoutSuccessUrl,
     paymentPageUrl: paymentPageUrl,
     orderDetailsUrl: orderDetailsUrl | default('#'),
+    cancelUrl: cancelUrl | default('#'),
 } %}
 
 {% block headTitle %}{{ 'stripe.payment.page.title' | trans }}{% endblock %}
@@ -57,5 +58,8 @@
                 {{ 'stripe.payment.button.pay' | trans }}
             </button>
         </stripe-payment>
+        <a href="{{ data.cancelUrl | e('html_attr') }}" class="button button--hollow button--expand" style="margin-top: 12px;">
+            {{ 'stripe.payment.button.cancel' | trans }}
+        </a>
     </div>
 {% endblock %}

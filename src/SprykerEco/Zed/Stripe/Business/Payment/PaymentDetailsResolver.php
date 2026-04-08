@@ -7,15 +7,10 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
-use Generated\Shared\Transfer\CurrencyTransfer;
-use Generated\Shared\Transfer\QuoteTransfer;
 use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
-use Generated\Shared\Transfer\StripePaymentTransfer;
-use Generated\Shared\Transfer\TotalsTransfer;
 use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
-use SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
 class PaymentDetailsResolver implements PaymentDetailsResolverInterface
@@ -23,7 +18,6 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
     public function __construct(
         protected StripeIntentsInterface $stripeIntents,
         protected PaymentReaderInterface $paymentReader,
-        protected StripeEntityManagerInterface $entityManager,
         protected StripeConfig $config,
     ) {
     }
@@ -62,9 +56,13 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
                 ->setStatus($status);
         }
 
-        // PI was auto-canceled by Stripe (7-day expiry) — create a fresh PaymentIntent
-        if ($status === 'canceled') {
-            return $this->recreatePaymentIntent($payment, $orderReference, $idSalesOrder);
+        // PI canceled — either by the customer, OMS, or Stripe's 7-day expiry.
+        // OMS handles expiry via the "expire payment" event (timeout=6days → Stripe/Cancel).
+        // Do not recreate the PI; let the controller redirect the customer home.
+        if ($status === SharedStripeConfig::PAYMENT_STATUS_CANCELED) {
+            return (new StripeIntentResponseTransfer())
+                ->setIsSuccessful(false)
+                ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
         }
 
         // PI is still open — reuse the existing client_secret
@@ -78,30 +76,5 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         }
 
         return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
-    }
-
-    protected function recreatePaymentIntent(StripePaymentTransfer $payment, string $orderReference, ?int $idSalesOrder): StripeIntentResponseTransfer
-    {
-        $quoteTransfer = (new QuoteTransfer())
-            ->setOrderReference($orderReference)
-            ->setTotals((new TotalsTransfer())->setGrandTotal($payment->getAmount()))
-            ->setCurrency((new CurrencyTransfer())->setCode($payment->getCurrencyCode()));
-
-        $newResponse = $this->stripeIntents->create(
-            (new StripeIntentRequestTransfer())->setQuote($quoteTransfer),
-        );
-
-        if (!$newResponse->getIsSuccessful()) {
-            return $newResponse;
-        }
-
-        $this->entityManager->updateTransactionId(
-            $orderReference,
-            $newResponse->getTransactionIdOrFail(),
-        );
-
-        return $newResponse
-            ->setPublishableKey($this->config->getPublishableKey())
-            ->setIdSalesOrder($idSalesOrder);
     }
 }

@@ -111,7 +111,6 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         return new PaymentDetailsResolver(
             $this->createStripeIntents(),
             $this->createPaymentReader(),
-            $this->getEntityManager(),
             $this->getConfig(),
         );
     }
