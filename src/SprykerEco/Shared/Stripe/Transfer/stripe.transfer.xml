@@ -7,6 +7,17 @@
          CORE PAYMENT PERSISTENCE
          ======================================================================== -->
 
+    <!-- ========================================================================
+         CONFIGURATION VALIDATION
+         ======================================================================== -->
+
+    <transfer name="StripeApiCredentialsValidation" strict="true">
+        <property name="isSecretKeyValid" type="bool"/>
+        <property name="isPublishableKeyValid" type="bool"/>
+        <property name="isWebhookSecretValid" type="bool"/>
+        <property name="isWebhookSecretConnectValid" type="bool"/>
+    </transfer>
+
     <transfer name="StripePayment" strict="true">
         <property name="idStripePayment" type="int"/>
         <property name="fkSalesOrder" type="int"/>

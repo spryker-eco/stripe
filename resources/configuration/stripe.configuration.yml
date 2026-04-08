@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=../../../../Spryker/Configuration/resources/configuration/configuration-schema-v1.json
+features:
+    - key: integrations
+      name: Integrations
+      description: Third-party integrations configuration.
+      enabled: true
+      order: 100
+      tabs:
+          - key: stripe
+            name: Stripe
+            enabled: true
+            order: 0
+            groups:
+                - key: credentials
+                  name: Credentials
+                  description: "Stripe API credentials for payment provider integration. All credentials must be provided for Stripe payments to function. After saving valid credentials, activate Stripe under Administration → Payment Methods."
+                  enabled: true
+                  order: 0
+                  scopes:
+                      - global
+                  settings:
+                      - key: secret_key
+                        name: Secret Key
+                        description: "Server-side secret key used for all Stripe API calls. Find it in the Stripe Dashboard under Developers → API keys (https://dashboard.stripe.com/apikeys). Test keys start with sk_test_, production keys with sk_live_. Never expose this key in frontend code."
+                        type: string
+                        enabled: true
+                        secret: true
+                        storefront: false
+                        order: 0
+                        default_value: ''
+                        scopes:
+                            - global
+                        constraints:
+                            - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
+                            - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
+                      - key: publishable_key
+                        name: Publishable Key
+                        description: "Client-side publishable key used by Stripe.js in the storefront. Find it in the Stripe Dashboard under Developers → API keys (https://dashboard.stripe.com/apikeys). Test keys start with pk_test_, production keys with pk_live_. Must belong to the same environment (test/live) as the Secret Key."
+                        type: string
+                        enabled: true
+                        secret: false
+                        storefront: true
+                        order: 1
+                        default_value: ''
+                        scopes:
+                            - global
+                        constraints:
+                            - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
+                            - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
+                      - key: webhook_secret
+                        name: Webhook Secret
+                        description: "Signing secret used to verify incoming Stripe webhook events. To obtain it: open the Stripe Dashboard → Developers → Webhooks (https://dashboard.stripe.com/webhooks), click 'Add endpoint', enter your shop's notification URL (e.g. https://your-shop.com/stripe/notification), select the required events, then copy the signing secret shown after creation. It starts with whsec_."
+                        type: string
+                        enabled: true
+                        secret: true
+                        storefront: false
+                        order: 2
+                        default_value: ''
+                        scopes:
+                            - global
+                        constraints:
+                            - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
+                            - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
+                      - key: webhook_secret_connect
+                        name: Webhook Secret (Connect)
+                        description: "Signing secret for the Stripe Connect webhook endpoint. Required for Marketplace setups to receive account.updated events from connected merchant accounts. To obtain it: open the Stripe Dashboard → Developers → Webhooks (https://dashboard.stripe.com/webhooks), switch to the 'Connect' tab, add an endpoint for your shop's notification URL and copy the signing secret. Leave empty for non-Marketplace installations."
+                        type: string
+                        enabled: true
+                        secret: true
+                        storefront: false
+                        order: 3
+                        default_value: ''
+                        scopes:
+                            - global
+                        constraints:
+                            - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'

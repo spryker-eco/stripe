@@ -16,6 +16,8 @@ use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use SprykerEco\Zed\Stripe\Business\Dashboard\DashboardUrlGenerator;
 use SprykerEco\Zed\Stripe\Business\Executor\CheckoutPostSaveExecutor;
 use SprykerEco\Zed\Stripe\Business\Executor\CheckoutPostSaveExecutorInterface;
+use SprykerEco\Zed\Stripe\Business\Handler\CredentialsPreSaveHandler;
+use SprykerEco\Zed\Stripe\Business\Handler\CredentialsPreSaveHandlerInterface;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingHandler;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingRegistrator;
 use SprykerEco\Zed\Stripe\Business\Merchant\MerchantOnboardingUrlGenerator;
@@ -40,6 +42,14 @@ use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntents;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeLoginLinks;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfers;
+use SprykerEco\Zed\Stripe\Business\Validator\ApiCredentialsValidator;
+use SprykerEco\Zed\Stripe\Business\Validator\ApiCredentialsValidatorInterface;
+use SprykerEco\Zed\Stripe\Business\Validator\CredentialsFormatValidator;
+use SprykerEco\Zed\Stripe\Business\Validator\CredentialsFormatValidatorInterface;
+use SprykerEco\Zed\Stripe\Business\Validator\StripeConnectionChecker;
+use SprykerEco\Zed\Stripe\Business\Validator\StripeConnectionCheckerInterface;
+use SprykerEco\Zed\Stripe\Business\Validator\StripeWebhookEndpointChecker;
+use SprykerEco\Zed\Stripe\Business\Validator\StripeWebhookEndpointCheckerInterface;
 use SprykerEco\Zed\Stripe\Business\Webhook\StripeEventDetailsExtractor;
 use SprykerEco\Zed\Stripe\Business\Webhook\WebhookHandler;
 use SprykerEco\Zed\Stripe\StripeDependencyProvider;
@@ -51,6 +61,36 @@ use SprykerEco\Zed\Stripe\StripeDependencyProvider;
  */
 class StripeBusinessFactory extends AbstractBusinessFactory
 {
+    public function createCredentialsPreSaveHandler(): CredentialsPreSaveHandlerInterface
+    {
+        return new CredentialsPreSaveHandler(
+            $this->getConfig(),
+            $this->createApiCredentialsValidator(),
+        );
+    }
+
+    public function createApiCredentialsValidator(): ApiCredentialsValidatorInterface
+    {
+        return new ApiCredentialsValidator(
+            $this->createStripeConnectionChecker(),
+        );
+    }
+
+    public function createStripeConnectionChecker(): StripeConnectionCheckerInterface
+    {
+        return new StripeConnectionChecker();
+    }
+
+    public function createStripeWebhookEndpointChecker(): StripeWebhookEndpointCheckerInterface
+    {
+        return new StripeWebhookEndpointChecker();
+    }
+
+    public function createCredentialsFormatValidator(): CredentialsFormatValidatorInterface
+    {
+        return new CredentialsFormatValidator();
+    }
+
     public function createWebhookHandler(): WebhookHandler
     {
         return new WebhookHandler(

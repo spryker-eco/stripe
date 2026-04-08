@@ -9,15 +9,29 @@ namespace SprykerEco\Zed\Stripe;
 
 use Spryker\Shared\Application\ApplicationConstants;
 use Spryker\Zed\Kernel\AbstractBundleConfig;
+use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
 use SprykerEco\Shared\Stripe\StripeConstants;
 use Stripe\Event;
 
+/**
+ * @method \SprykerEco\Shared\Stripe\StripeConfig getSharedConfig()
+ */
 class StripeConfig extends AbstractBundleConfig
 {
     /**
      * @api
      */
     public const string APP_NAME = 'Stripe';
+
+    /**
+     * @var array<string>
+     */
+    public const array STRIPE_CREDENTIALS_KEYS = [
+        SharedStripeConfig::CONFIGURATION_KEY_STRIPE_SECRET_KEY,
+        SharedStripeConfig::CONFIGURATION_KEY_STRIPE_PUBLISHABLE_KEY,
+        SharedStripeConfig::CONFIGURATION_KEY_STRIPE_WEBHOOK_SECRET,
+        SharedStripeConfig::CONFIGURATION_KEY_STRIPE_WEBHOOK_SECRET_CONNECT,
+    ];
 
     /**
      * @api
@@ -62,7 +76,14 @@ class StripeConfig extends AbstractBundleConfig
      */
     public function getSecretKey(): string
     {
-        return (string)$this->get(StripeConstants::STRIPE_SECRET_KEY, '');
+        if (!$this->getSharedConfig()->isConfigurationModuleUsed()) {
+            return (string)$this->get(StripeConstants::STRIPE_SECRET_KEY, '');
+        }
+
+        return (string)$this->getModuleConfig(
+            SharedStripeConfig::CONFIGURATION_KEY_STRIPE_SECRET_KEY,
+            '',
+        );
     }
 
     /**
@@ -70,7 +91,14 @@ class StripeConfig extends AbstractBundleConfig
      */
     public function getPublishableKey(): string
     {
-        return (string)$this->get(StripeConstants::STRIPE_PUBLISHABLE_KEY, '');
+        if (!$this->getSharedConfig()->isConfigurationModuleUsed()) {
+            return (string)$this->get(StripeConstants::STRIPE_PUBLISHABLE_KEY, '');
+        }
+
+        return (string)$this->getModuleConfig(
+            SharedStripeConfig::CONFIGURATION_KEY_STRIPE_PUBLISHABLE_KEY,
+            '',
+        );
     }
 
     /**
@@ -78,7 +106,14 @@ class StripeConfig extends AbstractBundleConfig
      */
     public function getWebhookSecret(): string
     {
-        return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET, '');
+        if (!$this->getSharedConfig()->isConfigurationModuleUsed()) {
+            return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET, '');
+        }
+
+        return (string)$this->getModuleConfig(
+            SharedStripeConfig::CONFIGURATION_KEY_STRIPE_WEBHOOK_SECRET,
+            '',
+        );
     }
 
     /**
@@ -86,7 +121,14 @@ class StripeConfig extends AbstractBundleConfig
      */
     public function getWebhookConnectSecret(): string
     {
-        return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT, '');
+        if (!$this->getSharedConfig()->isConfigurationModuleUsed()) {
+            return (string)$this->get(StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT, '');
+        }
+
+        return (string)$this->getModuleConfig(
+            SharedStripeConfig::CONFIGURATION_KEY_STRIPE_WEBHOOK_SECRET_CONNECT,
+            '',
+        );
     }
 
     /**
