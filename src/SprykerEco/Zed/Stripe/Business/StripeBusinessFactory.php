@@ -44,12 +44,8 @@ use SprykerEco\Zed\Stripe\Business\Stripe\StripeRefunds;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeTransfers;
 use SprykerEco\Zed\Stripe\Business\Validator\ApiCredentialsValidator;
 use SprykerEco\Zed\Stripe\Business\Validator\ApiCredentialsValidatorInterface;
-use SprykerEco\Zed\Stripe\Business\Validator\CredentialsFormatValidator;
-use SprykerEco\Zed\Stripe\Business\Validator\CredentialsFormatValidatorInterface;
 use SprykerEco\Zed\Stripe\Business\Validator\StripeConnectionChecker;
 use SprykerEco\Zed\Stripe\Business\Validator\StripeConnectionCheckerInterface;
-use SprykerEco\Zed\Stripe\Business\Validator\StripeWebhookEndpointChecker;
-use SprykerEco\Zed\Stripe\Business\Validator\StripeWebhookEndpointCheckerInterface;
 use SprykerEco\Zed\Stripe\Business\Webhook\StripeEventDetailsExtractor;
 use SprykerEco\Zed\Stripe\Business\Webhook\WebhookHandler;
 use SprykerEco\Zed\Stripe\StripeDependencyProvider;
@@ -79,16 +75,6 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     public function createStripeConnectionChecker(): StripeConnectionCheckerInterface
     {
         return new StripeConnectionChecker();
-    }
-
-    public function createStripeWebhookEndpointChecker(): StripeWebhookEndpointCheckerInterface
-    {
-        return new StripeWebhookEndpointChecker();
-    }
-
-    public function createCredentialsFormatValidator(): CredentialsFormatValidatorInterface
-    {
-        return new CredentialsFormatValidator();
     }
 
     public function createWebhookHandler(): WebhookHandler

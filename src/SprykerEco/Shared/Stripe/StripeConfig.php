@@ -130,6 +130,6 @@ class StripeConfig extends AbstractSharedConfig
      */
     public function isConfigurationModuleUsed(): bool
     {
-        return true;
+        return false;
     }
 }
