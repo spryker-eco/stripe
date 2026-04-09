@@ -9,7 +9,7 @@ namespace SprykerEco\Zed\Stripe\Business\Stripe;
 
 use Generated\Shared\Transfer\StripeRefundRequestTransfer;
 use Generated\Shared\Transfer\StripeRefundResponseTransfer;
-use Spryker\Service\UtilEncoding\UtilEncodingService;
+use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
 use Spryker\Shared\Log\LoggerTrait;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use Stripe\Exception\ApiErrorException;
@@ -21,7 +21,7 @@ class StripeRefunds implements StripeRefundsInterface
 
     public function __construct(
         protected StripeClientFactory $stripeClientFactory,
-        protected UtilEncodingService $utilEncodingService,
+        protected UtilEncodingServiceInterface $utilEncodingService,
     ) {
     }
 

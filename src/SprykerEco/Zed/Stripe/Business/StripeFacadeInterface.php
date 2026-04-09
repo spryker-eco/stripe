@@ -9,8 +9,6 @@ namespace SprykerEco\Zed\Stripe\Business;
 
 use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
-use Generated\Shared\Transfer\QuoteTransfer;
-use Generated\Shared\Transfer\SaveOrderTransfer;
 use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;

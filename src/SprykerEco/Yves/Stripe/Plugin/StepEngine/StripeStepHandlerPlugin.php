@@ -24,12 +24,13 @@ class StripeStepHandlerPlugin extends AbstractPlugin implements StepHandlerPlugi
      * The transactionId (PaymentIntent ID) is already bound to quoteTransfer->getPayment()->getStripe()
      * by the Symfony form system via StripeSubForm::getPropertyPath().
      */
-    public function addToDataClass(Request $request, AbstractTransfer $quoteTransfer): QuoteTransfer
+    public function addToDataClass(Request $request, AbstractTransfer $dataTransfer): QuoteTransfer
     {
-        $paymentTransfer = $quoteTransfer->getPayment();
+        assert($dataTransfer instanceof QuoteTransfer);
+        $paymentTransfer = $dataTransfer->getPayment();
 
         if ($paymentTransfer === null) {
-            return $quoteTransfer;
+            return $dataTransfer;
         }
 
         $paymentTransfer
@@ -37,6 +38,6 @@ class StripeStepHandlerPlugin extends AbstractPlugin implements StepHandlerPlugi
             ->setPaymentMethod(SharedStripeConfig::PAYMENT_METHOD_NAME)
             ->setPaymentSelection(SharedStripeConfig::PAYMENT_METHOD_NAME);
 
-        return $quoteTransfer;
+        return $dataTransfer;
     }
 }
