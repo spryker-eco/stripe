@@ -17,7 +17,7 @@ features:
                   enabled: true
                   order: 0
                   scopes:
-                      - global
+                      - global, store
                   settings:
                       - key: secret_key
                         name: Secret Key
@@ -29,7 +29,7 @@ features:
                         order: 0
                         default_value: ''
                         scopes:
-                            - global
+                            - global, store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
@@ -43,7 +43,7 @@ features:
                         order: 1
                         default_value: ''
                         scopes:
-                            - global
+                            - global, store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
@@ -57,7 +57,7 @@ features:
                         order: 2
                         default_value: ''
                         scopes:
-                            - global
+                            - global, store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
@@ -71,6 +71,6 @@ features:
                         order: 3
                         default_value: ''
                         scopes:
-                            - global
+                            - global, store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'

@@ -19,10 +19,10 @@ class StripeClientFactory
     /**
      * @codeCoverageIgnore
      */
-    public function create(): StripeClient
+    public function create(string $secretKey = ''): StripeClient
     {
         return new StripeClient([
-            'api_key' => $this->config->getSecretKey(),
+            'api_key' => $secretKey ?: $this->config->getSecretKey(),
             'stripe_version' => '2023-10-16',
         ]);
     }

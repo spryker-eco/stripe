@@ -8,21 +8,21 @@
 namespace SprykerEco\Zed\Stripe\Business\Validator;
 
 use Stripe\Exception\ApiErrorException;
-use Stripe\StripeClient;
+use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 
 /**
  * @codeCoverageIgnore Infrastructure adapter — tested via integration tests.
  */
 class StripeConnectionChecker implements StripeConnectionCheckerInterface
 {
+    public function __construct(protected StripeClientFactory $stripeClientFactory)
+    {
+    }
+
     public function check(string $secretKey): bool
     {
         try {
-            $client = new StripeClient([
-                'api_key' => $secretKey,
-                'stripe_version' => '2023-10-16',
-            ]);
-            $client->balance->retrieve();
+            $this->stripeClientFactory->create($secretKey)->balance->retrieve();
 
             return true;
         } catch (ApiErrorException) {

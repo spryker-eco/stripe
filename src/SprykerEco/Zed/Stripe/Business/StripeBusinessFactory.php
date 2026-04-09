@@ -74,7 +74,9 @@ class StripeBusinessFactory extends AbstractBusinessFactory
 
     public function createStripeConnectionChecker(): StripeConnectionCheckerInterface
     {
-        return new StripeConnectionChecker();
+        return new StripeConnectionChecker(
+            $this->createStripeClientFactory(),
+        );
     }
 
     public function createWebhookHandler(): WebhookHandler
