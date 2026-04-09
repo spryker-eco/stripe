@@ -57,8 +57,6 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         }
 
         // PI canceled — either by the customer, OMS, or Stripe's 7-day expiry.
-        // OMS handles expiry via the "expire payment" event (timeout=6days → Stripe/Cancel).
-        // Do not recreate the PI; let the controller redirect the customer home.
         if ($status === SharedStripeConfig::PAYMENT_STATUS_CANCELED) {
             return (new StripeIntentResponseTransfer())
                 ->setIsSuccessful(false)
