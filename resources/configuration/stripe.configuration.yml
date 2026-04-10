@@ -13,16 +13,17 @@ features:
             groups:
                 - key: credentials
                   name: Credentials
-                  description: "Stripe API credentials for payment provider integration. All credentials must be provided for Stripe payments to function. After saving valid credentials, activate Stripe under Administration → Payment Methods."
+                  description: "Stripe API credentials for payment provider integration. All credentials must be provided for Stripe payments to function. After saving valid credentials, activate Stripe under Administration → Payment Methods. ⚠️ The Stripe payment method will not be available on the checkout until all credentials are set."
                   enabled: true
                   order: 0
                   scopes:
                       - global
-                      - store
                   settings:
                       - key: secret_key
                         name: Secret Key
-                        description: "Server-side secret key used for all Stripe API calls. Find it in the Stripe Dashboard under Developers → API keys (https://dashboard.stripe.com/apikeys). Test keys start with sk_test_, production keys with sk_live_. Never expose this key in frontend code."
+                        description: "Server-side secret key used for all Stripe API calls."
+                        help_text: "Find it in the Stripe Dashboard under Developers → API keys (https://dashboard.stripe.com/apikeys). Test keys start with sk_test_, production keys with sk_live_. Never expose this key in frontend code."
+                        placeholder: 'sk_'
                         type: string
                         enabled: true
                         secret: true
@@ -31,13 +32,14 @@ features:
                         default_value: ''
                         scopes:
                             - global
-                            - store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
                       - key: publishable_key
                         name: Publishable Key
-                        description: "Client-side publishable key used by Stripe.js in the storefront. Find it in the Stripe Dashboard under Developers → API keys (https://dashboard.stripe.com/apikeys). Test keys start with pk_test_, production keys with pk_live_. Must belong to the same environment (test/live) as the Secret Key."
+                        description: "Client-side publishable key used by Stripe.js in the storefront."
+                        help_text: " Find it in the Stripe Dashboard under Developers → API keys (https://dashboard.stripe.com/apikeys). Test keys start with pk_test_, production keys with pk_live_. Must belong to the same environment (test/live) as the Secret Key."
+                        placeholder: 'pk_'
                         type: string
                         enabled: true
                         secret: false
@@ -46,13 +48,14 @@ features:
                         default_value: ''
                         scopes:
                             - global
-                            - store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
                       - key: webhook_secret
                         name: Webhook Secret
-                        description: "Signing secret used to verify incoming Stripe webhook events. To obtain it: open the Stripe Dashboard → Developers → Webhooks (https://dashboard.stripe.com/webhooks), click 'Add endpoint', enter your shop's notification URL (e.g. https://your-shop.com/stripe/notification), select the required events, then copy the signing secret shown after creation. It starts with whsec_."
+                        description: "Signing secret used to verify incoming Stripe webhook events."
+                        help_text: "To obtain it: open the Stripe Dashboard → Developers → Webhooks (https://dashboard.stripe.com/webhooks), click 'Add endpoint', enter your shop's notification URL (e.g. https://your-shop.com/stripe/notification), select the required events, then copy the signing secret shown after creation. It starts with whsec_."
+                        placeholder: 'whsec_'
                         type: string
                         enabled: true
                         secret: true
@@ -61,13 +64,15 @@ features:
                         default_value: ''
                         scopes:
                             - global
-                            - store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
                       - key: webhook_secret_connect
                         name: Webhook Secret (Connect)
-                        description: "Signing secret for the Stripe Connect webhook endpoint. Required for Marketplace setups to receive account.updated events from connected merchant accounts. To obtain it: open the Stripe Dashboard → Developers → Webhooks (https://dashboard.stripe.com/webhooks), switch to the 'Connect' tab, add an endpoint for your shop's notification URL and copy the signing secret. Leave empty for non-Marketplace installations."
+                        description: "Signing secret for the Stripe Connect webhook endpoint."
+                        help_text: "To obtain it: open the Stripe Dashboard → Developers → Webhooks (https://dashboard.stripe.com/webhooks), switch to the 'Connect' tab, add an endpoint for your shop's notification URL and copy the signing secret. Leave empty for non-Marketplace installations."
+                        note: "Required for Marketplace setups to receive account.updated events from connected merchant accounts."
+                        placeholder: 'whsec_connect'
                         type: string
                         enabled: true
                         secret: true
@@ -76,6 +81,5 @@ features:
                         default_value: ''
                         scopes:
                             - global
-                            - store
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
