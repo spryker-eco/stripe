@@ -13,7 +13,7 @@ use Generated\Shared\Transfer\PaymentMethodTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 use Spryker\Zed\PaymentExtension\Dependency\Plugin\PaymentMethodFilterPluginInterface;
-use SprykerEco\Zed\Stripe\StripeConfig;
+use SprykerEco\Shared\Stripe\StripeConfig;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
@@ -64,6 +64,6 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
             return false;
         }
 
-        return strtolower((string)$paymentProvider->getPaymentProviderKey()) === strtolower(StripeConfig::APP_NAME);
+        return strtolower((string)$paymentProvider->getPaymentProviderKey()) === strtolower(StripeConfig::PAYMENT_PROVIDER_NAME);
     }
 }
