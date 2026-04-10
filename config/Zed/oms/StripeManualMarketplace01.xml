@@ -17,8 +17,12 @@
 
         <states>
             <state name="new" display="oms.state.new"/>
-            <state name="payment pending" reserved="true" display="oms.state.payment-pending"/>
-            <state name="authorized" reserved="true" display="oms.state.authorized"/>
+            <state name="payment pending" reserved="true" display="oms.state.payment-pending">
+                <flag>cancellable</flag>
+            </state>
+            <state name="authorized" reserved="true" display="oms.state.authorized">
+                <flag>cancellable</flag>
+            </state>
             <state name="authorization failed" display="oms.state.authorization-failed"/>
             <state name="capture pending" reserved="true" display="oms.state.capture-pending"/>
             <state name="captured" reserved="true" display="oms.state.captured"/>
@@ -76,6 +80,20 @@
                 <source>captured</source>
                 <target>commission calculated</target>
                 <event>commission calculate</event>
+            </transition>
+
+            <!-- Cancel from payment pending (customer aborts before authorization completes) -->
+            <transition>
+                <source>payment pending</source>
+                <target>cancelled</target>
+                <event>cancel</event>
+            </transition>
+
+            <!-- Stripe expires PIs after 7 days — close the order at 6 days to stay ahead -->
+            <transition>
+                <source>payment pending</source>
+                <target>cancelled</target>
+                <event>expire payment</event>
             </transition>
 
             <!-- Cancel from authorized (before capture) -->
@@ -157,23 +175,18 @@
             </transition>
 
             <!-- After refund: if a payout transfer was previously made, reverse it.
-                 If no payout was made (e.g. refunded before payout), go directly to cancelled. -->
+                 If no payout was made (e.g. refunded before payout), the item stays in refunded. -->
             <transition condition="SalesPaymentMerchant/IsMerchantPaidOut">
                 <source>refunded</source>
                 <target>merchant payout reverse ready</target>
                 <event>reverse payout</event>
             </transition>
 
-            <transition>
-                <source>refunded</source>
-                <target>cancelled</target>
-                <event>reverse payout</event>
-            </transition>
-
         </transitions>
 
         <events>
-            <event name="wait for payment" onEnter="true" timeout="15m"/>
+            <event name="wait for payment" onEnter="true"/>
+            <event name="expire payment" timeout="6 day" command="Stripe/Cancel"/>
             <event name="capture" manual="true" command="Stripe/Capture"/>
             <event name="commission calculate" onEnter="true" command="MerchantCommission/Calculate"/>
             <event name="cancel" manual="true" command="Stripe/Cancel"/>

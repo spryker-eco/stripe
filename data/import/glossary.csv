@@ -41,6 +41,8 @@ stripe.payment.order.reference.text,Finalize the payment for the order:,en_US
 stripe.payment.order.reference.text,Zahlung für die Bestellung abschließen:,de_DE
 stripe.payment.button.pay,Pay now,en_US
 stripe.payment.button.pay,Jetzt bezahlen,de_DE
+stripe.payment.button.cancel,Cancel payment,en_US
+stripe.payment.button.cancel,Zahlung abbrechen,de_DE
 stripe.payment.selection_message,You will be asked for the payment details securely via Stripe after placing your order.,en_US
 stripe.payment.selection_message,Nach der Bestellung werden Sie sicher über Stripe zur Eingabe Ihrer Zahlungsdaten weitergeleitet.,de_DE
 stripe.payment.error.failed_redirect,Your payment was not completed. Please choose a different payment method and try again.,en_US

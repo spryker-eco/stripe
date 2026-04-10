@@ -7,6 +7,7 @@
 
 namespace SprykerEco\Yves\Stripe;
 
+use Spryker\Client\Cart\CartClientInterface;
 use Spryker\Yves\Kernel\AbstractFactory;
 use SprykerEco\Client\Stripe\StripeClientInterface;
 use SprykerEco\Yves\Stripe\Form\DataProvider\StripeFormDataProvider;
@@ -30,5 +31,10 @@ class StripeFactory extends AbstractFactory
     public function getStripeClient(): StripeClientInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::CLIENT_STRIPE);
+    }
+
+    public function getCartClient(): CartClientInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::CLIENT_CART);
     }
 }
