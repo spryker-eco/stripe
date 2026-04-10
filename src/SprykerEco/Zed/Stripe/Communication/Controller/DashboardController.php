@@ -28,7 +28,7 @@ class DashboardController extends AbstractController
      *
      * Route: GET /stripe/dashboard
      *
-     * @return Response|array<string, string>
+     * @return \Symfony\Component\HttpFoundation\Response|array<string, string>
      */
     public function indexAction(Request $request): array|Response
     {

@@ -7,8 +7,8 @@
 
 namespace SprykerEco\Zed\Stripe\Business\Validator;
 
-use Stripe\Exception\ApiErrorException;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * @codeCoverageIgnore Infrastructure adapter — tested via integration tests.

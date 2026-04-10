@@ -21,3 +21,10 @@ suites:
             enabled:
                 - \SprykerTest\Shared\Testify\Helper\Environment
                 - \SprykerTest\Zed\Testify\Helper\Business\BusinessHelper
+
+    Communication:
+        path: Communication
+        actor: StripeCommunicationTester
+        modules:
+            enabled:
+                - \SprykerTest\Shared\Testify\Helper\Environment

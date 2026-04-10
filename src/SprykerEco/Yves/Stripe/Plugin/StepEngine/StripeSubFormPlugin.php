@@ -17,17 +17,11 @@ use SprykerEco\Yves\Stripe\Form\DataProvider\StripeFormDataProvider;
  */
 class StripeSubFormPlugin extends AbstractPlugin implements SubFormPluginInterface
 {
-    /**
-     * {@inheritDoc}
-     */
     public function createSubForm(): SubFormInterface
     {
         return $this->getFactory()->createStripeSubForm();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function createSubFormDataProvider(): StripeFormDataProvider
     {
         return $this->getFactory()->createStripeFormDataProvider();
