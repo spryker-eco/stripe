@@ -3,11 +3,12 @@
 {% define data = {
     orderReference: orderReference,
     idSalesOrder: idSalesOrder | default(null),
-    stripePublishableKey: stripePublishableKey | default(''),
-    stripeClientSecret: stripeClientSecret | default(''),
+    stripePaymentIntent: stripePaymentIntent,
+    stripePublishableKey: stripePaymentIntent.publishableKey | default(''),
+    stripeClientSecret: stripePaymentIntent.clientSecret | default(''),
     checkoutSuccessUrl: checkoutSuccessUrl,
     paymentPageUrl: paymentPageUrl,
-    orderDetailsUrl: orderDetailsUrl | default('#'),
+    orderDetailsUrl: orderDetailsUrl,
     cancelUrl: cancelUrl | default('#'),
 } %}
 
@@ -37,7 +38,8 @@
 {% block content %}
     <div class="box">
         <p>
-            {{ 'stripe.payment.order.reference.text' | trans }} <strong><a href="{{ data.orderDetailsUrl }}" target="_blank">{{ data.orderReference }}</a></strong>.
+            {{ 'stripe.payment.order.reference.text' | trans }} <strong><a href="{{ data.orderDetailsUrl }}" target="_blank">{{ data.orderReference }}</a></strong>
+            ( <strong>{{ data.stripePaymentIntent.grandTotal | money(false, data.stripePaymentIntent.currencyCode) }} {{ data.stripePaymentIntent.currencyCode }}</strong> )
         </p>
         <stripe-payment
             class="stripe-payment"
@@ -58,7 +60,7 @@
                 {{ 'stripe.payment.button.pay' | trans }}
             </button>
         </stripe-payment>
-        <a href="{{ data.cancelUrl | e('html_attr') }}" class="button button--hollow button--expand" style="margin-top: 12px;">
+        <a href="{{ data.cancelUrl | e('html_attr') }}" class="button button--hollow button--expand" style="margin-top: 15px;">
             {{ 'stripe.payment.button.cancel' | trans }}
         </a>
     </div>

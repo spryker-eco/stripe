@@ -24,51 +24,48 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
 
     public function resolve(string $orderReference): StripeIntentResponseTransfer
     {
-        $payment = $this->paymentReader->getPaymentByOrderReference($orderReference);
+        $stripePaymentTransfer = $this->paymentReader->getPaymentByOrderReference($orderReference);
 
-        if ($payment === null) {
+        if ($stripePaymentTransfer === null) {
             return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
         }
 
-        $transactionId = $payment->getTransactionId();
+        $transactionId = $stripePaymentTransfer->getTransactionId();
 
         if ($transactionId === null) {
             return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
         }
 
-        $liveResponse = $this->stripeIntents->get(
+        $stripeIntentResponseTransfer = $this->stripeIntents->get(
             (new StripeIntentRequestTransfer())->setTransactionId($transactionId),
         );
 
-        $idSalesOrder = $payment->getFkSalesOrder();
+        $idSalesOrder = $stripePaymentTransfer->getFkSalesOrder();
 
         // Stripe API unreachable — client_secret is not stored, cannot proceed
-        if (!$liveResponse->getIsSuccessful()) {
+        if (!$stripeIntentResponseTransfer->getIsSuccessful()) {
             return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
         }
 
-        $status = $liveResponse->getStatus();
+        $status = $stripeIntentResponseTransfer->getStatus();
 
         // Payment already captured or pending capture — redirect customer to success page
         if (in_array($status, SharedStripeConfig::SUCCESSFUL_PAYMENT_STATUSES, true)) {
-            return (new StripeIntentResponseTransfer())
-                ->setIsSuccessful(false)
-                ->setStatus($status);
+            return $stripeIntentResponseTransfer
+                ->setIsSuccessful(false);
         }
 
         // PI canceled — either by the customer, OMS, or Stripe's 7-day expiry.
         if ($status === SharedStripeConfig::PAYMENT_STATUS_CANCELED) {
-            return (new StripeIntentResponseTransfer())
-                ->setIsSuccessful(false)
-                ->setStatus(SharedStripeConfig::PAYMENT_STATUS_CANCELED);
+            return $stripeIntentResponseTransfer
+                ->setIsSuccessful(false);
         }
 
-        // PI is still open — reuse the existing client_secret
+        // PI is still open
         if (in_array($status, SharedStripeConfig::REUSABLE_PAYMENT_STATUSES, true)) {
-            return (new StripeIntentResponseTransfer())
+            return $stripeIntentResponseTransfer
                 ->setIsSuccessful(true)
-                ->setTransactionId($transactionId)
-                ->setClientSecret($liveResponse->getClientSecret())
+                ->setCurrencyCode(strtoupper($stripeIntentResponseTransfer->getCurrencyCodeOrFail()))
                 ->setPublishableKey($this->config->getPublishableKey())
                 ->setIdSalesOrder($idSalesOrder);
         }

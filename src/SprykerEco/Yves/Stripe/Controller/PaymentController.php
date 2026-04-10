@@ -92,8 +92,7 @@ class PaymentController extends AbstractController
             [
                 'orderReference' => $orderReference,
                 'idSalesOrder' => $idSalesOrder,
-                'stripePublishableKey' => $paymentDetails->getPublishableKey(),
-                'stripeClientSecret' => $paymentDetails->getClientSecret(),
+                'stripePaymentIntent' => $paymentDetails,
                 'checkoutSuccessUrl' => $checkoutSuccessUrl,
                 'paymentPageUrl' => $paymentPageUrl,
                 'orderDetailsUrl' => $orderDetailsUrl,

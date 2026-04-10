@@ -1,6 +1,6 @@
 import Component from 'ShopUi/models/component';
 
-declare function Stripe(publishableKey: string): StripeInstance;
+declare function Stripe(publishableKey: string, settings: object): StripeInstance;
 
 interface StripeInstance {
     elements(options: { clientSecret: string; appearance: object }): StripeElements;
@@ -53,7 +53,7 @@ export default class StripePayment extends Component {
         paymentPageUrl: string,
         errorFailed: string,
     ): void {
-        const stripe = Stripe(publishableKey);
+        const stripe = Stripe(publishableKey, {locale: document.documentElement.lang});
         // see https://docs.stripe.com/elements/appearance-api
         const elements = stripe.elements({
             clientSecret,

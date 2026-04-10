@@ -10,8 +10,8 @@
     <process name="StripeMerchantPayout">
 
         <states>
-            <state name="merchant payout ready" display="oms.state.payout-merchant"/>
-            <state name="payout failed" display="oms.state.payout-failed"/>
+            <state name="merchant payout ready" display="oms.state.closed"/>
+            <state name="payout failed" display="oms.state.closed"/>
         </states>
 
         <transitions>

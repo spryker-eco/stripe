@@ -10,8 +10,8 @@
     <process name="StripeMerchantPayoutReverse">
 
         <states>
-            <state name="merchant payout reverse ready" display="oms.state.payout-reversed"/>
-            <state name="reverse payout failed" display="oms.state.payout-reversal-failed"/>
+            <state name="merchant payout reverse ready" display="oms.state.refunded"/>
+            <state name="reverse payout failed" display="oms.state.refunded"/>
         </states>
 
         <transitions>

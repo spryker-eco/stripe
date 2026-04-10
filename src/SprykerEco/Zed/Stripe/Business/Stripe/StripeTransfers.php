@@ -15,6 +15,7 @@ use SprykerEco\Zed\Stripe\Business\Exception\ReverseTransferWithoutPreviousMadeT
 use SprykerEco\Zed\Stripe\Business\Exception\StripeException;
 use SprykerEco\Zed\Stripe\Business\Message\MessageBuilder;
 use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\InvalidRequestException;
 use Stripe\StripeClient;
 use Stripe\Transfer;
 use Stripe\TransferReversal;
@@ -62,13 +63,34 @@ class StripeTransfers implements StripeTransfersInterface
             'currency' => $stripeTransmissionRequestTransfer->getCurrencyOrFail()->getCodeOrFail(),
             'destination' => $stripeTransmissionRequestTransfer->getDestinationOrFail(),
             'description' => $stripeTransmissionRequestTransfer->getDescriptionOrFail(),
-            'source_transaction' => $stripeTransmissionRequestTransfer->getSourceTransactionOrFail(),
             'transfer_group' => $stripeTransmissionRequestTransfer->getTransferGroupOrFail(),
             'metadata' => $stripeTransmissionRequestTransfer->getMetadata(),
         ];
 
+        if ($stripeTransmissionRequestTransfer->getSourceTransaction() !== null) {
+            $transferData['source_transaction'] = $stripeTransmissionRequestTransfer->getSourceTransaction();
+        }
+
         if ((int)$transferData['amount'] >= 0) {
-            return $stripeClient->transfers->create($transferData);
+            try {
+                return $stripeClient->transfers->create($transferData);
+            } catch (InvalidRequestException $invalidRequestException) {
+                if ($invalidRequestException->getStripeParam() !== 'source_transaction') {
+                    throw $invalidRequestException;
+                }
+
+                // source_transaction currency must match the charge's balance_transaction currency (e.g. EUR for a
+                // German platform account), but the transfer currency is the order currency (e.g. CHF). Stripe will
+                // use the platform's available balance and convert to the destination currency instead.
+                $this->getLogger()->warning(sprintf(
+                    'Transfer with source_transaction failed due to currency mismatch, retrying without source_transaction: %s',
+                    $invalidRequestException->getMessage(),
+                ));
+
+                unset($transferData['source_transaction']);
+
+                return $stripeClient->transfers->create($transferData);
+            }
         }
 
         if ($stripeTransmissionRequestTransfer->getTransferId() === null || $stripeTransmissionRequestTransfer->getTransferId() === '' || $stripeTransmissionRequestTransfer->getTransferId() === '0') {
