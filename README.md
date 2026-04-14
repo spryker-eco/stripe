@@ -234,6 +234,10 @@ class SecurityMerchantPortalGuiConfig extends SprykerSecurityMerchantPortalGuiCo
 
 ### Step 13: Configure Stripe credentials
 
+#### Option A: Environment variable-based credentials
+
+Set the values in your config file.
+
 **File:** `config/Shared/config_local.php`
 
 ```php
@@ -243,7 +247,46 @@ $config[StripeConstants::STRIPE_SECRET_KEY] = 'sk_live_***';                // f
 $config[StripeConstants::STRIPE_PUBLISHABLE_KEY] = 'pk_live_***';           // from Stripe Dashboard → API keys
 $config[StripeConstants::STRIPE_WEBHOOK_SECRET] = 'whsec_***';              // from Stripe Dashboard → Webhooks → standard endpoint
 $config[StripeConstants::STRIPE_WEBHOOK_SECRET_CONNECT] = 'whsec_***';      // from Stripe Dashboard → Webhooks → Connect endpoint (marketplace only)
-$config[StripeConstants::STRIPE_PAYMENT_METHOD_US_BANK_ACCOUNT] = 'pm_***'; // from Stripe Dashboard → Payment methods → ACH → Set up test bank account and copy the generated payment method ID (starts with `pm_`)
+```
+
+#### Option B: Back Office configuration
+
+Requires the [Spryker Configuration feature](https://docs.spryker.com/docs/dg/dev/integrate-and-configure/integrate-confguration-feature) to be installed.
+Once installed, activate it for this module by creating `src/Pyz/Shared/Stripe/StripeConfig.php`:
+
+```php
+namespace Pyz\Shared\Stripe;
+
+use SprykerEco\Shared\Stripe\StripeConfig as SprykerEcoStripeConfig;
+
+class StripeConfig extends SprykerEcoStripeConfig
+{
+    public function isConfigurationModuleUsed(): bool
+    {
+        return true;
+    }
+}
+```
+
+Run the following command to sync the configuration settings to the database. This registers the Stripe configuration keys used by the Back Office:
+
+```bash
+vendor/bin/console configuration:sync
+```
+
+Configure Stripe credentials in the Back Office under **Configuration > Integrations > Stripe**. Enter the Secret Key, Publishable Key, and Webhook Secret. Webhook Secret (Connect) is optional and used only for marketplace.
+
+To enable credential validation on save, register `StripeCredentialsPreSavePlugin` in `src/Pyz/Zed/Configuration/ConfigurationDependencyProvider.php`:
+
+```php
+use \SprykerEco\Zed\Stripe\Communication\Plugin\Configuration\StripeCredentialsPreSavePlugin;
+
+protected function getConfigurationValuePreSavePlugins(): array
+{
+    return [
+        new StripeCredentialsPreSavePlugin(),
+    ];
+}
 ```
 
 ---

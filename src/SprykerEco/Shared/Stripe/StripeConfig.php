@@ -7,7 +7,9 @@
 
 namespace SprykerEco\Shared\Stripe;
 
-class StripeConfig
+use Spryker\Shared\Kernel\AbstractSharedConfig;
+
+class StripeConfig extends AbstractSharedConfig
 {
     public const string PAYMENT_PROVIDER_NAME = 'Stripe';
 
@@ -109,4 +111,25 @@ class StripeConfig
         self::PAYMENT_STATUS_REQUIRES_ACTION,
         self::PAYMENT_STATUS_PROCESSING,
     ];
+
+    public const string CONFIGURATION_KEY_STRIPE_SECRET_KEY = 'integrations:stripe:credentials:secret_key';
+
+    public const string CONFIGURATION_KEY_STRIPE_PUBLISHABLE_KEY = 'integrations:stripe:credentials:publishable_key';
+
+    public const string CONFIGURATION_KEY_STRIPE_WEBHOOK_SECRET = 'integrations:stripe:credentials:webhook_secret';
+
+    public const string CONFIGURATION_KEY_STRIPE_WEBHOOK_SECRET_CONNECT = 'integrations:stripe:credentials:webhook_secret_connect';
+
+    /**
+     * Specification:
+     * - Returns whether the Configuration module is used for Stripe configuration.
+     * - When enabled, configuration values are retrieved from the Configuration module.
+     * - When disabled, configuration values are retrieved from static Shared config.
+     *
+     * @api
+     */
+    public function isConfigurationModuleUsed(): bool
+    {
+        return false;
+    }
 }

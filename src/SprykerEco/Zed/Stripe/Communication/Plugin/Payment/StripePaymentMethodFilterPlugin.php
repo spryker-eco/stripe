@@ -7,10 +7,13 @@
 
 namespace SprykerEco\Zed\Stripe\Communication\Plugin\Payment;
 
+use ArrayObject;
 use Generated\Shared\Transfer\PaymentMethodsTransfer;
+use Generated\Shared\Transfer\PaymentMethodTransfer;
 use Generated\Shared\Transfer\QuoteTransfer;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 use Spryker\Zed\PaymentExtension\Dependency\Plugin\PaymentMethodFilterPluginInterface;
+use SprykerEco\Shared\Stripe\StripeConfig;
 
 /**
  * @method \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface getFacade()
@@ -21,8 +24,6 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
 {
     /**
      * {@inheritDoc}
-     * - Filters available payment methods based on quote and configuration,
-     * - Can remove payment methods based on business rules.
      *
      * @api
      */
@@ -30,7 +31,39 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
         PaymentMethodsTransfer $paymentMethodsTransfer,
         QuoteTransfer $quoteTransfer,
     ): PaymentMethodsTransfer {
-        // Here you can filter out Stripe method based on project logic
-        return $paymentMethodsTransfer;
+        if ($this->hasApiCredentials()) {
+            return $paymentMethodsTransfer;
+        }
+
+        return $this->removeStripePaymentMethods($paymentMethodsTransfer);
+    }
+
+    protected function hasApiCredentials(): bool
+    {
+        return $this->getConfig()->getSecretKey() !== '' && $this->getConfig()->getPublishableKey() !== '';
+    }
+
+    protected function removeStripePaymentMethods(PaymentMethodsTransfer $paymentMethodsTransfer): PaymentMethodsTransfer
+    {
+        $filteredMethods = new ArrayObject();
+
+        foreach ($paymentMethodsTransfer->getMethods() as $paymentMethodTransfer) {
+            if (!$this->isStripePaymentMethod($paymentMethodTransfer)) {
+                $filteredMethods->append($paymentMethodTransfer);
+            }
+        }
+
+        return $paymentMethodsTransfer->setMethods($filteredMethods);
+    }
+
+    protected function isStripePaymentMethod(PaymentMethodTransfer $paymentMethodTransfer): bool
+    {
+        $paymentProvider = $paymentMethodTransfer->getPaymentProvider();
+
+        if ($paymentProvider === null) {
+            return false;
+        }
+
+        return strtolower((string)$paymentProvider->getPaymentProviderKey()) === strtolower(StripeConfig::PAYMENT_PROVIDER_NAME);
     }
 }
