@@ -35,6 +35,10 @@ features:
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
+                            - type: regex
+                              message: 'Must be a valid Secret Key (starts with sk_test_ or sk_live_).'
+                              options:
+                                  pattern: '^sk_(test|live)_.+$'
                       - key: publishable_key
                         name: Publishable Key
                         description: "Client-side publishable key used by Stripe.js in the storefront."
@@ -51,6 +55,10 @@ features:
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
+                            - type: regex
+                              message: 'Must be a valid Publishable Key (starts with pk_test_ or pk_live_).'
+                              options:
+                                  pattern: '^pk_(test|live)_.+$'
                       - key: webhook_secret
                         name: Webhook Secret
                         description: "Signing secret used to verify incoming Stripe webhook events."
@@ -67,12 +75,16 @@ features:
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsMissingConstraint'
+                            - type: regex
+                              message: 'Must be a valid Webhook Secret (starts with whsec_).'
+                              options:
+                                  pattern: '^whsec_.+$'
                       - key: webhook_secret_connect
                         name: Webhook Secret (Connect)
                         description: "Signing secret for the Stripe Connect webhook endpoint."
                         help_text: "To obtain it: open the Stripe Dashboard → Developers → Webhooks (https://dashboard.stripe.com/webhooks), switch to the 'Connect' tab, add an endpoint for your shop's notification URL and copy the signing secret. Leave empty for non-Marketplace installations."
                         note: "Required for Marketplace setups to receive account.updated events from connected merchant accounts."
-                        placeholder: 'whsec_connect'
+                        placeholder: 'whsec_'
                         type: string
                         enabled: true
                         secret: true
@@ -83,3 +95,7 @@ features:
                             - global
                         constraints:
                             - type: 'SprykerEco\Zed\Stripe\Communication\Constraint\StripeCredentialsConstraint'
+                            - type: regex
+                              message: 'Must be a valid Webhook Signing Secret (starts with whsec_).'
+                              options:
+                                  pattern: '^whsec_.+$'
