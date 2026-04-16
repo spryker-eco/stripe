@@ -1,0 +1,67 @@
+{% extends template('page-layout-checkout', 'CheckoutPage') %}
+
+{% define data = {
+    orderReference: orderReference,
+    idSalesOrder: idSalesOrder | default(null),
+    stripePaymentIntent: stripePaymentIntent,
+    stripePublishableKey: stripePaymentIntent.publishableKey | default(''),
+    stripeClientSecret: stripePaymentIntent.clientSecret | default(''),
+    checkoutSuccessUrl: checkoutSuccessUrl,
+    paymentPageUrl: paymentPageUrl,
+    orderDetailsUrl: orderDetailsUrl,
+    cancelUrl: cancelUrl | default('#'),
+} %}
+
+{% block headTitle %}{{ 'stripe.payment.page.title' | trans }}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include view('cart-checkout-breadcrumb', 'CheckoutWidget') with {
+        data: {
+            isCartPage: false,
+            addCartBreadcrumb: false,
+            checkoutBreadcrumbs: [
+                {
+                    title: 'stripe.payment.page.title',
+                    route: 'stripe-payment',
+                    isActive: true,
+                    isEnabled: false
+                }
+            ]
+        }
+    } only %}
+{% endblock %}
+
+{% block title %}
+    <h1 class="title--h3">{{ 'stripe.payment.heading' | trans }}</h1>
+{% endblock %}
+
+{% block content %}
+    <div class="box">
+        <p>
+            {{ 'stripe.payment.order.reference.text' | trans }} <strong><a href="{{ data.orderDetailsUrl }}" target="_blank">{{ data.orderReference }}</a></strong>
+            ( <strong>{{ data.stripePaymentIntent.grandTotal | money(false, data.stripePaymentIntent.currencyCode) }} {{ data.stripePaymentIntent.currencyCode }}</strong> )
+        </p>
+        <stripe-payment
+            class="stripe-payment"
+            data-publishable-key="{{ data.stripePublishableKey | e('html_attr') }}"
+            data-client-secret="{{ data.stripeClientSecret | e('html_attr') }}"
+            data-checkout-success-url="{{ data.checkoutSuccessUrl | e('html_attr') }}"
+            data-payment-page-url="{{ data.paymentPageUrl | e('html_attr') }}"
+            data-error-failed="{{ 'stripe.payment.error.failed_redirect' | trans | e('html_attr') }}"
+        >
+            <div class="js-stripe-payment__payment-element">
+                <div class="js-stripe-payment__loader" style="text-align: center; padding: 40px 0; color: #bbbbbb;">
+                    {{ 'stripe.payment.loading' | trans }}
+                </div>
+            </div>
+            <div class="js-stripe-payment__message" style="display: none; color: #df1b41; margin-top: 12px;"></div>
+
+            <button class="js-stripe-payment__submit button button--expand" style="margin-top: 20px;">
+                {{ 'stripe.payment.button.pay' | trans }}
+            </button>
+        </stripe-payment>
+        <a href="{{ data.cancelUrl | e('html_attr') }}" class="button button--hollow button--expand" style="margin-top: 15px;">
+            {{ 'stripe.payment.button.cancel' | trans }}
+        </a>
+    </div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends '@ZedUi/Layout/merchant-layout-main.twig' %}
+
+{% block headSubTitle %}
+    {{- 'Stripe Dashboard' | trans -}}
+{% endblock %}
+
+{% block content %}
+    <web-mp-dashboard cloak>
+        <h1 title>{{ 'Stripe Dashboard' | trans }}</h1>
+
+        <div content>
+            <web-spy-card spy-title="{{ 'Error' | trans }}">
+                <p>{{ errorMessage | trans }}</p>
+                <br>
+                <web-spy-button-link url="/merchant-app-merchant-portal-gui/payment-settings" size="lg">
+                    {{- 'Back' | trans -}}
+                </web-spy-button-link>
+            </web-spy-card>
+        </div>
+    </web-mp-dashboard>
+{% endblock %}

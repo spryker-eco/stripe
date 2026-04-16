@@ -1,0 +1,150 @@
+<?php
+
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
+namespace SprykerEco\Zed\Stripe\Business;
+
+use Generated\Shared\Transfer\OrderTransfer;
+use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
+use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
+use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
+use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
+use Spryker\Zed\Kernel\Business\AbstractFacade;
+
+/**
+ * @method \SprykerEco\Zed\Stripe\Business\StripeBusinessFactory getFactory()
+ * @method \SprykerEco\Zed\Stripe\Persistence\StripeRepositoryInterface getRepository()
+ * @method \SprykerEco\Zed\Stripe\Persistence\StripeEntityManagerInterface getEntityManager()
+ */
+class StripeFacade extends AbstractFacade implements StripeFacadeInterface
+{
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function processWebhook(StripeWebhookPayloadTransfer $webhookPayloadTransfer): StripeWebhookProcessResponseTransfer
+    {
+        return $this->getFactory()
+            ->createWebhookHandler()
+            ->processWebhook($webhookPayloadTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer
+    {
+        return $this->getFactory()
+            ->createPaymentDetailsResolver()
+            ->resolve($orderReference);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function authorizePayment(OrderTransfer $orderTransfer): void
+    {
+        $this->getFactory()
+            ->createOmsCommandHandler()
+            ->authorize($orderTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function capturePayment(OrderTransfer $orderTransfer, int $captureAmount = 0): void
+    {
+        $this->getFactory()
+            ->createOmsCommandHandler()
+            ->capture($orderTransfer, $captureAmount);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function cancelPayment(OrderTransfer $orderTransfer): void
+    {
+        $this->getFactory()
+            ->createOmsCommandHandler()
+            ->cancel($orderTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param array<\Generated\Shared\Transfer\ItemTransfer> $orderItems
+     */
+    public function refundPayment(OrderTransfer $orderTransfer, array $orderItems, int $refundAmount = 0): void
+    {
+        $this->getFactory()
+            ->createOmsCommandHandler()
+            ->refund($orderTransfer, $orderItems, $refundAmount);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function generateMerchantOnboardingUrl(string $merchantReference, string $returnUrl, string $refreshUrl): StripeAccountLinksResponseTransfer
+    {
+        return $this->getFactory()
+            ->createMerchantOnboardingUrlGenerator()
+            ->generateOnboardingUrl($merchantReference, $returnUrl, $refreshUrl);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function registerMerchantOnboarding(): void
+    {
+        $this->getFactory()
+            ->createMerchantOnboardingRegistrator()
+            ->register();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function generateDashboardUrl(string $merchantReference): ?string
+    {
+        return $this->getFactory()
+            ->createDashboardUrlGenerator()
+            ->generateDashboardUrl($merchantReference);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param list<\Generated\Shared\Transfer\PaymentTransmissionItemTransfer> $paymentTransmissionItemTransfers
+     */
+    public function executePayoutTransmission(
+        array $paymentTransmissionItemTransfers,
+        OrderTransfer $orderTransfer,
+    ): PaymentTransmissionResponseCollectionTransfer {
+        return $this->getFactory()
+            ->createPayoutTransmissionExecutor()
+            ->executePayoutTransmission($paymentTransmissionItemTransfers, $orderTransfer);
+    }
+}

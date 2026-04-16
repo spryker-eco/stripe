@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+<transfers xmlns="spryker:transfer-01"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="spryker:transfer-01 http://static.spryker.com/transfer-01.xsd">
+
+    <!-- ========================================================================
+         CORE PAYMENT PERSISTENCE
+         ======================================================================== -->
+
+    <!-- ========================================================================
+         CONFIGURATION VALIDATION
+         ======================================================================== -->
+
+    <transfer name="StripeApiCredentialsValidation" strict="true">
+        <property name="isSecretKeyValid" type="bool"/>
+        <property name="isPublishableKeyValid" type="bool"/>
+        <property name="isWebhookSecretValid" type="bool"/>
+        <property name="isWebhookSecretConnectValid" type="bool"/>
+    </transfer>
+
+    <transfer name="StripePayment" strict="true">
+        <property name="idStripePayment" type="int"/>
+        <property name="fkSalesOrder" type="int"/>
+        <property name="orderReference" type="string"/>
+        <property name="transactionId" type="string" description="Stripe PaymentIntent ID (pi_xxx)"/>
+        <property name="amount" type="int" description="Amount in minor units (cents)"/>
+        <property name="currencyCode" type="string"/>
+    </transfer>
+
+    <!-- ========================================================================
+         WEBHOOK OPERATIONS
+         ======================================================================== -->
+
+    <transfer name="StripeWebhookPayload" strict="true">
+        <property name="rawPayload" type="string"/>
+        <property name="signatureHeader" type="string"/>
+    </transfer>
+
+    <transfer name="StripeWebhookProcessResponse" strict="true">
+        <property name="isSuccessful" type="bool"/>
+        <property name="message" type="string"/>
+    </transfer>
+
+    <!-- ========================================================================
+         STRIPE SDK WRAPPERS (internal Stripe API calls from Zed Business layer)
+         Migrated from ACP app; StripeConfig removed — config read from StripeConfig directly.
+         ======================================================================== -->
+
+    <transfer name="StripeIntentRequest" strict="true">
+        <property name="quote" type="Quote"/>
+        <property name="transactionId" type="string"/>
+    </transfer>
+
+    <transfer name="StripeIntentResponse" strict="true">
+        <property name="isSuccessful" type="bool"/>
+        <property name="transactionId" type="string"/>
+        <property name="grandTotal" type="int"/>
+        <property name="currencyCode" type="string"/>
+        <property name="clientSecret" type="string"/>
+        <property name="publishableKey" type="string"/>
+        <property name="latestChargeId" type="string"/>
+        <property name="message" type="string"/>
+        <property name="status" type="string"/>
+        <property name="idSalesOrder" type="int" description="FK to spy_sales_order — used to link to the customer order details page"/>
+    </transfer>
+
+    <transfer name="StripeIntentCaptureRequest" strict="true">
+        <property name="transactionId" type="string"/>
+        <property name="amount" type="int"/>
+    </transfer>
+
+    <transfer name="StripeIntentCaptureResponse" strict="true">
+        <property name="isSuccessful" type="bool"/>
+        <property name="status" type="string"/>
+        <property name="message" type="string"/>
+    </transfer>
+
+    <transfer name="StripeCustomerRequest" strict="true">
+        <property name="quote" type="Quote"/>
+    </transfer>
+
+    <transfer name="StripeCustomerResponse" strict="true">
+        <property name="isSuccessful" type="bool"/>
+        <property name="customerId" type="string"/>
+        <property name="message" type="string"/>
+    </transfer>
+
+    <transfer name="StripeRefundRequest" strict="true">
+        <property name="transactionId" type="string"/>
+        <property name="amount" type="int"/>
+        <property name="orderItemSkus" type="string[]" singular="orderItemSku"/>
+    </transfer>
+
+    <transfer name="StripeRefundResponse" strict="true">
+        <property name="isSuccessful" type="bool"/>
+        <property name="refundId" type="string"/>
+        <property name="status" type="string"/>
+        <property name="message" type="string"/>
+    </transfer>
+
+    <!-- Marketplace: Stripe Connect account operations -->
+    <transfer name="StripeAccountRequest" strict="true">
+        <property name="accountConfig" type="array" singular="accountConfig"/>
+    </transfer>
+
+    <transfer name="StripeAccountResponse" strict="true">
+        <property name="stripeAccount" type="StripeAccount"/>
+        <property name="isSuccessful" type="bool"/>
+        <property name="message" type="string"/>
+    </transfer>
+
+    <transfer name="StripeAccountLinksRequest" strict="true">
+        <property name="accountLinksConfig" type="array" singular="accountLinksConfig"/>
+    </transfer>
+
+    <transfer name="StripeAccountLinksResponse" strict="true">
+        <property name="url" type="string" description="Onboarding URL returned to the merchant"/>
+        <property name="isSuccessful" type="bool"/>
+        <property name="message" type="string"/>
+    </transfer>
+
+    <transfer name="StripeAccount" strict="true">
+        <property name="accountId" type="string"/>
+    </transfer>
+
+    <transfer name="StripeTransmissionRequest" strict="true">
+        <property name="transferId" type="string"/>
+        <property name="sourceTransaction" type="string"/>
+        <property name="transferGroup" type="string"/>
+        <property name="destination" type="string"/>
+        <property name="description" type="string"/>
+        <property name="amount" type="string"/>
+        <property name="metadata" type="array" associative="true" singular="metadatum"/>
+        <property name="currency" type="Currency"/>
+    </transfer>
+
+    <transfer name="StripeTransmissionResponse" strict="true">
+        <property name="isSuccessful" type="bool"/>
+        <property name="transferId" type="string"/>
+        <property name="message" type="string"/>
+    </transfer>
+
+    <!-- Marketplace: Merchant Stripe account mapping (stripe_account_id only; status owned by MerchantApp) -->
+    <transfer name="StripeMerchant" strict="true">
+        <property name="idStripeMerchant" type="int"/>
+        <property name="merchantReference" type="string"/>
+        <property name="stripeAccountId" type="string"/>
+    </transfer>
+
+    <!-- ========================================================================
+         SPRYKER CORE EXTENSIONS
+         ======================================================================== -->
+
+    <!-- Payment form data (Yves checkout sub-form carries transactionId) -->
+    <transfer name="Stripe" strict="true">
+        <property name="transactionId" type="string" description="Stripe PaymentIntent ID submitted from Yves checkout form"/>
+    </transfer>
+
+    <transfer name="Quote">
+        <property name="payment" type="Payment"/>
+    </transfer>
+
+    <transfer name="Payment">
+        <property name="stripe" type="Stripe" strict="true"/>
+        <property name="paymentMethod" type="string"/>
+        <property name="paymentProvider" type="string"/>
+        <property name="paymentSelection" type="string"/>
+        <property name="additionalPaymentData" type="array" singular="additionalPaymentData"/>
+    </transfer>
+
+    <transfer name="Order">
+        <property name="stripe" type="Stripe" strict="true"/>
+        <property name="idSalesOrder" type="int"/>
+        <property name="orderReference" type="string"/>
+        <property name="items" type="Item[]" singular="item"/>
+    </transfer>
+
+    <transfer name="Item">
+        <property name="idSalesOrderItem" type="int"/>
+        <property name="sumPriceToPayAggregation" type="int"/>
+    </transfer>
+
+    <transfer name="SaveOrder">
+        <property name="idSalesOrder" type="int"/>
+        <property name="orderReference" type="string"/>
+        <property name="orderItems" type="Item[]" singular="orderItem"/>
+    </transfer>
+
+    <transfer name="CheckoutResponse">
+        <property name="isSuccess" type="bool"/>
+        <property name="isExternalRedirect" type="bool"/>
+        <property name="redirectUrl" type="string"/>
+        <property name="errors" type="CheckoutError[]" singular="error"/>
+    </transfer>
+
+    <transfer name="CheckoutError">
+        <property name="message" type="string"/>
+        <property name="errorCode" type="int"/>
+    </transfer>
+
+    <transfer name="PaymentMethods">
+        <property name="methods" type="PaymentMethod[]" singular="method"/>
+    </transfer>
+
+    <transfer name="PaymentMethod">
+        <property name="methodName" type="string"/>
+        <property name="paymentMethodKey" type="string" strict="true"/>
+    </transfer>
+
+    <transfer name="Currency">
+        <property name="code" type="string"/>
+    </transfer>
+
+</transfers>

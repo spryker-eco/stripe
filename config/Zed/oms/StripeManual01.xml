@@ -1,0 +1,177 @@
+<?xml version="1.0"?>
+<statemachine
+    xmlns="spryker:oms-01"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="spryker:oms-01 http://static.spryker.com/oms-01.xsd">
+
+    <!-- Manual capture flow: PaymentIntent created with capture_method=manual.
+         OMS explicitly triggers capture after authorization. -->
+    <process name="StripeManual01" main="true">
+
+        <states>
+            <state name="new" display="oms.state.new">
+                <flag>cancellable</flag>
+            </state>
+            <state name="payment pending" reserved="true" display="oms.state.payment-pending">
+                <flag>cancellable</flag>
+            </state>
+            <state name="authorized" reserved="true" display="oms.state.authorized">
+                <flag>cancellable</flag>
+            </state>
+            <state name="authorization failed" display="oms.state.authorization-failed"/>
+            <state name="capture pending" reserved="true" display="oms.state.capture-pending"/>
+            <state name="captured" reserved="true" display="oms.state.captured"/>
+            <state name="capture failed" display="oms.state.capture-failed"/>
+            <state name="cancelled" display="oms.state.cancelled"/>
+            <state name="cancellation failed" display="oms.state.cancellation-failed"/>
+            <state name="refund pending" reserved="true" display="oms.state.refund-pending"/>
+            <state name="refund confirmed" reserved="true" display="oms.state.refund-confirmed"/>
+            <state name="refunded" display="oms.state.refunded"/>
+            <state name="refund failed" display="oms.state.refund-failed"/>
+            <state name="shipped" reserved="true" display="oms.state.shipped"/>
+            <state name="delivered" display="oms.state.delivered"/>
+            <state name="closed" display="oms.state.closed"/>
+        </states>
+
+        <transitions>
+            <!-- Checkout → wait for Stripe webhook -->
+            <transition happy="true">
+                <source>new</source>
+                <target>payment pending</target>
+                <event>wait for payment</event>
+            </transition>
+
+            <!-- payment_intent.amount_capturable_updated → AUTHORIZED -->
+            <transition happy="true" condition="Payment/IsAuthorized">
+                <source>payment pending</source>
+                <target>authorized</target>
+            </transition>
+
+            <!-- payment_intent.payment_failed → AUTHORIZATION_FAILED -->
+            <transition condition="Payment/IsAuthorizationFailed">
+                <source>payment pending</source>
+                <target>authorization failed</target>
+            </transition>
+
+            <!-- Manual capture trigger -->
+            <transition happy="true">
+                <source>authorized</source>
+                <target>capture pending</target>
+                <event>capture</event>
+            </transition>
+
+            <!-- payment_intent.succeeded → CAPTURED -->
+            <transition happy="true" condition="Payment/IsCaptured">
+                <source>capture pending</source>
+                <target>captured</target>
+            </transition>
+
+            <!-- charge.failed (captured=true) → CAPTURE_FAILED -->
+            <transition condition="Payment/IsCaptureFailed">
+                <source>capture pending</source>
+                <target>capture failed</target>
+            </transition>
+
+            <!-- Fulfillment -->
+            <transition happy="true">
+                <source>captured</source>
+                <target>shipped</target>
+                <event>ship</event>
+            </transition>
+
+            <transition happy="true">
+                <source>shipped</source>
+                <target>delivered</target>
+                <event>deliver</event>
+            </transition>
+
+            <transition happy="true">
+                <source>delivered</source>
+                <target>closed</target>
+                <event>close</event>
+            </transition>
+
+            <!-- Cancel from payment pending (customer aborts before authorization completes) -->
+            <transition>
+                <source>payment pending</source>
+                <target>cancelled</target>
+                <event>cancel</event>
+            </transition>
+
+            <!-- Stripe expires PIs after 7 days — close the order at 6 days to stay ahead -->
+            <transition>
+                <source>payment pending</source>
+                <target>cancelled</target>
+                <event>expire payment</event>
+            </transition>
+
+            <!-- Cancel from authorized (before capture).
+                 Stripe/Cancel is synchronous; Payment/IsCanceled or IsCancellationFailed
+                 determines the final state based on the API result stored in PaymentApp. -->
+            <transition>
+                <source>authorized</source>
+                <target>cancelled</target>
+                <event>cancel</event>
+            </transition>
+
+            <!-- payment_intent.canceled webhook → CANCELLED (e.g. canceled from Stripe dashboard after authorization) -->
+            <transition condition="Payment/IsCanceled">
+                <source>authorized</source>
+                <target>cancelled</target>
+            </transition>
+
+            <transition condition="Payment/IsCancellationFailed">
+                <source>authorized</source>
+                <target>cancellation failed</target>
+            </transition>
+
+            <!-- Refund command submits refund request; charge.refund.updated webhook resolves final state -->
+            <transition>
+                <source>captured</source>
+                <target>refund pending</target>
+                <event>refund</event>
+            </transition>
+
+            <!-- charge.refund.updated → REFUND CONFIRMED -->
+            <transition happy="true" condition="Payment/IsRefunded">
+                <source>refund pending</source>
+                <target>refund confirmed</target>
+            </transition>
+
+            <!-- charge.refund.updated → REFUND FAILED -->
+            <transition condition="Payment/IsRefundFailed">
+                <source>refund pending</source>
+                <target>refund failed</target>
+            </transition>
+
+            <!-- Save refund record and set canceled_amount on items -->
+            <transition happy="true">
+                <source>refund confirmed</source>
+                <target>refunded</target>
+                <event>confirm refund</event>
+            </transition>
+
+            <!-- Retry refund after failure -->
+            <transition>
+                <source>refund failed</source>
+                <target>refund pending</target>
+                <event>retry refund</event>
+            </transition>
+        </transitions>
+
+        <events>
+            <event name="wait for payment" onEnter="true"/>
+            <event name="expire payment" timeout="6 day" command="Stripe/Cancel"/>
+            <event name="capture" manual="true" command="Stripe/Capture"/>
+            <event name="cancel" manual="true" command="Stripe/Cancel"/>
+            <event name="ship" manual="true"/>
+            <event name="deliver" manual="true"/>
+            <event name="close" manual="true"/>
+            <event name="refund" manual="true" command="Stripe/Refund"/>
+            <event name="confirm refund" onEnter="true" command="Payment/Refund/Confirm"/>
+            <event name="retry refund" manual="true" command="Stripe/Refund"/>
+        </events>
+
+    </process>
+
+</statemachine>

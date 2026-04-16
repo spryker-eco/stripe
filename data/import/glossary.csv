@@ -1,11 +1,51 @@
 key,translation,locale
-stripeCreditCard,Credit Card via Stripe,en_US
-stripeInvoice,Invoice via Stripe,en_US
+stripe,Online via Stripe,en_US
+stripe,Online über Stripe,de_DE
 checkout.payment.provider.Stripe,Stripe,en_US
+checkout.payment.provider.Stripe,Stripe,de_DE
 oms.state.new,New,en_US
+oms.state.new,Neu,de_DE
 oms.state.processing,Processing,en_US
+oms.state.processing,In Bearbeitung,de_DE
+oms.state.payment-pending,Payment Pending,en_US
+oms.state.payment-pending,Zahlung ausstehend,de_DE
 oms.state.authorization-pending,Authorization Pending,en_US
+oms.state.authorization-pending,Autorisierung ausstehend,de_DE
 oms.state.authorization-failed,Authorization Failed,en_US
+oms.state.authorization-failed,Autorisierung fehlgeschlagen,de_DE
 oms.state.authorized,Authorized,en_US
+oms.state.authorized,Autorisiert,de_DE
 oms.state.capture-pending,Capture Pending,en_US
+oms.state.capture-pending,Erfassung ausstehend,de_DE
+oms.state.capture-failed,Capture Failed,en_US
+oms.state.capture-failed,Erfassung fehlgeschlagen,de_DE
 oms.state.captured,Captured,en_US
+oms.state.captured,Erfasst,de_DE
+oms.state.cancelled,Canceled,en_US
+oms.state.cancelled,Storniert,de_DE
+oms.state.cancellation-failed,Cancellation Failed,en_US
+oms.state.cancellation-failed,Stornierung fehlgeschlagen,de_DE
+oms.state.refunded,Refunded,en_US
+oms.state.refunded,Erstattet,de_DE
+oms.state.shipped,Shipped,en_US
+oms.state.shipped,Versandt,de_DE
+oms.state.delivered,Delivered,en_US
+oms.state.delivered,Geliefert,de_DE
+oms.state.closed,Closed,en_US
+oms.state.closed,Geschlossen,de_DE
+stripe.payment.page.title,Complete Payment,en_US
+stripe.payment.page.title,Zahlung abschließen,de_DE
+stripe.payment.heading,Complete Payment,en_US
+stripe.payment.heading,Zahlung abschließen,de_DE
+stripe.payment.order.reference.text,Finalize the payment for the order:,en_US
+stripe.payment.order.reference.text,Zahlung für die Bestellung abschließen:,de_DE
+stripe.payment.button.pay,Pay now,en_US
+stripe.payment.button.pay,Jetzt bezahlen,de_DE
+stripe.payment.button.cancel,Cancel payment,en_US
+stripe.payment.button.cancel,Zahlung abbrechen,de_DE
+stripe.payment.selection_message,You will be asked for the payment details securely via Stripe after placing your order.,en_US
+stripe.payment.selection_message,Nach der Bestellung werden Sie sicher über Stripe zur Eingabe Ihrer Zahlungsdaten weitergeleitet.,de_DE
+stripe.payment.error.failed_redirect,Your payment was not completed. Please choose a different payment method and try again.,en_US
+stripe.payment.error.failed_redirect,Ihre Zahlung wurde nicht abgeschlossen. Bitte wählen Sie eine andere Zahlungsmethode und versuchen Sie es erneut.,de_DE
+stripe.payment.loading,Loading payment form…,en_US
+stripe.payment.loading,Zahlungsformular wird geladen…,de_DE

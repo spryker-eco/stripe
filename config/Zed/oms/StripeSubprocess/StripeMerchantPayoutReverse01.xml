@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<statemachine
+    xmlns="spryker:oms-01"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="spryker:oms-01 http://static.spryker.com/oms-01.xsd">
+
+    <!-- Stripe marketplace: reverses a previously made Stripe Connect transfer to a merchant.
+         Uses SalesPaymentMerchant orchestration with StripePayoutTransmissionPlugin for direct Stripe API calls.
+         On success → refunded; on failure → reverse payout failed (retryable). -->
+    <process name="StripeMerchantPayoutReverse">
+
+        <states>
+            <state name="merchant payout reverse ready" display="oms.state.refunded"/>
+            <state name="reverse payout failed" display="oms.state.refunded"/>
+        </states>
+
+        <transitions>
+
+            <transition condition="SalesPaymentMerchant/IsMerchantPayoutReversed" happy="true">
+                <source>merchant payout reverse ready</source>
+                <target>refunded</target>
+                <event>reverse payout merchant</event>
+            </transition>
+
+            <transition>
+                <source>merchant payout reverse ready</source>
+                <target>reverse payout failed</target>
+                <event>reverse payout merchant</event>
+            </transition>
+
+            <transition>
+                <source>reverse payout failed</source>
+                <target>merchant payout reverse ready</target>
+                <event>retry reverse payout merchant</event>
+            </transition>
+
+        </transitions>
+
+        <events>
+            <event name="reverse payout merchant" onEnter="true" command="SalesPaymentMerchant/ReversePayout"/>
+            <event name="retry reverse payout merchant" manual="true"/>
+        </events>
+
+    </process>
+
+</statemachine>

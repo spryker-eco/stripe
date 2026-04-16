@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<statemachine
+    xmlns="spryker:oms-01"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="spryker:oms-01 http://static.spryker.com/oms-01.xsd">
+
+    <!-- Stripe marketplace: commission calculation and merchant order creation. -->
+    <process name="StripeMerchantOrder">
+
+        <states>
+            <state name="commission calculated" display="oms.state.commission-calculated"/>
+            <state name="sent to merchant" display="oms.state.sent-to-merchant"/>
+            <state name="delivered" display="oms.state.delivered"/>
+        </states>
+
+        <transitions>
+
+            <transition happy="true">
+                <source>commission calculated</source>
+                <target>sent to merchant</target>
+                <event>send to merchant</event>
+            </transition>
+
+            <transition happy="true">
+                <source>sent to merchant</source>
+                <target>delivered</target>
+                <event>deliver</event>
+            </transition>
+
+        </transitions>
+
+        <events>
+            <event name="send to merchant" onEnter="true" command="MerchantSalesOrder/CreateOrders"/>
+            <event name="deliver" manual="true"/>
+        </events>
+
+    </process>
+
+</statemachine>

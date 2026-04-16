@@ -1,0 +1,30 @@
+namespace: SprykerEcoTest\Zed\Stripe
+
+paths:
+    tests: .
+    data: _data
+    support: _support
+    output: _output
+
+coverage:
+    enabled: true
+    remote: false
+    whitelist:
+        include:
+            - '../../../../src/*'
+
+suites:
+    Business:
+        path: Business
+        actor: StripeBusinessTester
+        modules:
+            enabled:
+                - \SprykerTest\Shared\Testify\Helper\Environment
+                - \SprykerTest\Zed\Testify\Helper\Business\BusinessHelper
+
+    Communication:
+        path: Communication
+        actor: StripeCommunicationTester
+        modules:
+            enabled:
+                - \SprykerTest\Shared\Testify\Helper\Environment

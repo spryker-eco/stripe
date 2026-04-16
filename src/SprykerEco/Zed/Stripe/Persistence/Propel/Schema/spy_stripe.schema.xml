@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<database xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          name="zed"
+          xsi:noNamespaceSchemaLocation="http://static.spryker.com/schema-01.xsd"
+          namespace="Orm\Zed\Stripe\Persistence"
+          package="src.Orm.Zed.Stripe.Persistence">
+
+    <table name="spy_stripe_payment" idMethod="native" allowPkInsert="true">
+        <column name="id_stripe_payment" required="true" type="INTEGER" autoIncrement="true" primaryKey="true"/>
+        <column name="fk_sales_order" required="true" type="INTEGER"/>
+        <column name="order_reference" required="true" type="VARCHAR" size="255"/>
+        <column name="transaction_id" required="false" type="VARCHAR" size="255"
+                comment="Stripe PaymentIntent ID (pi_xxx)"/>
+        <!-- No status column: payment lifecycle status is in spy_payment_app_payment_status (PaymentApp module) -->
+        <column name="amount" required="false" type="INTEGER"
+                comment="Amount in minor units (cents)"/>
+        <column name="currency_code" required="false" type="VARCHAR" size="10"/>
+
+        <foreign-key name="spy_stripe_payment-fk_sales_order" foreignTable="spy_sales_order" onDelete="CASCADE">
+            <reference foreign="id_sales_order" local="fk_sales_order"/>
+        </foreign-key>
+
+        <index name="spy_stripe_payment-order_reference">
+            <index-column name="order_reference"/>
+        </index>
+        <index name="spy_stripe_payment-transaction_id">
+            <index-column name="transaction_id"/>
+        </index>
+
+        <behavior name="timestampable"/>
+        <id-method-parameter value="spy_stripe_payment_pk_seq"/>
+    </table>
+
+    <table name="spy_stripe_merchant" idMethod="native" allowPkInsert="true">
+        <column name="id_stripe_merchant" required="true" type="INTEGER" autoIncrement="true" primaryKey="true"/>
+        <column name="merchant_reference" required="true" type="VARCHAR" size="255"/>
+        <column name="stripe_account_id" required="false" type="VARCHAR" size="255"
+                comment="Stripe Connect account ID (acct_xxx) — populated during onboarding"/>
+
+        <!-- Onboarding status is NOT stored here; it lives in spy_merchant_app_onboarding_status (MerchantApp module) -->
+
+        <unique name="spy_stripe_merchant-merchant_reference">
+            <unique-column name="merchant_reference"/>
+        </unique>
+
+        <behavior name="timestampable"/>
+        <id-method-parameter value="spy_stripe_merchant_pk_seq"/>
+    </table>
+
+</database>
