@@ -6,19 +6,20 @@
 
     <!-- Stripe marketplace: reverses a previously made Stripe Connect transfer to a merchant.
          Uses SalesPaymentMerchant orchestration with StripePayoutTransmissionPlugin for direct Stripe API calls.
-         On success → refunded; on failure → reverse payout failed (retryable). -->
+         On success → merchant payout reversed; on failure → reverse payout failed (retryable). -->
     <process name="StripeMerchantPayoutReverse">
 
         <states>
             <state name="merchant payout reverse ready" display="oms.state.refunded"/>
             <state name="reverse payout failed" display="oms.state.refunded"/>
+            <state name="merchant payout reversed" display="oms.state.refunded"/>
         </states>
 
         <transitions>
 
             <transition condition="SalesPaymentMerchant/IsMerchantPayoutReversed" happy="true">
                 <source>merchant payout reverse ready</source>
-                <target>refunded</target>
+                <target>merchant payout reversed</target>
                 <event>reverse payout merchant</event>
             </transition>
 
