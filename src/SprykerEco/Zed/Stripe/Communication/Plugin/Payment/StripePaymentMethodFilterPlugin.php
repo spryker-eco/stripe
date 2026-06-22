@@ -31,11 +31,7 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
         PaymentMethodsTransfer $paymentMethodsTransfer,
         QuoteTransfer $quoteTransfer,
     ): PaymentMethodsTransfer {
-        if ($this->hasApiCredentials()) {
-            return $paymentMethodsTransfer;
-        }
-
-        return $this->removeStripePaymentMethods($paymentMethodsTransfer);
+        return $this->removeUnavailableStripePaymentMethods($paymentMethodsTransfer);
     }
 
     protected function hasApiCredentials(): bool
@@ -43,21 +39,44 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
         return $this->getConfig()->getSecretKey() !== '' && $this->getConfig()->getPublishableKey() !== '';
     }
 
-    protected function removeStripePaymentMethods(PaymentMethodsTransfer $paymentMethodsTransfer): PaymentMethodsTransfer
+    protected function removeUnavailableStripePaymentMethods(PaymentMethodsTransfer $paymentMethodsTransfer): PaymentMethodsTransfer
     {
         $filteredMethods = new ArrayObject();
 
         foreach ($paymentMethodsTransfer->getMethods() as $paymentMethodTransfer) {
-            if (!$this->isStripePaymentMethod($paymentMethodTransfer)) {
-                $filteredMethods->append($paymentMethodTransfer);
+            if ($this->shouldRemoveStripePaymentMethod($paymentMethodTransfer)) {
+                continue;
             }
+
+            $filteredMethods->append($paymentMethodTransfer);
         }
 
         return $paymentMethodsTransfer->setMethods($filteredMethods);
     }
 
+    protected function shouldRemoveStripePaymentMethod(PaymentMethodTransfer $paymentMethodTransfer): bool
+    {
+        if (!$this->isStripePaymentMethod($paymentMethodTransfer)) {
+            return false;
+        }
+
+        // Stripe must be registered in the Backoffice (spy_payment_method) to be shown —
+        // infrastructural methods (OMS-only, no DB entry) bypass admin enable/disable control.
+        if ($paymentMethodTransfer->getIdPaymentMethod() === null) {
+            return true;
+        }
+
+        return !$this->hasApiCredentials();
+    }
+
     protected function isStripePaymentMethod(PaymentMethodTransfer $paymentMethodTransfer): bool
     {
+        // Infrastructural payment methods (present in OMS config but absent from spy_payment_method)
+        // have no paymentProvider — match them by paymentMethodKey.
+        if (strtolower((string)$paymentMethodTransfer->getPaymentMethodKey()) === strtolower(StripeConfig::PAYMENT_METHOD_NAME)) {
+            return true;
+        }
+
         $paymentProvider = $paymentMethodTransfer->getPaymentProvider();
 
         if ($paymentProvider === null) {
