@@ -58,6 +58,12 @@ class StripePaymentMethodFilterPlugin extends AbstractPlugin implements PaymentM
 
     protected function isStripePaymentMethod(PaymentMethodTransfer $paymentMethodTransfer): bool
     {
+        // Infrastructural payment methods (present in OMS config but absent from spy_payment_method)
+        // have no paymentProvider — match them by paymentMethodKey.
+        if (strtolower((string)$paymentMethodTransfer->getPaymentMethodKey()) === strtolower(StripeConfig::PAYMENT_METHOD_NAME)) {
+            return true;
+        }
+
         $paymentProvider = $paymentMethodTransfer->getPaymentProvider();
 
         if ($paymentProvider === null) {
