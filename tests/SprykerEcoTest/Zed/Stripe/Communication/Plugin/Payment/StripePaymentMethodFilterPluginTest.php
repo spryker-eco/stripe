@@ -35,12 +35,14 @@ class StripePaymentMethodFilterPluginTest extends Unit
 
     protected const string OTHER_PROVIDER_KEY = 'paypal';
 
+    protected const int PAYMENT_METHOD_ID = 1;
+
     public function testFilterPaymentMethodsReturnsAllMethodsWhenCredentialsArePresent(): void
     {
         // Arrange
         $plugin = $this->createPlugin(secretKey: static::SECRET_KEY, publishableKey: static::PUBLISHABLE_KEY);
         $paymentMethodsTransfer = $this->buildPaymentMethodsTransfer([
-            $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY),
+            $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY, static::PAYMENT_METHOD_ID),
             $this->buildPaymentMethod(static::OTHER_PROVIDER_KEY),
         ]);
 
@@ -56,7 +58,7 @@ class StripePaymentMethodFilterPluginTest extends Unit
         // Arrange
         $plugin = $this->createPlugin(secretKey: '', publishableKey: static::PUBLISHABLE_KEY);
         $paymentMethodsTransfer = $this->buildPaymentMethodsTransfer([
-            $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY),
+            $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY, static::PAYMENT_METHOD_ID),
             $this->buildPaymentMethod(static::OTHER_PROVIDER_KEY),
         ]);
 
@@ -73,7 +75,7 @@ class StripePaymentMethodFilterPluginTest extends Unit
         // Arrange
         $plugin = $this->createPlugin(secretKey: static::SECRET_KEY, publishableKey: '');
         $paymentMethodsTransfer = $this->buildPaymentMethodsTransfer([
-            $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY),
+            $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY, static::PAYMENT_METHOD_ID),
             $this->buildPaymentMethod(static::OTHER_PROVIDER_KEY),
         ]);
 
@@ -89,6 +91,23 @@ class StripePaymentMethodFilterPluginTest extends Unit
     {
         // Arrange
         $plugin = $this->createPlugin(secretKey: '', publishableKey: '');
+        $paymentMethodsTransfer = $this->buildPaymentMethodsTransfer([
+            $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY, static::PAYMENT_METHOD_ID),
+            $this->buildPaymentMethod(static::OTHER_PROVIDER_KEY),
+        ]);
+
+        // Act
+        $result = $plugin->filterPaymentMethods($paymentMethodsTransfer, new QuoteTransfer());
+
+        // Assert
+        $this->assertCount(1, $result->getMethods());
+        $this->assertSame(static::OTHER_PROVIDER_KEY, $result->getMethods()[0]->getPaymentProvider()->getPaymentProviderKey());
+    }
+
+    public function testFilterPaymentMethodsRemovesUnregisteredStripeMethodRegardlessOfCredentials(): void
+    {
+        // Arrange — Stripe method with no idPaymentMethod (not registered in Backoffice)
+        $plugin = $this->createPlugin(secretKey: static::SECRET_KEY, publishableKey: static::PUBLISHABLE_KEY);
         $paymentMethodsTransfer = $this->buildPaymentMethodsTransfer([
             $this->buildPaymentMethod(static::STRIPE_PROVIDER_KEY),
             $this->buildPaymentMethod(static::OTHER_PROVIDER_KEY),
@@ -139,10 +158,12 @@ class StripePaymentMethodFilterPluginTest extends Unit
         return (new PaymentMethodsTransfer())->setMethods(new ArrayObject($methods));
     }
 
-    protected function buildPaymentMethod(string $providerKey): PaymentMethodTransfer
+    protected function buildPaymentMethod(string $providerKey, ?int $idPaymentMethod = null): PaymentMethodTransfer
     {
         $paymentProvider = (new PaymentProviderTransfer())->setPaymentProviderKey($providerKey);
 
-        return (new PaymentMethodTransfer())->setPaymentProvider($paymentProvider);
+        return (new PaymentMethodTransfer())
+            ->setPaymentProvider($paymentProvider)
+            ->setIdPaymentMethod($idPaymentMethod);
     }
 }
