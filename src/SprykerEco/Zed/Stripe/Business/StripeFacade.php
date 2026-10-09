@@ -11,6 +11,7 @@ use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
 use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
 use Spryker\Zed\Kernel\Business\AbstractFacade;
@@ -38,12 +39,31 @@ class StripeFacade extends AbstractFacade implements StripeFacadeInterface
      * {@inheritDoc}
      *
      * @api
+     *
+     * @deprecated Use {@link \SprykerEco\Zed\Stripe\Business\StripeFacade::getPaymentDetailsByRequest()} instead.
      */
-    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer
+    public function getPaymentDetails(string $orderReference, ?string $customerReference = null): StripeIntentResponseTransfer
     {
         return $this->getFactory()
             ->createPaymentDetailsResolver()
-            ->resolve($orderReference);
+            ->resolve(
+                (new StripePaymentDetailsRequestTransfer())
+                    ->setOrderReference($orderReference)
+                    ->setCustomerReference($customerReference),
+            );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function getPaymentDetailsByRequest(
+        StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer,
+    ): StripeIntentResponseTransfer {
+        return $this->getFactory()
+            ->createPaymentDetailsResolver()
+            ->resolve($stripePaymentDetailsRequestTransfer);
     }
 
     /**

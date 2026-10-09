@@ -7,6 +7,8 @@
 
 namespace SprykerEco\Yves\Stripe\Controller;
 
+use Generated\Shared\Transfer\CustomerTransfer;
+use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 use Spryker\Yves\Kernel\Controller\AbstractController;
 use SprykerEco\Shared\Stripe\StripeConfig;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,10 +22,22 @@ class PaymentController extends AbstractController
 {
     protected const PARAM_ORDER_REFERENCE = 'orderReference';
 
+    protected const string PARAM_PAYMENT_INTENT_CLIENT_SECRET = 'payment_intent_client_secret';
+
+    /**
+     * @uses \SprykerShop\Yves\CustomerPage\Plugin\CustomerPage\RedirectUriCustomerRedirectStrategyPlugin::PARAM_REDIRECT_URI
+     */
+    protected const string PARAM_REDIRECT_URI = 'redirectUri';
+
     /**
      * @uses \SprykerShop\Yves\HomePage\Plugin\Router\HomePageRouteProviderPlugin::ROUTE_NAME_HOME
      */
     protected const string ROUTE_NAME_HOME = 'home';
+
+    /**
+     * @uses \SprykerShop\Yves\CustomerPage\Plugin\Router\CustomerPageRouteProviderPlugin::ROUTE_NAME_LOGIN
+     */
+    protected const string ROUTE_NAME_LOGIN = 'login';
 
     /**
      * @uses \SprykerShop\Yves\PaymentPage\Plugin\Router\PaymentPageRouteProviderPlugin::ROUTE_NAME_PAYMENT_ORDER_SUCCESS
@@ -58,9 +72,22 @@ class PaymentController extends AbstractController
             return $this->redirectResponseInternal(static::ROUTE_NAME_HOME);
         }
 
+        $customerTransfer = $this->getFactory()->getCustomerClient()->getCustomer();
+        $stripePaymentDetailsRequestTransfer = (new StripePaymentDetailsRequestTransfer())
+            ->setOrderReference($orderReference)
+            ->setCustomerReference($customerTransfer?->getCustomerReference())
+            ->setClientSecret($this->findClientSecret($request))
+            ->setIsOrderPlacedInCurrentSession($this->isOrderPlacedInCurrentSession($orderReference));
+
+        if (!$this->hasAccessProof($stripePaymentDetailsRequestTransfer)) {
+            return $this->redirectResponseInternal(static::ROUTE_NAME_LOGIN, [
+                static::PARAM_REDIRECT_URI => $request->getRequestUri(),
+            ]);
+        }
+
         $paymentDetails = $this->getFactory()
             ->getStripeClient()
-            ->getPaymentDetails($orderReference);
+            ->getPaymentDetailsByRequest($stripePaymentDetailsRequestTransfer);
 
         if (!$paymentDetails->getIsSuccessful()) {
             // Payment already captured/succeeded — send customer to the success page
@@ -72,17 +99,21 @@ class PaymentController extends AbstractController
             return $this->redirectResponseInternal(static::ROUTE_NAME_HOME);
         }
 
-        $this->getFactory()->getCartClient()->clearQuote();
+        if ($customerTransfer !== null) {
+            $this->getFactory()->getCartClient()->clearQuote();
+        }
 
         $checkoutSuccessUrl = $this->getRouter()->generate(static::ROUTE_NAME_CHECKOUT_SUCCESS, [], UrlGeneratorInterface::ABSOLUTE_PATH);
         $paymentPageUrl = $this->getRouter()->generate(static::ROUTE_STRIPE_PAYMENT, [
             static::PARAM_ORDER_REFERENCE => $orderReference,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
-        $cancelUrl = $this->getRouter()->generate(static::ROUTE_NAME_PAYMENT_ORDER_CANCEL, [
-            static::PARAM_ORDER_REFERENCE => $orderReference,
-        ], UrlGeneratorInterface::ABSOLUTE_PATH);
+        $cancelUrl = $this->isOrderCancellableByVisitor($customerTransfer, $stripePaymentDetailsRequestTransfer)
+            ? $this->getRouter()->generate(static::ROUTE_NAME_PAYMENT_ORDER_CANCEL, [
+                static::PARAM_ORDER_REFERENCE => $orderReference,
+            ], UrlGeneratorInterface::ABSOLUTE_PATH)
+            : null;
 
-        $idSalesOrder = $paymentDetails->getIdSalesOrder();
+        $idSalesOrder = $customerTransfer !== null ? $paymentDetails->getIdSalesOrder() : null;
         $orderDetailsUrl = $idSalesOrder !== null
             ? $this->getRouter()->generate(static::ROUTE_NAME_CUSTOMER_ORDER_DETAILS, [], UrlGeneratorInterface::ABSOLUTE_PATH) . '?id=' . $idSalesOrder
             : null;
@@ -99,5 +130,31 @@ class PaymentController extends AbstractController
                 'cancelUrl' => $cancelUrl, // order payment cancellation requires that OMS state "payment pending" has flag "cancellable"
             ],
         );
+    }
+
+    protected function findClientSecret(Request $request): ?string
+    {
+        $clientSecret = (string)$request->query->get(static::PARAM_PAYMENT_INTENT_CLIENT_SECRET, '');
+
+        return $clientSecret !== '' ? $clientSecret : null;
+    }
+
+    protected function isOrderPlacedInCurrentSession(string $orderReference): bool
+    {
+        return $this->getFactory()->getCartClient()->getQuote()->getOrderReference() === $orderReference;
+    }
+
+    protected function isOrderCancellableByVisitor(
+        ?CustomerTransfer $customerTransfer,
+        StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer,
+    ): bool {
+        return $customerTransfer !== null || $stripePaymentDetailsRequestTransfer->getIsOrderPlacedInCurrentSession() === true;
+    }
+
+    protected function hasAccessProof(StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer): bool
+    {
+        return $stripePaymentDetailsRequestTransfer->getCustomerReference() !== null
+            || $stripePaymentDetailsRequestTransfer->getClientSecret() !== null
+            || $stripePaymentDetailsRequestTransfer->getIsOrderPlacedInCurrentSession() === true;
     }
 }

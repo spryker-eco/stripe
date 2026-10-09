@@ -8,8 +8,9 @@
 namespace SprykerEco\Zed\Stripe\Business\Payment;
 
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 
 interface PaymentDetailsResolverInterface
 {
-    public function resolve(string $orderReference): StripeIntentResponseTransfer;
+    public function resolve(StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer): StripeIntentResponseTransfer;
 }

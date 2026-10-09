@@ -8,6 +8,7 @@
 namespace SprykerEco\Client\Stripe;
 
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
 use Spryker\Client\Kernel\AbstractClient;
@@ -32,9 +33,22 @@ class StripeClient extends AbstractClient implements StripeClientInterface
      * {@inheritDoc}
      *
      * @api
+     *
+     * @deprecated Use {@link \SprykerEco\Client\Stripe\StripeClient::getPaymentDetailsByRequest()} instead.
      */
-    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer
+    public function getPaymentDetails(string $orderReference, ?string $customerReference = null): StripeIntentResponseTransfer
     {
-        return $this->getFactory()->createZedStub()->getPaymentDetails($orderReference);
+        return $this->getFactory()->createZedStub()->getPaymentDetails($orderReference, $customerReference);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     */
+    public function getPaymentDetailsByRequest(
+        StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer,
+    ): StripeIntentResponseTransfer {
+        return $this->getFactory()->createZedStub()->getPaymentDetailsByRequest($stripePaymentDetailsRequestTransfer);
     }
 }

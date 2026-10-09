@@ -9,7 +9,10 @@ namespace SprykerEco\Zed\Stripe\Business\Payment;
 
 use Generated\Shared\Transfer\StripeIntentRequestTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 use SprykerEco\Shared\Stripe\StripeConfig as SharedStripeConfig;
+use SprykerEco\Zed\Stripe\Business\Checker\ClientSecretCheckerInterface;
+use SprykerEco\Zed\Stripe\Business\Checker\OrderOwnershipCheckerInterface;
 use SprykerEco\Zed\Stripe\Business\Stripe\StripeIntentsInterface;
 use SprykerEco\Zed\Stripe\StripeConfig;
 
@@ -18,12 +21,20 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
     public function __construct(
         protected StripeIntentsInterface $stripeIntents,
         protected PaymentReaderInterface $paymentReader,
+        protected OrderOwnershipCheckerInterface $orderOwnershipChecker,
+        protected ClientSecretCheckerInterface $clientSecretChecker,
         protected StripeConfig $config,
     ) {
     }
 
-    public function resolve(string $orderReference): StripeIntentResponseTransfer
+    public function resolve(StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer): StripeIntentResponseTransfer
     {
+        $orderReference = (string)$stripePaymentDetailsRequestTransfer->getOrderReference();
+
+        if ($orderReference === '') {
+            return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
+        }
+
         $stripePaymentTransfer = $this->paymentReader->getPaymentByOrderReference($orderReference);
 
         if ($stripePaymentTransfer === null) {
@@ -36,6 +47,13 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
             return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
         }
 
+        $clientSecret = $stripePaymentDetailsRequestTransfer->getClientSecret();
+        $isRequesterTrusted = $this->isRequesterTrusted($stripePaymentDetailsRequestTransfer, $orderReference);
+
+        if (!$isRequesterTrusted && !$this->clientSecretChecker->isClientSecretOfPaymentIntent($clientSecret, $transactionId)) {
+            return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
+        }
+
         $stripeIntentResponseTransfer = $this->stripeIntents->get(
             (new StripeIntentRequestTransfer())->setTransactionId($transactionId),
         );
@@ -44,6 +62,10 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
 
         // Stripe API unreachable — client_secret is not stored, cannot proceed
         if (!$stripeIntentResponseTransfer->getIsSuccessful()) {
+            return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
+        }
+
+        if (!$isRequesterTrusted && !$this->clientSecretChecker->isClientSecretEqual($clientSecret, $stripeIntentResponseTransfer->getClientSecret())) {
             return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
         }
 
@@ -71,5 +93,19 @@ class PaymentDetailsResolver implements PaymentDetailsResolverInterface
         }
 
         return (new StripeIntentResponseTransfer())->setIsSuccessful(false);
+    }
+
+    protected function isRequesterTrusted(
+        StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer,
+        string $orderReference,
+    ): bool {
+        if ($stripePaymentDetailsRequestTransfer->getIsOrderPlacedInCurrentSession() === true) {
+            return true;
+        }
+
+        return $this->orderOwnershipChecker->isOrderOwnedByCustomer(
+            $orderReference,
+            $stripePaymentDetailsRequestTransfer->getCustomerReference(),
+        );
     }
 }

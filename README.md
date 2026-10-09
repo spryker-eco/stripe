@@ -177,6 +177,8 @@ use SprykerEco\Yves\Stripe\Plugin\Router\StripeRouteProviderPlugin;
 new StripeRouteProviderPlugin(),
 ```
 
+> **Payment page access:** `/stripe/payment` renders only for the logged-in customer who owns the order, for a guest whose session quote placed the order, or for a visitor who returns from Stripe with the `payment_intent_client_secret` query parameter of the order's PaymentIntent. Every other visitor is redirected to `login?redirectUri=<payment page URL>`. To return the customer to the payment page after login, register `RedirectUriCustomerRedirectStrategyPlugin` (`spryker-shop/customer-page`) in `Pyz\Yves\CustomerPage\CustomerPageDependencyProvider::getAfterLoginCustomerRedirectPlugins()` before the other strategies. The page clears the cart only for logged-in customers; a guest cart stays until the success or cancel page.
+
 ---
 
 ### Step 10: Add Stripe payment form to the checkout payment template
@@ -353,6 +355,9 @@ vendor/bin/console propel:install
 # Generate new transfer objects
 vendor/bin/console transfer:generate
 
+# Rebuild the Zed backend gateway route cache (route /stripe/gateway/get-payment-details-by-request)
+vendor/bin/console router:cache:warm-up:backend-gateway
+
 # Run marketplace installer
 vendor/bin/console setup:init-db
 
@@ -432,6 +437,19 @@ Google Pay and Apple Pay require your site domains to be registered in Stripe. G
 5. (Marketplace only) Log in to Merchant Portal with a merchant user and go to Payment Settings. The Stripe section should be visible.
 6. (Marketplace only) Complete merchant onboarding to Stripe (Stripe Connect must be enabled on the account).
 7. (Marketplace only) Trigger a payout and verify the Stripe Connect transfer appears in the Stripe Express Dashboard under the merchant's connected account (also visible under Transactions > Transfers in the main Stripe account).
+8. Open `/stripe/payment?orderReference=<reference>` in a private browser window. Confirm the redirect to the login page with a `redirectUri` parameter. Log in as the order owner and confirm that the payment page renders. Log in as a different customer and confirm the redirect to the home page.
+
+---
+
+## Upgrading
+
+### Payment page access control
+
+- Run `vendor/bin/console transfer:generate` (new transfer `StripePaymentDetailsRequest`) and `vendor/bin/console router:cache:warm-up:backend-gateway` (new Zed gateway route `/stripe/gateway/get-payment-details-by-request`). Without the route cache rebuild, the payment page fails with a 404 from the backend gateway.
+- `spryker/customer` is a new requirement of this module.
+- `StripeFacadeInterface::getPaymentDetails()` and `StripeClientInterface::getPaymentDetails()` are deprecated. They now return `isSuccessful=false` unless the given `$customerReference` owns the order. A call with only `$orderReference` always returns `isSuccessful=false`. Use `getPaymentDetailsByRequest(StripePaymentDetailsRequestTransfer)` and set `customerReference`, `clientSecret` and `isOrderPlacedInCurrentSession`.
+- Zed does not verify `StripePaymentDetailsRequestTransfer.isOrderPlacedInCurrentSession`. Set it only when the current session quote placed the order.
+- If your project overrides `SprykerEco\Yves\Stripe\Controller\PaymentController`, apply the same access checks to the override.
 
 ---
 

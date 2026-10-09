@@ -35,6 +35,7 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
         $container = $this->addPaymentAppFacade($container);
         $container = $this->addMerchantAppFacade($container);
         $container = $this->addSalesPaymentDetailFacade($container);
+        $container = $this->addSalesFacade($container);
         $container = $this->addUtilEncodingService($container);
 
         return $container;
