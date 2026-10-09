@@ -158,6 +158,7 @@
 
     <transfer name="Quote">
         <property name="payment" type="Payment"/>
+        <property name="customerReference" type="string"/>
     </transfer>
 
     <transfer name="Payment">
@@ -205,10 +206,121 @@
     <transfer name="PaymentMethod">
         <property name="methodName" type="string"/>
         <property name="paymentMethodKey" type="string" strict="true"/>
+        <property name="idPaymentMethod" type="int"/>
     </transfer>
 
     <transfer name="Currency">
         <property name="code" type="string"/>
+    </transfer>
+
+    <transfer name="ConfigurationValueCollectionRequest" strict="true">
+        <property name="deletionKeys" type="ConfigurationValueDeletion[]" singular="deletionKey"/>
+        <property name="configurationValues" type="ConfigurationValue[]" singular="configurationValue"/>
+    </transfer>
+
+    <transfer name="PaymentTransmissionResponseCollection">
+        <property name="paymentTransmissions" type="PaymentTransmissionResponse[]" singular="paymentTransmission"/>
+    </transfer>
+
+    <transfer name="Country">
+        <property name="iso2Code" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentProvider">
+        <property name="paymentProviderKey" type="string" description="A unique key identifying a payment provider."/>
+    </transfer>
+
+    <transfer name="AclEntityMetadataConfig">
+    </transfer>
+
+    <transfer name="AclEntityMetadata">
+    </transfer>
+
+    <transfer name="Rule">
+        <property name="bundle" type="string"/>
+        <property name="controller" type="string"/>
+        <property name="action" type="string"/>
+        <property name="type" type="string"/>
+    </transfer>
+
+    <transfer name="ConfigurationValue" strict="true">
+        <property name="value" type="string"/>
+        <property name="settingKey" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentAppPaymentStatusCriteria">
+    </transfer>
+
+    <transfer name="PaymentAuthorized">
+    </transfer>
+
+    <transfer name="PaymentCanceled">
+    </transfer>
+
+    <transfer name="PaymentCaptured">
+    </transfer>
+
+    <transfer name="PaymentCaptureFailed">
+    </transfer>
+
+    <transfer name="PaymentCreated" strict="true">
+    </transfer>
+
+    <transfer name="PaymentPartiallyCaptured">
+    </transfer>
+
+    <transfer name="PaymentPartiallyRefunded">
+    </transfer>
+
+    <transfer name="PaymentRefunded">
+    </transfer>
+
+    <transfer name="PaymentRefundFailed">
+    </transfer>
+
+    <transfer name="PaymentUpdated" strict="true">
+    </transfer>
+
+    <transfer name="PaymentCancellationFailed">
+    </transfer>
+
+    <transfer name="PaymentTransmissionItem">
+        <property name="merchantReference" type="string"/>
+        <property name="amount" type="string" description="Amount in lowest denominator (cents, YEN). When negative money has to be refunded, when positive money has to be transferred."/>
+        <property name="transferId" type="string" description="The ID returned from the Platform implementation"/>
+        <property name="type" type="string" description="Indicates whether the item is an order item or an order expense. Can be 'order-item', 'order-expense', or any additional type."/>
+        <property name="itemReference" type="string" description="UUID of the sales_order_item or spy_sales_expense"/>
+        <property name="orderReference" type="string"/>
+        <property name="isSuccessful" type="bool"/>
+    </transfer>
+
+    <transfer name="PaymentTransmissionResponse">
+        <property name="merchantReference" type="string"/>
+        <property name="paymentTransmissionItems" type="PaymentTransmissionItem[]" singular="paymentTransmissionItem"/>
+        <property name="transferId" type="string"/>
+        <property name="isSuccessful" type="bool"/>
+        <property name="orderReference" type="string"/>
+        <property name="failureMessage" type="string"/>
+        <property name="amount" type="string"/>
+    </transfer>
+
+    <transfer name="MerchantAppOnboardingStatusChanged" strict="true">
+    </transfer>
+
+    <transfer name="Link" strict="true">
+    </transfer>
+
+    <transfer name="MerchantOnboardingState" strict="true">
+    </transfer>
+
+    <transfer name="Onboarding" strict="true">
+    </transfer>
+
+    <transfer name="ReadyForMerchantAppOnboarding" strict="true">
+    </transfer>
+
+    <transfer name="ConfigurationValueDeletion" strict="true">
+        <property name="settingKey" type="string"/>
     </transfer>
 
 </transfers>
