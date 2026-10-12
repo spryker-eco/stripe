@@ -42,6 +42,7 @@
         "spryker-shop/checkout-widget": "*",
         "spryker/code-sniffer": "*",
         "spryker/oms": "*",
+        "spryker/propel": "*",
         "spryker/router": "*",
         "spryker/testify": "*"
     },
