@@ -177,7 +177,7 @@ use SprykerEco\Yves\Stripe\Plugin\Router\StripeRouteProviderPlugin;
 new StripeRouteProviderPlugin(),
 ```
 
-> **Payment page access:** `/stripe/payment` renders only for the logged-in customer who owns the order, for a guest whose session quote placed the order, or for a visitor who returns from Stripe with the `payment_intent_client_secret` query parameter of the order's PaymentIntent. Every other visitor is redirected to `login?redirectUri=<payment page URL>`. To return the customer to the payment page after login, register `RedirectUriCustomerRedirectStrategyPlugin` (`spryker-shop/customer-page`) in `Pyz\Yves\CustomerPage\CustomerPageDependencyProvider::getAfterLoginCustomerRedirectPlugins()` before the other strategies. The page clears the cart only for logged-in customers; a guest cart stays until the success or cancel page.
+> **Payment page access:** `/stripe/payment` renders only for the logged-in customer who owns the order, for a guest whose session quote placed the order, or for a visitor who returns from Stripe with the `payment_intent_client_secret` query parameter of the order's PaymentIntent. Every other visitor who is not logged in is redirected to `login?redirectUri=<payment page URL>`, unless the order is already paid. A logged-in customer who does not own the order is redirected to the home page. To return the customer to the payment page after login, register `RedirectUriCustomerRedirectStrategyPlugin` (`spryker-shop/customer-page`) in `Pyz\Yves\CustomerPage\CustomerPageDependencyProvider::getAfterLoginCustomerRedirectPlugins()` before the other strategies. The page clears the cart only for logged-in customers; a guest cart stays until the success or cancel page.
 
 ---
 
@@ -437,7 +437,7 @@ Google Pay and Apple Pay require your site domains to be registered in Stripe. G
 5. (Marketplace only) Log in to Merchant Portal with a merchant user and go to Payment Settings. The Stripe section should be visible.
 6. (Marketplace only) Complete merchant onboarding to Stripe (Stripe Connect must be enabled on the account).
 7. (Marketplace only) Trigger a payout and verify the Stripe Connect transfer appears in the Stripe Express Dashboard under the merchant's connected account (also visible under Transactions > Transfers in the main Stripe account).
-8. Open `/stripe/payment?orderReference=<reference>` in a private browser window. Confirm the redirect to the login page with a `redirectUri` parameter. Log in as the order owner and confirm that the payment page renders. Log in as a different customer and confirm the redirect to the home page.
+8. Open `/stripe/payment?orderReference=<reference>` in a private browser window. Confirm the redirect to the login page with a `redirectUri` parameter. Log in as the order owner and confirm that the payment page renders. Log in as a different customer and confirm the redirect to the home page. Open the URL again in a private browser window with a wrong `payment_intent_client_secret` parameter and confirm the redirect to the login page.
 
 ---
 

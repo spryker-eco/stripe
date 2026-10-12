@@ -11,6 +11,7 @@ use Generated\Shared\Transfer\CustomerTransfer;
 use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 use Spryker\Yves\Kernel\Controller\AbstractController;
 use SprykerEco\Shared\Stripe\StripeConfig;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -80,9 +81,7 @@ class PaymentController extends AbstractController
             ->setIsOrderPlacedInCurrentSession($this->isOrderPlacedInCurrentSession($orderReference));
 
         if (!$this->hasAccessProof($stripePaymentDetailsRequestTransfer)) {
-            return $this->redirectResponseInternal(static::ROUTE_NAME_LOGIN, [
-                static::PARAM_REDIRECT_URI => $request->getRequestUri(),
-            ]);
+            return $this->createLoginRedirectResponse($orderReference);
         }
 
         $paymentDetails = $this->getFactory()
@@ -93,6 +92,10 @@ class PaymentController extends AbstractController
             // Payment already captured/succeeded — send customer to the success page
             if (in_array($paymentDetails->getStatus(), StripeConfig::SUCCESSFUL_PAYMENT_STATUSES, true)) {
                 return $this->redirectResponseInternal(static::ROUTE_NAME_PAYMENT_ORDER_SUCCESS);
+            }
+
+            if ($customerTransfer === null) {
+                return $this->createLoginRedirectResponse($orderReference);
             }
 
             // Payment canceled (by customer, OMS) or unrecoverable state
@@ -149,6 +152,15 @@ class PaymentController extends AbstractController
         StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer,
     ): bool {
         return $customerTransfer !== null || $stripePaymentDetailsRequestTransfer->getIsOrderPlacedInCurrentSession() === true;
+    }
+
+    protected function createLoginRedirectResponse(string $orderReference): RedirectResponse
+    {
+        return $this->redirectResponseInternal(static::ROUTE_NAME_LOGIN, [
+            static::PARAM_REDIRECT_URI => $this->getRouter()->generate(static::ROUTE_STRIPE_PAYMENT, [
+                static::PARAM_ORDER_REFERENCE => $orderReference,
+            ], UrlGeneratorInterface::ABSOLUTE_PATH),
+        ]);
     }
 
     protected function hasAccessProof(StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer): bool
