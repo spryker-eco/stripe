@@ -11,6 +11,7 @@ use Generated\Shared\Transfer\OrderTransfer;
 use Generated\Shared\Transfer\PaymentTransmissionResponseCollectionTransfer;
 use Generated\Shared\Transfer\StripeAccountLinksResponseTransfer;
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
 
@@ -28,14 +29,35 @@ interface StripeFacadeInterface
 
     /**
      * Specification:
+     * - Returns `isSuccessful=false` without any payment data when `$customerReference` is null or empty, or when the order does not belong to that customer.
      * - Reads `transactionId` from `spy_stripe_payment` by `orderReference`.
+     * - Fetches `clientSecret` live from Stripe API using the `transactionId`.
+     * - Adds `publishableKey` from the module configuration.
+     *
+     * @api
+     *
+     * @deprecated Use {@link \SprykerEco\Zed\Stripe\Business\StripeFacadeInterface::getPaymentDetailsByRequest()} instead.
+     */
+    public function getPaymentDetails(string $orderReference, ?string $customerReference = null): StripeIntentResponseTransfer;
+
+    /**
+     * Specification:
+     * - Returns `isSuccessful=false` without any payment data when `StripePaymentDetailsRequestTransfer.orderReference` is not set.
+     * - Reads `transactionId` from `spy_stripe_payment` by `orderReference`.
+     * - Grants access when `StripePaymentDetailsRequestTransfer.customerReference` owns the order.
+     * - Grants access when `StripePaymentDetailsRequestTransfer.isOrderPlacedInCurrentSession` is true. The flag is not verified, the caller sets it only when the current session quote placed the order.
+     * - Grants access when `StripePaymentDetailsRequestTransfer.clientSecret` is the client secret of the order's PaymentIntent.
+     * - Rejects a `clientSecret` that does not start with the PaymentIntent ID without a Stripe API call.
+     * - Returns `isSuccessful=false` without any payment data when no access condition is met.
      * - Fetches `clientSecret` live from Stripe API using the `transactionId`.
      * - Adds `publishableKey` from the module configuration.
      * - Used by the Yves Stripe payment page to mount Stripe Elements.
      *
      * @api
      */
-    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer;
+    public function getPaymentDetailsByRequest(
+        StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer,
+    ): StripeIntentResponseTransfer;
 
     /**
      * Specification:

@@ -10,6 +10,7 @@
         "spryker/cart": "^7.16.0",
         "spryker/checkout-extension": "^1.5.0",
         "spryker/configuration-extension": "^1.0.0",
+        "spryker/customer": "^7.0.0",
         "spryker/installer-extension": "^1.0.0",
         "spryker/kernel": "^3.84.0",
         "spryker/log": "^3.0.0",
@@ -40,7 +41,10 @@
         "spryker-shop/checkout-page": "*",
         "spryker-shop/checkout-widget": "*",
         "spryker/code-sniffer": "*",
+        "spryker/container": "*",
+        "spryker/locale": "*",
         "spryker/oms": "*",
+        "spryker/propel": "*",
         "spryker/router": "*",
         "spryker/testify": "*"
     },
