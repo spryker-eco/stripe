@@ -51,6 +51,13 @@
         <property name="transactionId" type="string"/>
     </transfer>
 
+    <transfer name="StripePaymentDetailsRequest" strict="true">
+        <property name="orderReference" type="string"/>
+        <property name="customerReference" type="string"/>
+        <property name="clientSecret" type="string"/>
+        <property name="isOrderPlacedInCurrentSession" type="bool"/>
+    </transfer>
+
     <transfer name="StripeIntentResponse" strict="true">
         <property name="isSuccessful" type="bool"/>
         <property name="transactionId" type="string"/>
@@ -158,6 +165,11 @@
 
     <transfer name="Quote">
         <property name="payment" type="Payment"/>
+        <property name="orderReference" type="string"/>
+    </transfer>
+
+    <transfer name="Customer">
+        <property name="customerReference" type="string"/>
     </transfer>
 
     <transfer name="Payment">
@@ -172,6 +184,7 @@
         <property name="stripe" type="Stripe" strict="true"/>
         <property name="idSalesOrder" type="int"/>
         <property name="orderReference" type="string"/>
+        <property name="customerReference" type="string"/>
         <property name="items" type="Item[]" singular="item"/>
     </transfer>
 

@@ -8,6 +8,7 @@
 namespace SprykerEco\Client\Stripe\Zed;
 
 use Generated\Shared\Transfer\StripeIntentResponseTransfer;
+use Generated\Shared\Transfer\StripePaymentDetailsRequestTransfer;
 use Generated\Shared\Transfer\StripeWebhookPayloadTransfer;
 use Generated\Shared\Transfer\StripeWebhookProcessResponseTransfer;
 
@@ -17,5 +18,9 @@ interface StripeStubInterface
         StripeWebhookPayloadTransfer $stripeWebhookPayloadTransfer,
     ): StripeWebhookProcessResponseTransfer;
 
-    public function getPaymentDetails(string $orderReference): StripeIntentResponseTransfer;
+    public function getPaymentDetails(string $orderReference, ?string $customerReference): StripeIntentResponseTransfer;
+
+    public function getPaymentDetailsByRequest(
+        StripePaymentDetailsRequestTransfer $stripePaymentDetailsRequestTransfer,
+    ): StripeIntentResponseTransfer;
 }

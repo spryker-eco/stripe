@@ -19,11 +19,23 @@ class StripeDependencyProvider extends AbstractBundleDependencyProvider
 
     public const string CLIENT_CART = 'CLIENT_CART';
 
+    public const string CLIENT_CUSTOMER = 'CLIENT_CUSTOMER';
+
     public function provideDependencies(Container $container): Container
     {
         $container = parent::provideDependencies($container);
         $container = $this->addStripeClient($container);
         $container = $this->addCartClient($container);
+        $container = $this->addCustomerClient($container);
+
+        return $container;
+    }
+
+    protected function addCustomerClient(Container $container): Container
+    {
+        $container->set(static::CLIENT_CUSTOMER, function (Container $container) {
+            return $container->getLocator()->customer()->client();
+        });
 
         return $container;
     }

@@ -9,7 +9,7 @@
     checkoutSuccessUrl: checkoutSuccessUrl,
     paymentPageUrl: paymentPageUrl,
     orderDetailsUrl: orderDetailsUrl,
-    cancelUrl: cancelUrl | default('#'),
+    cancelUrl: cancelUrl | default(null),
 } %}
 
 {% block headTitle %}{{ 'stripe.payment.page.title' | trans }}{% endblock %}
@@ -38,7 +38,7 @@
 {% block content %}
     <div class="box">
         <p>
-            {{ 'stripe.payment.order.reference.text' | trans }} <strong><a href="{{ data.orderDetailsUrl }}" target="_blank">{{ data.orderReference }}</a></strong>
+            {{ 'stripe.payment.order.reference.text' | trans }} <strong>{% if data.orderDetailsUrl %}<a href="{{ data.orderDetailsUrl }}" target="_blank">{{ data.orderReference }}</a>{% else %}{{ data.orderReference }}{% endif %}</strong>
             ( <strong>{{ data.stripePaymentIntent.grandTotal | money(false, data.stripePaymentIntent.currencyCode) }} {{ data.stripePaymentIntent.currencyCode }}</strong> )
         </p>
         <stripe-payment
@@ -60,8 +60,10 @@
                 {{ 'stripe.payment.button.pay' | trans }}
             </button>
         </stripe-payment>
-        <a href="{{ data.cancelUrl | e('html_attr') }}" class="button button--hollow button--expand" style="margin-top: 15px;">
-            {{ 'stripe.payment.button.cancel' | trans }}
-        </a>
+        {% if data.cancelUrl %}
+            <a href="{{ data.cancelUrl | e('html_attr') }}" class="button button--hollow button--expand" style="margin-top: 15px;">
+                {{ 'stripe.payment.button.cancel' | trans }}
+            </a>
+        {% endif %}
     </div>
 {% endblock %}

@@ -8,6 +8,9 @@
 namespace SprykerEcoTest\Zed\Stripe;
 
 use Codeception\Actor;
+use Generated\Shared\Transfer\SaveOrderTransfer;
+use Generated\Shared\Transfer\StripePaymentTransfer;
+use SprykerEco\Zed\Stripe\Persistence\StripeEntityManager;
 
 /**
  * Inherited Methods
@@ -28,4 +31,14 @@ use Codeception\Actor;
 class StripeBusinessTester extends Actor
 {
     use _generated\StripeBusinessTesterActions;
+
+    public function haveStripePayment(SaveOrderTransfer $saveOrderTransfer, string $transactionId): StripePaymentTransfer
+    {
+        return (new StripeEntityManager())->createPayment(
+            (new StripePaymentTransfer())
+                ->setFkSalesOrder($saveOrderTransfer->getIdSalesOrderOrFail())
+                ->setOrderReference($saveOrderTransfer->getOrderReferenceOrFail())
+                ->setTransactionId($transactionId),
+        );
+    }
 }

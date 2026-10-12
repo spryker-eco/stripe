@@ -11,7 +11,12 @@ use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
 use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
 use Spryker\Zed\MerchantApp\Business\MerchantAppFacadeInterface;
 use Spryker\Zed\PaymentApp\Business\PaymentAppFacadeInterface;
+use Spryker\Zed\Sales\Business\SalesFacadeInterface;
 use Spryker\Zed\SalesPaymentDetail\Business\SalesPaymentDetailFacadeInterface;
+use SprykerEco\Zed\Stripe\Business\Checker\ClientSecretChecker;
+use SprykerEco\Zed\Stripe\Business\Checker\ClientSecretCheckerInterface;
+use SprykerEco\Zed\Stripe\Business\Checker\OrderOwnershipChecker;
+use SprykerEco\Zed\Stripe\Business\Checker\OrderOwnershipCheckerInterface;
 use SprykerEco\Zed\Stripe\Business\Client\StripeClientFactory;
 use SprykerEco\Zed\Stripe\Business\Dashboard\DashboardUrlGenerator;
 use SprykerEco\Zed\Stripe\Business\Executor\CheckoutPostSaveExecutor;
@@ -139,8 +144,22 @@ class StripeBusinessFactory extends AbstractBusinessFactory
         return new PaymentDetailsResolver(
             $this->createStripeIntents(),
             $this->createPaymentReader(),
+            $this->createOrderOwnershipChecker(),
+            $this->createClientSecretChecker(),
             $this->getConfig(),
         );
+    }
+
+    public function createOrderOwnershipChecker(): OrderOwnershipCheckerInterface
+    {
+        return new OrderOwnershipChecker(
+            $this->getSalesFacade(),
+        );
+    }
+
+    public function createClientSecretChecker(): ClientSecretCheckerInterface
+    {
+        return new ClientSecretChecker();
     }
 
     public function createPaymentAuthorizer(): PaymentAuthorizer
@@ -319,6 +338,11 @@ class StripeBusinessFactory extends AbstractBusinessFactory
     public function getSalesPaymentDetailFacade(): SalesPaymentDetailFacadeInterface
     {
         return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES_PAYMENT_DETAIL);
+    }
+
+    public function getSalesFacade(): SalesFacadeInterface
+    {
+        return $this->getProvidedDependency(StripeDependencyProvider::FACADE_SALES);
     }
 
     public function getUtilEncodingService(): UtilEncodingServiceInterface
