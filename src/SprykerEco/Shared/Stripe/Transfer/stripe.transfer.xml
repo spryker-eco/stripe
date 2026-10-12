@@ -165,6 +165,13 @@
 
     <transfer name="Quote">
         <property name="payment" type="Payment"/>
+        <property name="customerReference" type="string"/>
+        <property name="orderReference" type="string"/>
+        <property name="totals" type="Totals"/>
+        <property name="currency" type="Currency"/>
+        <property name="shippingAddress" type="Address" deprecated="Use item level shipping addresses (item.shipment.shippingAddress) instead."/>
+        <property name="billingAddress" type="Address"/>
+        <property name="customer" type="Customer"/>
         <property name="orderReference" type="string"/>
     </transfer>
 
@@ -191,6 +198,7 @@
     <transfer name="Item">
         <property name="idSalesOrderItem" type="int"/>
         <property name="sumPriceToPayAggregation" type="int"/>
+        <property name="sku" type="string"/>
     </transfer>
 
     <transfer name="SaveOrder">
@@ -204,6 +212,7 @@
         <property name="isExternalRedirect" type="bool"/>
         <property name="redirectUrl" type="string"/>
         <property name="errors" type="CheckoutError[]" singular="error"/>
+        <property name="saveOrder" type="SaveOrder"/>
     </transfer>
 
     <transfer name="CheckoutError">
@@ -218,10 +227,212 @@
     <transfer name="PaymentMethod">
         <property name="methodName" type="string"/>
         <property name="paymentMethodKey" type="string" strict="true"/>
+        <property name="idPaymentMethod" type="int"/>
+        <property name="paymentProvider" type="PaymentProvider" description="The provider of a payment method."/>
     </transfer>
 
     <transfer name="Currency">
         <property name="code" type="string"/>
+    </transfer>
+
+    <transfer name="ConfigurationValueCollectionRequest" strict="true">
+        <property name="deletionKeys" type="ConfigurationValueDeletion[]" singular="deletionKey"/>
+        <property name="configurationValues" type="ConfigurationValue[]" singular="configurationValue"/>
+    </transfer>
+
+    <transfer name="PaymentTransmissionResponseCollection">
+        <property name="paymentTransmissions" type="PaymentTransmissionResponse[]" singular="paymentTransmission"/>
+    </transfer>
+
+    <transfer name="Country">
+        <property name="iso2Code" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentProvider">
+        <property name="paymentProviderKey" type="string" description="A unique key identifying a payment provider."/>
+    </transfer>
+
+    <transfer name="AclEntityMetadataConfig">
+        <property name="aclEntityMetadataCollection" type="AclEntityMetadataCollection"/>
+    </transfer>
+
+    <transfer name="AclEntityMetadata">
+        <property name="entityName" type="string"/>
+        <property name="defaultGlobalOperationMask" type="int"/>
+    </transfer>
+
+    <transfer name="Rule">
+        <property name="bundle" type="string"/>
+        <property name="controller" type="string"/>
+        <property name="action" type="string"/>
+        <property name="type" type="string"/>
+    </transfer>
+
+    <transfer name="ConfigurationValue" strict="true">
+        <property name="value" type="string"/>
+        <property name="settingKey" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentAppPaymentStatusCriteria">
+        <property name="orderReferences" type="array" singular="orderReferences"/>
+    </transfer>
+
+    <transfer name="PaymentAuthorized">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentCanceled">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentCaptured">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentCaptureFailed">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentCreated" strict="true">
+        <property name="entityReference" type="string" strict="true"/>
+        <property name="paymentReference" type="string" strict="true"/>
+        <property name="details" type="string" strict="true"/>
+    </transfer>
+
+    <transfer name="PaymentPartiallyCaptured">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentPartiallyRefunded">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentRefunded">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentRefundFailed">
+        <property name="orderReference" type="string"/>
+        <property name="context" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentUpdated" strict="true">
+        <property name="entityReference" type="string" strict="true"/>
+        <property name="paymentReference" type="string" strict="true"/>
+        <property name="details" type="string" strict="true"/>
+    </transfer>
+
+    <transfer name="PaymentCancellationFailed">
+        <property name="orderReference" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentTransmissionItem">
+        <property name="merchantReference" type="string"/>
+        <property name="amount" type="string" description="Amount in lowest denominator (cents, YEN). When negative money has to be refunded, when positive money has to be transferred."/>
+        <property name="transferId" type="string" description="The ID returned from the Platform implementation"/>
+        <property name="type" type="string" description="Indicates whether the item is an order item or an order expense. Can be 'order-item', 'order-expense', or any additional type."/>
+        <property name="itemReference" type="string" description="UUID of the sales_order_item or spy_sales_expense"/>
+        <property name="orderReference" type="string"/>
+        <property name="isSuccessful" type="bool"/>
+    </transfer>
+
+    <transfer name="PaymentTransmissionResponse">
+        <property name="merchantReference" type="string"/>
+        <property name="paymentTransmissionItems" type="PaymentTransmissionItem[]" singular="paymentTransmissionItem"/>
+        <property name="transferId" type="string"/>
+        <property name="isSuccessful" type="bool"/>
+        <property name="orderReference" type="string"/>
+        <property name="failureMessage" type="string"/>
+        <property name="amount" type="string"/>
+    </transfer>
+
+    <transfer name="MerchantAppOnboardingStatusChanged" strict="true">
+        <property name="merchantReference" type="string"/>
+        <property name="appIdentifier" type="string" description="The identifier of an App that supports the onboarding of Merchants"/>
+        <property name="status" type="string" description="Can be oneOf: initialized, failed, completed"/>
+        <property name="type" type="string" description="E.g. The category of the App"/>
+    </transfer>
+
+    <transfer name="Link" strict="true">
+        <property name="label" type="string"/>
+        <property name="url" type="string"/>
+        <property name="attributes" type="string[]" associative="true" singular="attribute"/>
+    </transfer>
+
+    <transfer name="MerchantOnboardingState" strict="true">
+        <property name="name" type="string"/>
+        <property name="attributes" type="string[]" associative="true" singular="attribute"/>
+    </transfer>
+
+    <transfer name="Onboarding" strict="true">
+        <property name="strategy" type="string" description="Onboarding strategy which could be oneOf: iframe, redirect, api"/>
+        <property name="url" type="string" description="URL that will be used together with the onboarding type to determine how to start the onboarding process"/>
+    </transfer>
+
+    <transfer name="ReadyForMerchantAppOnboarding" strict="true">
+        <property name="type" type="string" description="Could be an App Category name e.g. Payment"/>
+        <property name="appName" type="string" description="The name of an App that supports the onboarding of Merchants"/>
+        <property name="appIdentifier" type="string" description="The identifier of an App that supports the onboarding of Merchants"/>
+        <property name="onboarding" type="Onboarding"/>
+        <property name="merchantOnboardingStates" type="MerchantOnboardingState[]" singular="merchantOnboardingState" description="States and a mapping for texts to be displayed"/>
+        <property name="additionalLinks" type="Link[]" singular="additionalLink" description="Additional URLs that are needed for the onboarding process or displayed for merchants."/>
+    </transfer>
+
+    <transfer name="ConfigurationValueDeletion" strict="true">
+        <property name="settingKey" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentAppPaymentStatusCollection">
+        <property name="paymentAppPaymentStates" type="PaymentAppPaymentStatus[]" singular="paymentAppPaymentStatus"/>
+    </transfer>
+
+    <transfer name="MerchantUser">
+        <property name="merchant" type="Merchant"/>
+    </transfer>
+
+    <transfer name="Refund">
+        <property name="amount" type="int"/>
+    </transfer>
+
+    <transfer name="Totals">
+        <property name="grandTotal" type="int"/>
+    </transfer>
+
+    <transfer name="Address">
+        <property name="zipCode" type="string"/>
+        <property name="city" type="string"/>
+        <property name="address1" type="string"/>
+        <property name="firstName" type="string"/>
+        <property name="lastName" type="string"/>
+        <property name="country" type="Country"/>
+        <property name="address2" type="string"/>
+        <property name="state" type="string"/>
+        <property name="phone" type="string"/>
+    </transfer>
+
+    <transfer name="Customer">
+        <property name="firstName" type="string"/>
+        <property name="lastName" type="string"/>
+        <property name="email" type="string"/>
+    </transfer>
+
+    <transfer name="PaymentAppPaymentStatus">
+        <property name="status" type="string"/>
+    </transfer>
+
+    <transfer name="Merchant">
+        <property name="merchantReference" type="string"/>
+    </transfer>
+
+    <transfer name="AclEntityMetadataCollection">
+        <property name="collection" type="array" singular="aclEntityMetadata" associative="true"/>
     </transfer>
 
 </transfers>
