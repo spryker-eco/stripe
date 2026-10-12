@@ -41,6 +41,8 @@
         "spryker-shop/checkout-page": "*",
         "spryker-shop/checkout-widget": "*",
         "spryker/code-sniffer": "*",
+        "spryker/container": "*",
+        "spryker/locale": "*",
         "spryker/oms": "*",
         "spryker/propel": "*",
         "spryker/router": "*",
